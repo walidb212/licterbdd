@@ -24,5 +24,15 @@ data/
 .DS_Store
 Thumbs.db
 
+# Embedded repos / submodules
+clix/
+crawl4ai/
+
+# Node
+node_modules/
+
+# Loose data/scrape files at root
+/*.json
+
 # Logs
 *.log
