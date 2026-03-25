@@ -16,6 +16,7 @@ from monitor_core import load_workspace_env, normalize_hash_input, parse_publish
 from .config import DEFAULT_OPENAI_MODEL, DEFAULT_OPENROUTER_MODEL, PRIMARY_FILES, SOURCE_DIRS
 from .models import BatchRunResult, EnrichedRecord, EntitySummaryRecord, PreparedRecord
 from .openai_client import OpenAIResponsesClient
+from .mistral_client import MistralChatClient
 from .openrouter_client import OpenRouterChatClient
 
 
@@ -470,6 +471,114 @@ def _prepare_news_items(run_dir: Path, selected_brand: str) -> list[PreparedReco
     return items
 
 
+def _prepare_excel_items(excel_dir: Path, selected_brand: str) -> tuple[list[PreparedRecord], list[PreparedRecord]]:
+    """Normalize the 3 Excel JSONL exports (benchmark_marche, reputation_crise, voix_client_cx) into PreparedRecords."""
+    social: list[PreparedRecord] = []
+    review: list[PreparedRecord] = []
+    source_run_id = "excel_runs"
+
+    def _brand_from_entity(value: str) -> str:
+        lowered = (value or "").lower()
+        if "intersport" in lowered:
+            return "intersport"
+        if "decathlon" in lowered:
+            return "decathlon"
+        return "both"
+
+    def _is_valid_text(text: str) -> bool:
+        cleaned = _clean_text(text)
+        return bool(cleaned) and len(cleaned.split()) >= 5
+
+    # --- benchmark_marche : mentions comparatives Decathlon vs Intersport ---
+    for row in _read_jsonl(excel_dir / "benchmark_marche.jsonl"):
+        text = _clean_text(row.get("text"))
+        if not _is_valid_text(text):
+            continue
+        brand_focus = _brand_from_entity(str(row.get("entity_analyzed") or ""))
+        if not _brand_matches(brand_focus, selected_brand):
+            continue
+        item_key = f"excel_benchmark:{normalize_hash_input(row.get('review_id'), text[:80])}"
+        engagement = _safe_int(row.get("share_count")) + _safe_int(row.get("reply_count"))
+        social.append(PreparedRecord(
+            source_run_id=source_run_id,
+            source_name="excel_benchmark",
+            source_partition="social",
+            brand_focus=brand_focus,
+            entity_name=_clean_text(row.get("entity_analyzed") or "benchmark"),
+            item_key=item_key,
+            pillar="benchmark",
+            published_at=str(row.get("date") or ""),
+            title="",
+            content_text=_truncate_text(text),
+            author="",
+            source_url="",
+            raw_language=str(row.get("language") or ""),
+            engagement_score=engagement,
+            metadata={"topic": row.get("topic"), "platform": row.get("platform"), "is_verified": row.get("is_verified")},
+        ))
+
+    # --- reputation_crise : bad buzz vélo 100% Decathlon ---
+    for row in _read_jsonl(excel_dir / "reputation_crise.jsonl"):
+        text = _clean_text(row.get("text"))
+        if not _is_valid_text(text):
+            continue
+        if not _brand_matches("decathlon", selected_brand):
+            continue
+        item_key = f"excel_reputation:{normalize_hash_input(row.get('review_id'), text[:80])}"
+        likes = _safe_int(row.get("likes"))
+        shares = _safe_int(row.get("share_count"))
+        followers = _safe_float(row.get("user_followers")) or 0.0
+        engagement = likes + shares * 3 + int(followers * 0.01)
+        social.append(PreparedRecord(
+            source_run_id=source_run_id,
+            source_name="excel_reputation",
+            source_partition="social",
+            brand_focus="decathlon",
+            entity_name="reputation_crise",
+            item_key=item_key,
+            pillar="reputation",
+            published_at=str(row.get("date") or ""),
+            title="",
+            content_text=_truncate_text(text),
+            author="",
+            source_url="",
+            raw_language=str(row.get("language") or ""),
+            engagement_score=engagement,
+            metadata={"platform": row.get("platform"), "post_type": row.get("post_type"), "is_verified": row.get("is_verified")},
+        ))
+
+    # --- voix_client_cx : avis clients Decathlon 1-5★ ---
+    for row in _read_jsonl(excel_dir / "voix_client_cx.jsonl"):
+        text = _clean_text(row.get("text"))
+        if not _is_valid_text(text):
+            continue
+        if not _brand_matches("decathlon", selected_brand):
+            continue
+        item_key = f"excel_cx:{normalize_hash_input(row.get('review_id'), text[:80])}"
+        rating = _safe_float(row.get("rating"))
+        review.append(PreparedRecord(
+            source_run_id=source_run_id,
+            source_name="excel_cx",
+            source_partition="customer",
+            brand_focus="decathlon",
+            entity_name=_clean_text(str(row.get("platform") or "voix_client")),
+            item_key=item_key,
+            pillar="cx",
+            published_at=str(row.get("date") or ""),
+            title="",
+            content_text=_truncate_text(text),
+            author="",
+            source_url="",
+            raw_language=str(row.get("language") or ""),
+            engagement_score=0,
+            rating=rating,
+            metadata={"category": row.get("category"), "platform": row.get("platform")},
+        ))
+
+    log.info("excel_runs: benchmark=%d reputation=%d cx=%d", sum(1 for r in social if r.source_name == "excel_benchmark"), sum(1 for r in social if r.source_name == "excel_reputation"), len(review))
+    return social, review
+
+
 def _resolve_items(selected_runs: dict[str, Path | None], *, brand: str) -> tuple[list[PreparedRecord], list[PreparedRecord], list[PreparedRecord]]:
     social: list[PreparedRecord] = []
     review: list[PreparedRecord] = []
@@ -490,6 +599,11 @@ def _resolve_items(selected_runs: dict[str, Path | None], *, brand: str) -> tupl
         review.extend(_prepare_review_items_from_rows(selected_runs["product"], _read_jsonl(selected_runs["product"] / "reviews.jsonl"), "product_review", brand))
     if selected_runs["news"]:
         news.extend(_prepare_news_items(selected_runs["news"], brand))
+    excel_dir = Path("data/excel_runs")
+    if excel_dir.exists():
+        excel_social, excel_review = _prepare_excel_items(excel_dir, brand)
+        social.extend(excel_social)
+        review.extend(excel_review)
     return social, review, news
 
 
@@ -801,6 +915,30 @@ def _enrich_partition(
 ) -> list[EnrichedRecord]:
     if not records:
         return []
+
+    # --- Mistral branch ---
+    if provider == "mistral":
+        import os as _os
+        mistral_key = _os.environ.get("MISTRAL_API_KEY", "")
+        mistral_model = _os.environ.get("MISTRAL_MODEL") or model or "mistral-small-latest"
+        if not mistral_key:
+            message = "MISTRAL_API_KEY is missing. Falling back to heuristic enrichment."
+            warnings.append(message)
+        else:
+            mistral_client = MistralChatClient(api_key=mistral_key, model=mistral_model)
+            try:
+                return _enrich_with_openai(
+                    client=mistral_client,
+                    records=records,
+                    partition_name=partition_name,
+                    run_id=run_id,
+                    model=mistral_model,
+                    chunk_size=chunk_size,
+                    background_threshold=background_threshold,
+                    warnings=warnings,
+                )
+            except Exception as exc:
+                warnings.append(f"{partition_name}: Mistral enrichment failed ({exc}), using heuristic fallback.")
 
     # --- OpenRouter branch ---
     if provider == "openrouter":

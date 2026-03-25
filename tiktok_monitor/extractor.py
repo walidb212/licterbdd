@@ -56,6 +56,24 @@ class VideoRecord:
     source_partition: str = "social"
 
 
+@dataclass
+class CommentRecord:
+    run_id: str
+    brand_focus: str
+    video_id: str
+    video_url: str
+    video_title: str
+    pillar: str
+    comment_id: str
+    parent_id: str
+    author: str
+    text: str
+    published_at: str
+    like_count: int
+    is_reply: bool
+    source_partition: str = "social"
+
+
 def _safe_int(value: Any, default: int = 0) -> int:
     try:
         return int(value or default)
@@ -294,17 +312,21 @@ def _extract_from_ssr(ssr_data: dict, hashtag: str) -> list[dict]:
     videos: list[dict] = []
     scope = ssr_data.get("__DEFAULT_SCOPE__", {})
 
-    # Look in webapp.challenge-detail
-    challenge_detail = scope.get("webapp.challenge-detail", {})
-    items = challenge_detail.get("itemList", [])
+    # Look in webapp.challenge-detail or webapp.search-detail
+    for scope_key in ("webapp.challenge-detail", "webapp.search-detail", "webapp.search"):
+        detail = scope.get(scope_key, {})
+        items = detail.get("itemList", detail.get("item_list", []))
+        if items:
+            break
 
     # Fallback: search other paths
     if not items:
         for key in scope:
             val = scope[key]
-            if isinstance(val, dict) and "itemList" in val:
-                items = val["itemList"]
-                break
+            if isinstance(val, dict):
+                items = val.get("itemList", val.get("item_list", []))
+                if items:
+                    break
 
     for item in items:
         v = _parse_video_item(item, hashtag)
@@ -427,12 +449,13 @@ class TikTokHashtagScraper:
             window.fetch = async function(...args) {
                 const response = await originalFetch.apply(this, args);
                 const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
-                if (url.includes('challenge/item_list') || url.includes('api/post')) {
+                if (url.includes('challenge/item_list') || url.includes('api/post') || url.includes('search/item') || url.includes('search/video')) {
                     try {
                         const cloned = response.clone();
                         const data = await cloned.json();
-                        if (data.itemList) {
-                            window.__tiktokApiData.push(...data.itemList);
+                        const items = data.itemList || data.item_list || data.data || [];
+                        if (Array.isArray(items)) {
+                            window.__tiktokApiData.push(...items);
                         }
                     } catch(e) {}
                 }
@@ -449,12 +472,15 @@ class TikTokHashtagScraper:
                 this.addEventListener('load', function() {
                     if (this._url && (
                         this._url.includes('challenge/item_list') ||
-                        this._url.includes('api/post')
+                        this._url.includes('api/post') ||
+                        this._url.includes('search/item') ||
+                        this._url.includes('search/video')
                     )) {
                         try {
                             const data = JSON.parse(this.responseText);
-                            if (data.itemList) {
-                                window.__tiktokApiData.push(...data.itemList);
+                            const items = data.itemList || data.item_list || data.data || [];
+                            if (Array.isArray(items)) {
+                                window.__tiktokApiData.push(...items);
                             }
                         } catch(e) {}
                     }
@@ -464,28 +490,102 @@ class TikTokHashtagScraper:
         """)
 
     def scrape_hashtag(self, hashtag: str, *, max_items: int = 10) -> list[dict]:
-        """Scrape a single TikTok hashtag page and return video dicts."""
-        url = f"https://www.tiktok.com/tag/{hashtag}"
-        log.info("Scraping #%s -> %s", hashtag, url)
+        """Scrape TikTok for a keyword: search/video + tag page, combined."""
+        seen_ids: set[str] = set()
+        all_videos: list[dict] = []
 
+        # --- Pass 1: Search results (finds videos without the hashtag) ---
         try:
-            self.page.get(url)
-            # Re-inject interceptor on new page
-            self._inject_api_interceptor()
-            time.sleep(HASHTAG_PAGE_LOAD_WAIT)
-
-            # Scroll to load more videos
-            for scroll in range(HASHTAG_MAX_SCROLLS):
-                self.page.run_js("window.scrollBy(0, window.innerHeight * 2);")
-                time.sleep(HASHTAG_SCROLL_PAUSE)
-
-            videos = self._extract_videos(hashtag)
-            log.info("#%s: %d videos extracted", hashtag, len(videos))
-            return videos[:max_items]
-
+            search_videos = self._scrape_search(hashtag)
+            for v in search_videos:
+                if v["video_id"] not in seen_ids:
+                    seen_ids.add(v["video_id"])
+                    all_videos.append(v)
+            log.info("  search: %d videos", len(search_videos))
         except Exception as exc:
-            log.warning("#%s: scraping failed — %s", hashtag, exc)
-            return []
+            log.warning("  search failed: %s", exc)
+
+        # --- Pass 2: Tag page (gives volume, sorted by recent) ---
+        try:
+            tag_videos = self._scrape_tag(hashtag)
+            added = 0
+            for v in tag_videos:
+                if v["video_id"] not in seen_ids:
+                    seen_ids.add(v["video_id"])
+                    all_videos.append(v)
+                    added += 1
+            log.info("  tag: %d videos (%d new)", len(tag_videos), added)
+        except Exception as exc:
+            log.warning("  tag failed: %s", exc)
+
+        log.info("'%s': %d total unique videos", hashtag, len(all_videos))
+        return all_videos[:max_items]
+
+    def _scrape_search(self, keyword: str) -> list[dict]:
+        """Scrape /search/video?q=keyword using CDP packet listening."""
+        url = f"https://www.tiktok.com/search/video?q={keyword}"
+        log.info("Searching '%s' -> %s", keyword, url)
+
+        self.page.listen.start("api/search/item")
+        self.page.get(url)
+        time.sleep(HASHTAG_PAGE_LOAD_WAIT + 1)
+
+        # Scroll to trigger pagination
+        items: list[dict] = []
+        for i in range(6):
+            self.page.run_js("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            for packet in self.page.listen.steps(timeout=0.5):
+                try:
+                    body = packet.response.body
+                    if body:
+                        data = json.loads(body) if isinstance(body, str) else body
+                        il = data.get("itemList", data.get("item_list", []))
+                        if isinstance(il, list):
+                            items.extend(il)
+                except Exception:
+                    pass
+
+        self.page.listen.stop()
+
+        videos: list[dict] = []
+        for item in items:
+            v = _parse_video_item(item, keyword)
+            if v:
+                videos.append(v)
+        return videos
+
+    def _scrape_tag(self, hashtag: str) -> list[dict]:
+        """Scrape /tag/hashtag with Videos tab (sorted by recent)."""
+        url = f"https://www.tiktok.com/tag/{hashtag}"
+        log.info("Scraping tag '%s' -> %s", hashtag, url)
+
+        self.page.get(url)
+        self._inject_api_interceptor()
+        time.sleep(HASHTAG_PAGE_LOAD_WAIT)
+
+        # Click "Videos" tab
+        try:
+            self.page.run_js("""
+                const buttons = document.querySelectorAll('button, [role="tab"]');
+                for (const btn of buttons) {
+                    const text = btn.textContent.trim().toLowerCase();
+                    if (text === 'videos' || text === 'vidéos' || text === 'video') {
+                        btn.click();
+                        break;
+                    }
+                }
+            """)
+            time.sleep(HASHTAG_PAGE_LOAD_WAIT)
+        except Exception:
+            pass
+
+        # Scroll to load more
+        for _ in range(HASHTAG_MAX_SCROLLS):
+            self.page.run_js("window.scrollBy(0, window.innerHeight * 2);")
+            time.sleep(HASHTAG_SCROLL_PAUSE)
+
+        return self._extract_videos(hashtag)
 
     def _extract_videos(self, hashtag: str) -> list[dict]:
         """Extract videos from page using multiple methods (SSR, API, SIGI, DOM)."""
@@ -567,3 +667,53 @@ class TikTokHashtagScraper:
                 self.page.quit()
             except Exception:
                 pass
+
+
+# ---------------------------------------------------------------------------
+# yt-dlp comment extraction (works without login)
+# ---------------------------------------------------------------------------
+
+def extract_comments_ytdlp(video_url: str, video_id: str, *, max_comments: int = 30, quiet: bool = True) -> list[dict]:
+    """Extract comments from a TikTok video using yt-dlp."""
+    try:
+        import yt_dlp
+    except ImportError:
+        log.warning("yt-dlp not installed, cannot extract comments")
+        return []
+
+    comments: list[dict] = []
+    opts = {
+        "quiet": quiet,
+        "no_warnings": quiet,
+        "ignoreerrors": True,
+        "logger": _YDLLogger(),
+        "getcomments": True,
+        "extractor_args": {"tiktok": {"comment_count": [str(max_comments)]}},
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            if not info:
+                return []
+
+            raw_comments = info.get("comments") or []
+            for c in raw_comments[:max_comments]:
+                comments.append({
+                    "comment_id": str(c.get("id", "")),
+                    "parent_id": str(c.get("parent", "") or ""),
+                    "author": str(c.get("author", "")),
+                    "text": str(c.get("text", "")),
+                    "like_count": _safe_int(c.get("like_count", 0)),
+                    "is_reply": c.get("parent", "") not in ("", "root", None),
+                    "published_at": _iso(c.get("timestamp", 0)),
+                })
+
+        if comments:
+            log.info("  %s: %d comments via yt-dlp", video_id, len(comments))
+        else:
+            log.debug("  %s: no comments from yt-dlp", video_id)
+    except Exception as exc:
+        log.debug("yt-dlp comment extraction failed for %s: %s", video_id, exc)
+
+    return comments

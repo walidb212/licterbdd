@@ -138,7 +138,7 @@ Durée : 6 semaines. Jury : 4 professionnels de la data.
 
 ---
 
-## 8. Repo Python — état au 14 mars 2026
+## 8. Repo Python — état au 18 mars 2026
 
 ### Modules présents
 
@@ -146,8 +146,8 @@ Durée : 6 semaines. Jury : 4 professionnels de la data.
 LICTER/
 ├── monitor_core/       # état SQLite partagé, Cloudflare helpers, .env loader
 ├── reddit_monitor/     # posts + commentaires via crawl4ai
-├── youtube_monitor/    # vidéos + commentaires via yt-dlp
-├── tiktok_monitor/     # vidéos comptes officiels via yt-dlp (hashtags=experimental)
+├── youtube_monitor/    # vidéos + commentaires via yt-dlp (search + chaînes officielles)
+├── tiktok_monitor/     # vidéos + commentaires via yt-dlp + DrissionPage (comptes + hashtags + search)
 ├── x_monitor/          # tweets via clix local (Python 3.13 dans .venv-x)
 ├── news_monitor/       # Google News RSS + enrichissement Cloudflare
 ├── review_monitor/     # Trustpilot, Custplace, Glassdoor, Indeed, Dealabs, Poulpeo, eBuyClub
@@ -155,12 +155,35 @@ LICTER/
 ├── product_monitor/    # pages produit (fragile anti-bot, résultats 0 actuellement)
 ├── context_monitor/    # CGV, retours, livraison officiels Decathlon + Intersport
 ├── global_summary/     # snapshot Markdown consolidé multi-sources
-├── ai_batch/           # enrichissement OpenAI sur outputs monitors (JAMAIS TOURNÉ EN LIVE)
+├── ai_batch/           # enrichissement OpenAI/OpenRouter sur outputs monitors
+├── db/                 # schema.sql PostgreSQL/Supabase + loader.py (JSONL+Excel → DB)
 ├── prod_pipeline/      # runner cron avec retries, timeouts, logs
 └── data/               # tous les outputs JSONL par monitor et par run
 ```
 
-### Données réelles disponibles (snapshot 12 mars 2026)
+### Détail scrapers sociaux
+
+#### youtube_monitor
+
+1. **Recherche YouTube** (`ytsearch{N}:query`) — filtre date côté serveur (`week`, `month`…)
+2. **Filtre brand** — on garde uniquement les vidéos qui mentionnent "decathlon" ou "intersport" dans le titre ou la description
+3. **Chaînes officielles** — vidéos `/videos` + Shorts `/shorts` (via yt-dlp `channel_url/videos`, `channel_url/shorts`)
+4. **Commentaires** — extraction yt-dlp `getcomments` pour chaque vidéo (max 100 comments, 10 replies)
+5. **9 search queries** Decathlon (crise vélo, boycott, SAV, benchmark…) + **5 queries** Intersport
+6. **2 chaînes officielles** : `@decathlon` (global) + `@intersportfr`
+
+#### tiktok_monitor
+
+1. **Page hashtag** (`/tag/keyword`) — DrissionPage avec interception API XHR, ~150-200 vidéos par hashtag avec métriques complètes
+2. **Comptes officiels** (`@decathlon`, `@intersportfr`) — extraction yt-dlp des dernières vidéos publiées
+3. **Filtre pertinence** — on garde uniquement les vidéos qui mentionnent le keyword dans la description ou les hashtags
+4. **Filtre date** — uniquement les vidéos des 30 derniers jours (`--max-age-days 30`)
+5. **Déduplication** — hashtag + account combinés et dédupliqués par `video_id`
+6. **Commentaires** — yt-dlp `getcomments` sur les top 3 vidéos par hashtag (DrissionPage trouve les URLs, yt-dlp extrait les commentaires)
+7. **10 hashtags** : decathlon, decathlonfrance, decathlonsport, decathlonfr, intersport, intersportfrance, intersportfr, rockrider, nakamura, sportpascher
+8. **Anti-détection** — Chrome headless via DrissionPage (pas Playwright), pause aléatoire 4-8s entre hashtags
+
+### Données réelles disponibles (snapshot 18 mars 2026)
 
 | Source | Volume réel |
 |---|---|
@@ -168,12 +191,12 @@ LICTER/
 | `review_monitor` (Trustpilot, Glassdoor...) | **213 avis** |
 | `reddit_monitor` | **30 posts**, 168 commentaires |
 | `youtube_monitor` | **18 vidéos**, 39 commentaires |
-| `tiktok_monitor` | **10 vidéos** (comptes officiels uniquement) |
+| `tiktok_monitor` | **68 vidéos** (comptes + hashtags DrissionPage) |
 | `news_monitor` | **43 articles** |
 | `context_monitor` | **8 documents** CGV/retours/livraison |
 | `x_monitor` | ⚠️ **0 posts** — cookies expirés |
 | `product_monitor` | ⚠️ **0 résultats** — anti-bot bloquant |
-| `ai_batch` | ⚠️ **jamais tourné** — PRIORITÉ #1 |
+| `ai_batch` | ✅ **validé** via OpenRouter (social=265, review=25, news=43, entities=86) |
 
 ### Tests
 

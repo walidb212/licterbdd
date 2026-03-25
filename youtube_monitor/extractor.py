@@ -108,7 +108,22 @@ class YouTubeExtractor:
         self.max_replies = max_replies
         self.quiet = quiet
 
-    def search_videos(self, query: str, max_results: int = 15) -> list[dict]:
+    # YouTube search sp filters (base64-encoded protobuf)
+    SP_FILTERS: dict[str, str] = {
+        "hour": "EgIIAQ%3D%3D",
+        "today": "EgIIAg%3D%3D",
+        "week": "EgIIAw%3D%3D",
+        "month": "EgIIBA%3D%3D",
+        "year": "EgIIBQ%3D%3D",
+    }
+
+    def search_videos(self, query: str, max_results: int = 15, date_filter: str = "") -> list[dict]:
+        """Search YouTube. date_filter: hour/today/week/month/year or empty for no filter."""
+        if date_filter and date_filter in self.SP_FILTERS:
+            from urllib.parse import quote
+            sp = self.SP_FILTERS[date_filter]
+            url = f"https://www.youtube.com/results?search_query={quote(query)}&sp={sp}"
+            return self._extract_playlist(url, flat=True, playlist_end=max_results)
         return self._extract_playlist(f"ytsearch{max_results}:{query}", flat=False)
 
     def channel_videos(self, channel_url: str, max_videos: int = 20) -> list[dict]:
@@ -120,7 +135,16 @@ class YouTubeExtractor:
         )
         return results[:max_videos]
 
-    def _ydl_opts(self, *, flat: bool = False, playlist_items: str | None = None) -> dict[str, Any]:
+    def channel_shorts(self, channel_url: str, max_shorts: int = 20) -> list[dict]:
+        base_url = channel_url.rstrip("/")
+        results = self._extract_playlist(
+            f"{base_url}/shorts",
+            flat=True,
+            playlist_items=f"1:{max(max_shorts * 5, max_shorts)}",
+        )
+        return results[:max_shorts]
+
+    def _ydl_opts(self, *, flat: bool = False, playlist_items: str | None = None, playlist_end: int | None = None) -> dict[str, Any]:
         options: dict[str, Any] = {
             "quiet": self.quiet,
             "no_warnings": self.quiet,
@@ -145,16 +169,18 @@ class YouTubeExtractor:
         }
         if playlist_items:
             options["playlist_items"] = playlist_items
+        if playlist_end:
+            options["playlistend"] = playlist_end
         return options
 
-    def _extract_playlist(self, url: str, *, flat: bool = False, playlist_items: str | None = None) -> list[dict]:
+    def _extract_playlist(self, url: str, *, flat: bool = False, playlist_items: str | None = None, playlist_end: int | None = None) -> list[dict]:
         try:
             import yt_dlp
         except ImportError as exc:
             raise RuntimeError("yt-dlp is not installed. Run: pip install yt-dlp") from exc
 
         results: list[dict] = []
-        with yt_dlp.YoutubeDL(self._ydl_opts(flat=flat, playlist_items=playlist_items)) as ydl:
+        with yt_dlp.YoutubeDL(self._ydl_opts(flat=flat, playlist_items=playlist_items, playlist_end=playlist_end)) as ydl:
             try:
                 info = ydl.extract_info(url, download=False)
             except Exception as exc:

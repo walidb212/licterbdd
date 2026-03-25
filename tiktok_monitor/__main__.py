@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import DEFAULT_MAX_ITEMS_PER_SOURCE, is_source_enabled, list_sources
-from .extractor import TikTokExtractor, TikTokHashtagScraper, VideoRecord
+from .extractor import CommentRecord, TikTokExtractor, TikTokHashtagScraper, VideoRecord, extract_comments_ytdlp
 
 # DrissionPage fetches ~150+ videos per hashtag (top by relevance).
 # We scrape all of them but only keep videos from the last N days.
@@ -100,6 +100,7 @@ def run(
     extractor = TikTokExtractor(quiet=quiet)
 
     videos: list[VideoRecord] = []
+    all_comments: list[CommentRecord] = []
     source_stats: list[dict[str, object]] = []
     warnings: list[str] = []
     seen_video_ids: set[tuple[str, str]] = set()
@@ -194,10 +195,19 @@ def run(
                     warnings.append(f"{source.name} hashtag failed: {exc}")
                     raw_results = []
 
-                # Filter by date: only keep videos from the last max_age_days
+                # Filter 1: Relevance — video text must mention the keyword
+                keyword_lower = source.query_text.lower()
+                relevant = []
+                for raw in raw_results:
+                    text = (raw.get("description") or raw.get("title") or "").lower()
+                    hashtags = [h.lower() for h in raw.get("hashtags", [])]
+                    if keyword_lower in text or keyword_lower in hashtags:
+                        relevant.append(raw)
+
+                # Filter 2: Date — only keep videos from the last max_age_days
                 cutoff = datetime.now(timezone.utc).timestamp() - (max_age_days * 86400)
                 filtered = []
-                for raw in raw_results:
+                for raw in relevant:
                     pub = raw.get("published_at", "")
                     if pub:
                         try:
@@ -205,20 +215,16 @@ def run(
                             if ts >= cutoff:
                                 filtered.append(raw)
                         except (ValueError, TypeError):
-                            filtered.append(raw)  # keep if date unparseable
+                            filtered.append(raw)
                     else:
-                        filtered.append(raw)  # keep if no date
+                        filtered.append(raw)
 
-                # Sort by most recent first
-                filtered.sort(
-                    key=lambda r: r.get("published_at", ""),
-                    reverse=True,
-                )
-                # Cap to max_items_per_source
+                # Sort by most recent first, cap to max_items_per_source
+                filtered.sort(key=lambda r: r.get("published_at", ""), reverse=True)
                 filtered = filtered[:max_items_per_source]
 
-                log.info("  #%s: %d/%d videos after %d-day filter",
-                         source.query_text, len(filtered), len(raw_results), max_age_days)
+                log.info("  #%s: %d relevant / %d raw -> %d after %d-day filter",
+                         source.query_text, len(relevant), len(raw_results), len(filtered), max_age_days)
 
                 added = 0
                 for raw in filtered:
@@ -256,6 +262,34 @@ def run(
                     )
                     videos.append(vid_record)
                     added += 1
+
+                # Extract comments from the top videos via yt-dlp
+                comment_candidates = sorted(filtered[:added], key=lambda r: r.get("view_count", 0), reverse=True)
+                for raw in comment_candidates[:3]:  # top 3 videos per hashtag
+                    vid = raw.get("video_id", "")
+                    vurl = raw.get("video_url", "")
+                    if not vurl:
+                        continue
+                    try:
+                        raw_comments = extract_comments_ytdlp(vurl, vid, max_comments=20, quiet=quiet)
+                        for rc in raw_comments:
+                            all_comments.append(CommentRecord(
+                                run_id=run_id,
+                                brand_focus=source_brand if source_brand != "both" else "both",
+                                video_id=vid,
+                                video_url=vurl,
+                                video_title=(raw.get("title") or "")[:160],
+                                pillar=source.pillar,
+                                comment_id=rc.get("comment_id", ""),
+                                parent_id=rc.get("parent_id", ""),
+                                author=rc.get("author", ""),
+                                text=rc.get("text", ""),
+                                published_at=rc.get("published_at", ""),
+                                like_count=rc.get("like_count", 0),
+                                is_reply=rc.get("is_reply", False),
+                            ))
+                    except Exception as exc:
+                        log.debug("Comment extraction failed for %s: %s", vid, exc)
 
                 if not added:
                     warnings.append(f"{source.name}: no hashtag results found.")
@@ -303,8 +337,9 @@ def run(
             })
 
     _write_jsonl(run_dir / "videos.jsonl", videos)
-    _write_jsonl(run_dir / "comments.jsonl", [])
+    _write_jsonl(run_dir / "comments.jsonl", all_comments)
     _write_jsonl(run_dir / "sources.jsonl", source_stats)
+    log.info("Comments collected: %d", len(all_comments))
     (run_dir / "results.md").write_text(
         _build_results_markdown(
             run_id=run_id,
