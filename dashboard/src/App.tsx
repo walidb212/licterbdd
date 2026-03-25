@@ -6,6 +6,7 @@ import BenchmarkPanel from './components/panels/BenchmarkPanel'
 import CxPanel from './components/panels/CxPanel'
 import RecoPanel from './components/panels/RecoPanel'
 import SynthesePanel from './components/panels/SynthesePanel'
+import ChatPanel from './components/panels/ChatPanel'
 import { useHealth } from './api/client'
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
         {activeTab === 'cx'       && <CxPanel />}
         {activeTab === 'reco'     && <RecoPanel />}
         {activeTab === 'synthese' && <SynthesePanel />}
+        {activeTab === 'chat'     && <ChatPanel />}
       </main>
     </>
   )

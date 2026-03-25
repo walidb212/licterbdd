@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "api": "cd .. && py -3.10 -m uvicorn api.main:app --reload --port 8000",
+    "api": "cd ../server && node index.mjs",
     "start": "concurrently --names \"API,UI\" --prefix-colors \"cyan,magenta\" \"npm run api\" \"npm run dev\""
   },
   "dependencies": {
