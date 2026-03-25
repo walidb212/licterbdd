@@ -55,20 +55,30 @@ class MistralChatClient:
         schema: dict[str, Any],
         background: bool = False,
     ) -> dict[str, Any]:
+        # Mistral handles json_object better than strict json_schema.
+        # Embed the schema description in the system prompt instead.
+        enhanced_instructions = (
+            instructions + "\n\n"
+            "CRITICAL: Return valid JSON with this exact structure:\n"
+            '{"items": [{"item_key": "<EXACT item_key from input>", "language": "fr|en", '
+            '"sentiment_label": "positive|neutral|negative|mixed", "sentiment_confidence": 0.0-1.0, '
+            '"themes": ["snake_case_theme", ...], "risk_flags": ["snake_case_flag", ...], '
+            '"opportunity_flags": ["snake_case_flag", ...], "priority_score": 0-100, '
+            '"summary_short": "max 220 chars", "evidence_spans": ["quote1", "quote2"]}]}\n\n'
+            "IMPORTANT: You MUST return one item per input item. "
+            "Copy the item_key EXACTLY as provided — do NOT modify, truncate or paraphrase it.\n"
+            "Use these standard themes when applicable: "
+            "service_client, retour_remboursement, qualite_produit, livraison_stock, "
+            "magasin_experience, prix_promo, velo_mobilite, brand_controversy, "
+            "community_engagement, sponsoring_partnership, running_fitness, football_teamwear.\n"
+        )
         payload: dict[str, Any] = {
             "model": self.model,
             "messages": [
-                {"role": "system", "content": instructions},
+                {"role": "system", "content": enhanced_instructions},
                 {"role": "user", "content": user_text},
             ],
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": schema_name,
-                    "schema": schema,
-                    "strict": True,
-                },
-            },
+            "response_format": {"type": "json_object"},
         }
         raw = self._request(payload)
         content = (

@@ -1,5 +1,42 @@
 // Port 1:1 de api/kpis.py
 
+// Normalize Mistral free-form themes to dashboard standard themes
+const THEME_ALIASES = {
+  // Mistral variants → standard
+  product_defect: 'qualite_produit', product_quality_issue: 'qualite_produit',
+  product_defect_claim: 'qualite_produit', defective_product: 'qualite_produit',
+  product_quality: 'qualite_produit', quality_issue: 'qualite_produit',
+  safety_concern: 'qualite_produit', safety_issue: 'qualite_produit',
+  crisis_alert: 'brand_controversy', boycott_call: 'brand_controversy',
+  reputation_damage: 'brand_controversy', legal_ethical_violation: 'brand_controversy',
+  brand_image: 'brand_controversy', scandal: 'brand_controversy',
+  customer_service: 'service_client', sav: 'service_client', support: 'service_client',
+  customer_support: 'service_client', after_sales: 'service_client',
+  return_policy: 'retour_remboursement', refund: 'retour_remboursement',
+  return_issue: 'retour_remboursement', remboursement: 'retour_remboursement',
+  delivery: 'livraison_stock', shipping: 'livraison_stock', stock: 'livraison_stock',
+  out_of_stock: 'livraison_stock', delivery_issue: 'livraison_stock',
+  store_experience: 'magasin_experience', in_store: 'magasin_experience',
+  store_visit: 'magasin_experience', magasin: 'magasin_experience',
+  price: 'prix_promo', pricing: 'prix_promo', discount: 'prix_promo',
+  value_for_money: 'prix_promo', promotion: 'prix_promo', rapport_qualite_prix: 'prix_promo',
+  bike: 'velo_mobilite', cycling: 'velo_mobilite', bicycle: 'velo_mobilite',
+  velo: 'velo_mobilite', mobility: 'velo_mobilite', ebike: 'velo_mobilite',
+  running: 'running_fitness', fitness: 'running_fitness', sport: 'running_fitness',
+  football: 'football_teamwear', soccer: 'football_teamwear', teamwear: 'football_teamwear',
+  community: 'community_engagement', engagement: 'community_engagement',
+  partnership: 'sponsoring_partnership', sponsor: 'sponsoring_partnership',
+  collaboration: 'sponsoring_partnership',
+};
+
+export function normalizeThemes(themes) {
+  if (!themes || !Array.isArray(themes)) return [];
+  return themes.map(t => {
+    const lower = t.toLowerCase().replace(/[- ]/g, '_');
+    return THEME_ALIASES[lower] || lower;
+  });
+}
+
 export function platformFromSourceName(s) {
   if (!s) return 'Autre';
   const l = s.toLowerCase();

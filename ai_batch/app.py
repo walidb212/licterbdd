@@ -814,6 +814,12 @@ def _coerce_openai_item(
 ) -> EnrichedRecord | None:
     item_key = str(item.get("item_key") or "")
     record = record_lookup.get(item_key)
+    # Fuzzy match: LLMs sometimes truncate or slightly modify item_keys
+    if record is None and item_key:
+        for candidate_key, candidate_record in record_lookup.items():
+            if candidate_key.startswith(item_key[:40]) or item_key.startswith(candidate_key[:40]):
+                record = candidate_record
+                break
     if record is None:
         return None
     language = _normalize_language(str(item.get("language") or record.raw_language or ""), record.content_text)

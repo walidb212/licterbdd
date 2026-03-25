@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { normalizeThemes } from './kpis.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = join(__dirname, '..', 'data', 'dashboard.sqlite3');
@@ -167,6 +168,10 @@ export function parseJsonCol(row, ...cols) {
       try { row[col] = JSON.parse(row[col]); } catch { row[col] = []; }
     } else if (!row[col]) {
       row[col] = [];
+    }
+    // Normalize themes to standard dashboard names
+    if (col === 'themes' && Array.isArray(row[col])) {
+      row[col] = normalizeThemes(row[col]);
     }
   }
   return row;
