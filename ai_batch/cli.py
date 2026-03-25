@@ -11,7 +11,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--brand", choices=["both", "decathlon", "intersport"], default="both")
     parser.add_argument("--input-run", default="latest")
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--provider", choices=["auto", "openai", "openrouter", "heuristic"], default="auto")
+    parser.add_argument("--provider", choices=["auto", "openai", "openrouter", "mistral", "heuristic"], default="auto")
     parser.add_argument("--model", default=DEFAULT_OPENAI_MODEL)
     parser.add_argument("--chunk-size", type=int, default=8)
     parser.add_argument("--background-threshold", type=int, default=12)

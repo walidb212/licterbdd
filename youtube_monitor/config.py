@@ -43,4 +43,6 @@ OFFICIAL_CHANNELS: dict[str, list[dict[str, str | int]]] = {
 DEFAULT_SEARCH_RESULTS = 15
 DEFAULT_MAX_COMMENTS = 100
 DEFAULT_MAX_REPLIES = 10
+DEFAULT_DATE_FILTER = "month"  # hour, today, week, month, year, or "" for no filter
+DEFAULT_MAX_CHANNEL_SHORTS = 20
 SOURCE_PARTITION = "social"

@@ -10,8 +10,15 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .config import DEFAULT_MAX_COMMENTS, DEFAULT_MAX_REPLIES, DEFAULT_SEARCH_RESULTS, OFFICIAL_CHANNELS, SEARCH_QUERIES
+from .config import DEFAULT_DATE_FILTER, DEFAULT_MAX_CHANNEL_SHORTS, DEFAULT_MAX_COMMENTS, DEFAULT_MAX_REPLIES, DEFAULT_SEARCH_RESULTS, OFFICIAL_CHANNELS, SEARCH_QUERIES
 from .extractor import CommentRecord, VideoRecord, YouTubeExtractor
+
+
+def _brand_in_text(raw: dict, brand: str) -> bool:
+    """Return True if brand name appears in the video title or description."""
+    title = (raw.get("title") or "").lower()
+    desc = (raw.get("description") or "").lower()
+    return brand.lower() in title or brand.lower() in desc
 
 
 logging.basicConfig(
@@ -82,6 +89,8 @@ def run(
     max_comments: int = DEFAULT_MAX_COMMENTS,
     max_replies: int = DEFAULT_MAX_REPLIES,
     max_channel_videos: int = 20,
+    max_channel_shorts: int = DEFAULT_MAX_CHANNEL_SHORTS,
+    date_filter: str = DEFAULT_DATE_FILTER,
     output_dir: str = "data/youtube_runs",
     quiet: bool = True,
 ) -> Path:
@@ -92,6 +101,7 @@ def run(
     run_dir = Path(output_dir) / run_id
     brands = ["decathlon", "intersport"] if brand == "both" else [brand]
     extractor = YouTubeExtractor(max_comments=max_comments, max_replies=max_replies, quiet=quiet)
+    log.info("date_filter=%s", date_filter or "(none)")
 
     videos: list[VideoRecord] = []
     comments: list[CommentRecord] = []
@@ -102,18 +112,22 @@ def run(
 
     for brand_focus in brands:
         for query in SEARCH_QUERIES.get(brand_focus, []):
-            log.info("[%s] search - %s (%s)", brand_focus, query["name"], query["query"])
+            log.info("[%s] search - %s (%s) [filter=%s]", brand_focus, query["name"], query["query"], date_filter or "none")
             try:
-                raw_videos = extractor.search_videos(query["query"], max_results=max_search_results)
+                raw_videos = extractor.search_videos(query["query"], max_results=max_search_results, date_filter=date_filter)
             except Exception as exc:
                 log.warning("Search failed for %s: %s", query["name"], exc)
                 raw_videos = []
 
             added_videos = 0
             added_comments = 0
+            skipped_brand = 0
             for raw in raw_videos:
                 video_id = str(raw.get("id") or raw.get("display_id") or "")
                 if not video_id:
+                    continue
+                if not _brand_in_text(raw, brand_focus):
+                    skipped_brand += 1
                     continue
                 video_key = (brand_focus, video_id)
                 if video_key not in seen_video_ids:
@@ -137,6 +151,8 @@ def run(
                     seen_comment_ids.add(comment_key)
                     comments.append(comment)
                     added_comments += 1
+            if skipped_brand:
+                log.info("[%s] %s - skipped %d (no brand match)", brand_focus, query["name"], skipped_brand)
             query_stats.append(
                 {
                     "brand": brand_focus,
@@ -148,19 +164,31 @@ def run(
             )
 
         for channel in OFFICIAL_CHANNELS.get(brand_focus, []):
-            log.info("[%s] channel - %s", brand_focus, channel["name"])
+            # --- Channel videos ---
+            log.info("[%s] channel videos - %s", brand_focus, channel["name"])
             try:
                 raw_videos = extractor.channel_videos(
                     str(channel["url"]),
                     max_videos=min(max_channel_videos, int(channel["max_videos"])),
                 )
             except Exception as exc:
-                log.warning("Channel failed for %s: %s", channel["name"], exc)
+                log.warning("Channel videos failed for %s: %s", channel["name"], exc)
                 raw_videos = []
+
+            # --- Channel shorts ---
+            log.info("[%s] channel shorts - %s", brand_focus, channel["name"])
+            try:
+                raw_shorts = extractor.channel_shorts(
+                    str(channel["url"]),
+                    max_shorts=max_channel_shorts,
+                )
+            except Exception as exc:
+                log.warning("Channel shorts failed for %s: %s", channel["name"], exc)
+                raw_shorts = []
 
             added_videos = 0
             added_comments = 0
-            for raw in raw_videos:
+            for raw in raw_videos + raw_shorts:
                 video_id = str(raw.get("id") or raw.get("display_id") or "")
                 if not video_id:
                     continue
@@ -221,6 +249,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--max-comments", type=int, default=DEFAULT_MAX_COMMENTS)
     parser.add_argument("--max-replies", type=int, default=DEFAULT_MAX_REPLIES)
     parser.add_argument("--max-channel-videos", type=int, default=20)
+    parser.add_argument("--max-channel-shorts", type=int, default=DEFAULT_MAX_CHANNEL_SHORTS)
+    parser.add_argument("--date-filter", default=DEFAULT_DATE_FILTER, choices=["", "hour", "today", "week", "month", "year"], help="YouTube upload date filter for searches")
     parser.add_argument("--output-dir", default="data/youtube_runs")
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
@@ -238,6 +268,8 @@ def main() -> None:
         max_comments=args.max_comments,
         max_replies=args.max_replies,
         max_channel_videos=args.max_channel_videos,
+        max_channel_shorts=args.max_channel_shorts,
+        date_filter=args.date_filter,
         output_dir=args.output_dir,
         quiet=not args.verbose,
     )

@@ -230,6 +230,7 @@ def run_monitor(
         query_runs.append(query_run)
 
     articles = list(by_id.values())
+    articles.sort(key=lambda a: (0 if a.signal_type == "reputation" else 1, a.published_at or ""), reverse=False)
     cloudflare_mode = _enrich_articles(
         articles,
         enrich_mode=enrich_mode,

@@ -2,6 +2,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 
 POWERSHELL_UTF8_HINT = (
@@ -45,6 +46,8 @@ def ensure_utf8_console() -> None:
 
 
 def main() -> int:
+    from monitor_core import load_workspace_env
+    load_workspace_env(Path(__file__).resolve().parent.parent)
     ensure_utf8_console()
     from .cli import main as cli_main
 

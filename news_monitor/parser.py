@@ -13,8 +13,10 @@ _TAG_RE = re.compile(r"<[^>]+>")
 _WHITESPACE_RE = re.compile(r"\s+")
 
 _REPUTATION_KEYWORDS = {
-    "boycott", "grève", "plainte", "rappel", "controverse", "polémique", "fermeture",
-    "licenciement", "sanction", "fraude", "crise", "accident"
+    "boycott", "grève", "plainte", "rappel", "controverse", "polémique",
+    "licenciement", "sanction", "fraude", "crise", "accident",
+    "scandale", "blessé", "défectueux", "dangereux", "syndicat",
+    "éthique", "enquête", "exploitation", "disclose",
 }
 _CX_KEYWORDS = {
     "sav", "service client", "retour", "remboursement", "avis", "attente", "livraison", "magasin"
