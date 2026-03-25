@@ -1,4 +1,4 @@
-export type TabId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'chat'
+export type TabId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'personas' | 'chat'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'rep',      label: 'Réputation' },
@@ -6,6 +6,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'cx',       label: 'Expérience Client' },
   { id: 'reco',     label: 'Recommandations' },
   { id: 'synthese', label: 'Synthèse IA' },
+  { id: 'personas', label: 'Personas' },
   { id: 'chat',     label: 'Assistant IA' },
 ]
 

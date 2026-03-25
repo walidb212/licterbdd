@@ -608,3 +608,200 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ── PDF Button ────────────────────────────────────────── */
+.app-header__pdf-btn {
+  background: var(--color-decathlon);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.app-header__pdf-btn:hover { opacity: 0.85; }
+
+/* ── Personas Panel ────────────────────────────────────── */
+.personas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.persona-card {
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+}
+
+.persona-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.persona-card__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-decathlon);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.persona-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.persona-card__profile {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+.persona-card__score {
+  margin-left: auto;
+  text-align: center;
+}
+
+.persona-card__score-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-success);
+}
+
+.persona-card__score-label {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+
+.persona-card__section {
+  margin-bottom: 12px;
+}
+
+.persona-card__section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-info);
+  margin-bottom: 6px;
+}
+
+.persona-card__section-title--danger {
+  color: var(--color-text-danger);
+}
+
+.persona-card__section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.persona-card__section li {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  padding: 2px 0;
+  padding-left: 12px;
+  position: relative;
+}
+
+.persona-card__section li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--color-text-tertiary);
+}
+
+.persona-card__channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.persona-card__channel {
+  background: var(--color-background-tertiary);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.persona-card__reco {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-border-tertiary);
+  padding-top: 10px;
+  margin-top: 12px;
+}
+
+.persona-card__reco strong {
+  color: var(--color-decathlon);
+}
+
+/* ── Crisis Panel ──────────────────────────────────────── */
+.crisis-banner {
+  background: var(--color-background-secondary);
+  border: 2px solid;
+  border-radius: var(--border-radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.crisis-banner__severity {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.crisis-banner__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.crisis-banner__escalating {
+  background: var(--color-background-danger);
+  color: var(--color-text-danger);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.crisis-warnings {
+  margin-bottom: 20px;
+}
+
+.crisis-warning {
+  background: rgba(255, 217, 61, 0.08);
+  border-left: 3px solid var(--color-text-warning);
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--color-text-warning);
+  margin-bottom: 6px;
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+}
+
+/* ── Section headers ───────────────────────────────────── */
+.section-header { margin-bottom: 24px; }
+.section-title { font-size: 18px; color: var(--color-text-primary); margin-bottom: 4px; }
+.section-subtitle { font-size: 13px; color: var(--color-text-tertiary); }

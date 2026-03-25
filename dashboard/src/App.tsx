@@ -7,6 +7,8 @@ import CxPanel from './components/panels/CxPanel'
 import RecoPanel from './components/panels/RecoPanel'
 import SynthesePanel from './components/panels/SynthesePanel'
 import ChatPanel from './components/panels/ChatPanel'
+import PersonasPanel from './components/panels/PersonasPanel'
+import CrisisPanel from './components/panels/CrisisPanel'
 import { useHealth } from './api/client'
 
 function App() {
@@ -19,6 +21,9 @@ function App() {
         <div className="app-header__logo">
           LICTER <span>×</span> Decathlon
         </div>
+        <a href="/api/report/pdf" target="_blank" className="app-header__pdf-btn">
+          Rapport PDF
+        </a>
         <div className="app-header__subtitle">
           Dashboard COMEX — Matrice de Bataille — Mars 2026
           {health?.label && (
@@ -37,6 +42,7 @@ function App() {
         {activeTab === 'cx'       && <CxPanel />}
         {activeTab === 'reco'     && <RecoPanel />}
         {activeTab === 'synthese' && <SynthesePanel />}
+        {activeTab === 'personas' && <PersonasPanel />}
         {activeTab === 'chat'     && <ChatPanel />}
       </main>
     </>
