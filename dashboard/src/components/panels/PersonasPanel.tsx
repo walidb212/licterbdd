@@ -22,7 +22,7 @@ export default function PersonasPanel() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-1">Personas Consommateurs</h2>
+        <h2 className="text-base font-semibold text-[#324DE6] mb-1">Personas Consommateurs</h2>
         <p className="text-xs text-gray-400">Profils synthétiques générés par IA à partir des verbatims clients</p>
       </div>
       <div className="grid grid-cols-3 gap-5">
@@ -69,7 +69,7 @@ export default function PersonasPanel() {
 
             {/* Recommendation */}
             <div className="text-xs text-gray-500 border-t border-gray-100 pt-3 mt-3">
-              <strong className="text-[#0077c8]">Reco :</strong> {p.recommendation}
+              <strong className="text-[#324DE6]">Reco :</strong> {p.recommendation}
             </div>
           </div>
         ))}

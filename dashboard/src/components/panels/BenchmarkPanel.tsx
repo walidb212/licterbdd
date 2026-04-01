@@ -15,9 +15,9 @@ export default function BenchmarkPanel() {
     <div>
       <div className="grid grid-cols-4 gap-4 mb-6">
         <KpiCard label="SoV — Decathlon" value={`${Math.round(kpis.share_of_voice_decathlon * 100)}%`}
-          sub={`${kpis.total_mentions} mentions`} variant={kpis.share_of_voice_decathlon > 0.5 ? 'success' : 'default'} />
+          sub={`${kpis.total_mentions} mentions`} variant="decathlon" />
         <KpiCard label="SoV — Intersport" value={`${Math.round(kpis.share_of_voice_intersport * 100)}%`} />
-        <KpiCard label="Sentiment + Decathlon" value={`${Math.round(kpis.sentiment_decathlon_positive_pct * 100)}%`} variant="success" />
+        <KpiCard label="Sentiment + Decathlon" value={`${Math.round(kpis.sentiment_decathlon_positive_pct * 100)}%`} variant="decathlon" />
         <KpiCard label="Sentiment + Intersport" value={`${Math.round(kpis.sentiment_intersport_positive_pct * 100)}%`} />
       </div>
 
@@ -25,7 +25,7 @@ export default function BenchmarkPanel() {
       <div className="grid grid-cols-2 gap-5 mb-5">
         {(['decathlon', 'intersport'] as const).map(brand => {
           const s = brand_scores[brand]
-          const color = brand === 'decathlon' ? 'text-[#0077c8]' : 'text-[#e8001c]'
+          const color = brand === 'decathlon' ? 'text-[#324DE6]' : 'text-[#e8001c]'
           return (
             <div key={brand} className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
               <div className={`text-[15px] font-bold mb-1 ${color}`}>
@@ -56,11 +56,11 @@ export default function BenchmarkPanel() {
       {/* Charts */}
       <div className="grid grid-cols-2 gap-5">
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Share of Voice mensuel</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Share of Voice mensuel</h3>
           <SovBarChart data={sov_by_month} />
         </div>
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Radar forces / faiblesses</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Radar forces / faiblesses</h3>
           <SentimentRadar data={radar} />
         </div>
       </div>

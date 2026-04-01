@@ -26,11 +26,11 @@ export default function CxPanel() {
 
       <div className="grid grid-cols-2 gap-5 mb-5">
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Note moyenne / mois</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Note moyenne / mois</h3>
           <RatingLineChart data={rating_by_month} />
         </div>
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Distribution des notes</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Distribution des notes</h3>
           <RatingDistBar data={rating_distribution} />
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function CxPanel() {
       <div className="grid grid-cols-2 gap-5">
         {/* Irritants */}
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Top 5 irritants (avis 1-2★)</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Top 5 irritants (avis 1-2★)</h3>
           {irritants.length === 0
             ? <p className="text-gray-400 text-xs">Aucun irritant identifié.</p>
             : irritants.map((item, i) => (
@@ -56,7 +56,7 @@ export default function CxPanel() {
 
         {/* Enchantements + Sources */}
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Top 3 enchantements (avis 5★)</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Top 3 enchantements (avis 5★)</h3>
           {enchantements.length === 0
             ? <p className="text-gray-400 text-xs">Aucun enchantement identifié.</p>
             : enchantements.map((item, i) => (
@@ -73,7 +73,7 @@ export default function CxPanel() {
 
           {sources.length > 0 && (
             <div className="mt-6 pt-4 border-t border-gray-100">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Sources</h3>
+              <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-3">Sources</h3>
               {sources.map((s, i) => (
                 <div key={i} className="flex justify-between items-center mb-1.5 text-xs">
                   {s.url

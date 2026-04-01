@@ -175,7 +175,6 @@ export function ratingByMonth(reviews) {
     if (rating < 1 || rating > 5) continue;
     let d = parseDate(r.published_at);
     if (!d || isNaN(d)) {
-      // Try approximate from date_raw
       const m = (r.date_raw || '').match(/il y a (\d+)\s*(jour|mois|semaine|an)/i);
       if (!m) continue;
       const now = new Date();
@@ -187,16 +186,22 @@ export function ratingByMonth(reviews) {
       else if (unit.includes('an')) { d = new Date(now); d.setFullYear(d.getFullYear() - n); }
       else continue;
     }
-    const key = `${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     if (!monthly[key]) monthly[key] = { decathlon: [], intersport: [] };
     const b = (brand === 'intersport') ? 'intersport' : 'decathlon';
     monthly[key][b].push(rating);
   }
-  const result = Object.entries(monthly).map(([month, brands]) => ({
-    month,
-    decathlon: brands.decathlon.length ? Math.round(brands.decathlon.reduce((a, b) => a + b, 0) / brands.decathlon.length * 100) / 100 : null,
-    intersport: brands.intersport.length ? Math.round(brands.intersport.reduce((a, b) => a + b, 0) / brands.intersport.length * 100) / 100 : null,
-  }));
+  const result = Object.entries(monthly)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, brands]) => {
+      const [year, month] = key.split('-').map(Number);
+      const label = `${MONTHS_FR[month - 1]} ${year}`;
+      return {
+        month: label,
+        decathlon: brands.decathlon.length ? Math.round(brands.decathlon.reduce((a, b) => a + b, 0) / brands.decathlon.length * 100) / 100 : null,
+        intersport: brands.intersport.length ? Math.round(brands.intersport.reduce((a, b) => a + b, 0) / brands.intersport.length * 100) / 100 : null,
+      };
+    });
   return result.slice(-12);
 }
 

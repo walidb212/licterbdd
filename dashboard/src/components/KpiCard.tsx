@@ -1,8 +1,8 @@
 interface KpiCardProps {
-  label: string
+  label: string | React.ReactNode | React.ReactNode
   value: string | number
   sub?: string
-  variant?: 'default' | 'danger' | 'success' | 'warning'
+  variant?: 'default' | 'danger' | 'success' | 'warning' | 'decathlon'
   delta?: number
   deltaLabel?: string
 }
@@ -12,6 +12,7 @@ const VALUE_COLORS = {
   danger: 'text-red-500',
   success: 'text-green-600',
   warning: 'text-amber-500',
+  decathlon: 'text-[#324DE6]',
 }
 
 const BORDER_COLORS = {
@@ -19,12 +20,13 @@ const BORDER_COLORS = {
   danger: 'ring-1 ring-red-100',
   success: '',
   warning: '',
+  decathlon: '',
 }
 
 export default function KpiCard({ label, value, sub, variant = 'default', delta, deltaLabel }: KpiCardProps) {
   return (
     <div className={`bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] px-5 py-4 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 ${BORDER_COLORS[variant]}`}>
-      <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</div>
+      <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">{label}</div>
       <div className="flex items-baseline gap-2">
         <div className={`text-[26px] font-bold leading-none tracking-tight ${VALUE_COLORS[variant]}`}>{value}</div>
         {delta != null && (

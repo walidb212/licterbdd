@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useReputation } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 import AlertBanner from '../AlertBanner'
@@ -21,6 +22,7 @@ const SEV_COLORS: Record<string, string> = { critical: 'text-red-500 border-red-
 export default function ReputationPanel() {
   const { data, isLoading, error } = useReputation()
   const { data: crisis } = useQuery<CrisisData>({ queryKey: ['crisis'], queryFn: () => fetch('/api/crisis').then(r => r.json()) })
+  const [isExpanded, setIsExpanded] = useState(false)
 
   if (isLoading) return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Chargement...</div>
   if (error || !data) return <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-500 text-sm">Erreur de chargement.</div>
@@ -63,12 +65,12 @@ export default function ReputationPanel() {
       <div className="grid grid-cols-3 gap-4 mb-4">
         {/* Volume / jour — 2 cols */}
         <div className="col-span-2 bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5">
-          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Volume / jour</h3>
+          <h3 className="text-[11px] font-semibold text-[#324DE6] uppercase tracking-wide mb-3">Volume / jour</h3>
           <CrisisLineChart data={volume_by_day} />
         </div>
         {/* Plateforme — 1 col */}
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5">
-          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Plateformes</h3>
+          <h3 className="text-[11px] font-semibold text-[#324DE6] uppercase tracking-wide mb-3">Plateformes</h3>
           <PlatformPieChart data={platform_breakdown} />
         </div>
       </div>
@@ -76,7 +78,7 @@ export default function ReputationPanel() {
       {/* Crisis timeline — compact, only last 30 days */}
       {crisis?.timeline && crisis.timeline.length > 0 && (
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 mb-4">
-          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Timeline crise — Volume & Négatif</h3>
+          <h3 className="text-[11px] font-semibold text-[#324DE6] uppercase tracking-wide mb-3">Timeline crise — Volume & Négatif</h3>
           <AreaChart
             data={crisis.timeline.slice(-30).map(d => ({ ...d, date: d.date.slice(5) }))}
             index="date"
@@ -94,7 +96,7 @@ export default function ReputationPanel() {
 
       {top_items.length > 0 && (
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Top signaux prioritaires</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Top signaux prioritaires</h3>
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50">
@@ -106,7 +108,7 @@ export default function ReputationPanel() {
               </tr>
             </thead>
             <tbody>
-              {top_items.map((item, i) => (
+              {(isExpanded ? top_items : top_items.slice(0, 3)).map((item, i) => (
                 <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
                   <td className="px-3 py-2.5 max-w-[360px]">
                     {item.url
@@ -128,6 +130,16 @@ export default function ReputationPanel() {
               ))}
             </tbody>
           </table>
+          {top_items.length > 3 && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="px-4 py-1.5 rounded-full text-[11px] font-bold text-[#324DE6] border border-[#324DE6]/20 hover:bg-[#324DE6]/5 transition-all outline-none"
+              >
+                {isExpanded ? 'VOIR MOINS ↑' : `VOIR LES ${top_items.length - 3} AUTRES ↓`}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
