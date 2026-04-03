@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import AlertBanner from '../AlertBanner'
 import KpiCard from '../KpiCard'
 import { AreaChart } from '@tremor/react'
+import WordCloud from '../../charts/WordCloud'
 
 interface CrisisData {
   timeline: { date: string; volume: number; negative: number; neg_pct: number; is_spike: boolean }[]
@@ -86,6 +87,12 @@ export default function ReputationPanel() {
           className="h-40"
           yAxisWidth={35}
         />
+      </div>
+
+      {/* Word Cloud */}
+      <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 mb-5">
+        <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Thèmes dominants — Word Cloud</h3>
+        <WordCloud />
       </div>
 
       {/* 1 reco COMEX */}

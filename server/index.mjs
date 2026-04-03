@@ -29,6 +29,7 @@ import chatRouter from './routes/chat.mjs';
 import reportRouter from './routes/report.mjs';
 import personasRouter from './routes/personas.mjs';
 import { crisisAnalysis } from './crisis.mjs';
+import { checkAndAlert, sendAlert } from './alerts.mjs';
 
 const PORT = process.env.PORT || 8000;
 
@@ -60,6 +61,93 @@ app.get('/api/health', (req, res) => {
 app.post('/api/ingest', (req, res) => {
   const counts = ingest();
   res.json({ status: 'ok', counts });
+});
+
+// Manual alert trigger
+app.post('/api/alert/test', async (req, res) => {
+  const sent = await sendAlert({
+    type: 'test',
+    severity: 'medium',
+    title: 'Test alerte LICTER',
+    message: 'Ceci est un test du système d\'alertes Make/Slack.',
+    kpis: { gravityScore: 10, volumeTotal: 4995, negPct: 33 },
+  });
+  res.json({ sent });
+});
+
+// Word cloud data
+app.get('/api/wordcloud', async (req, res) => {
+  try {
+    const { getDb, parseJsonCol } = await import('./db.mjs');
+    const db = getDb();
+    const social = db.prepare('SELECT * FROM social_enriched').all().map(r => parseJsonCol(r, 'themes'));
+    const reviews = db.prepare('SELECT * FROM review_enriched').all().map(r => parseJsonCol(r, 'themes'));
+
+    // Count all themes across records
+    const counts = {};
+    for (const r of [...social, ...reviews]) {
+      for (const t of (r.themes || [])) {
+        if (t === 'general_brand_signal') continue;
+        counts[t] = (counts[t] || 0) + 1;
+      }
+    }
+
+    // Also extract frequent words from summaries
+    const stopwords = new Set(['de', 'la', 'le', 'les', 'du', 'des', 'un', 'une', 'et', 'en', 'est', 'que', 'qui', 'pour', 'pas', 'sur', 'au', 'avec', 'ce', 'il', 'son', 'se', 'ne', 'dans', 'plus', 'par', 'je', 'nous', 'vous', 'mais', 'ou', 'a', 'the', 'and', 'to', 'of', 'is', 'in', 'for', 'it', 'on', 'that', 'this', 'was', 'are', 'be', 'has', 'have', 'had', 'not', 'with', 'as', 'at', 'an', 'my', 'their', 'they', 'been', 'from']);
+    for (const r of [...social, ...reviews]) {
+      const text = (r.summary_short || '').toLowerCase();
+      for (const word of text.split(/\s+/)) {
+        const clean = word.replace(/[^a-zàâéèêëïîôùûüç]/g, '');
+        if (clean.length > 3 && !stopwords.has(clean)) {
+          counts[clean] = (counts[clean] || 0) + 1;
+        }
+      }
+    }
+
+    // Sort and return top 80
+    const words = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 80)
+      .map(([text, value]) => ({ text, value }));
+
+    res.json(words);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excel export
+app.get('/api/export/excel', async (_req, res) => {
+  try {
+    const { getDb } = await import('./db.mjs');
+    const db = getDb();
+
+    const social = db.prepare('SELECT * FROM social_enriched').all();
+    const reviews = db.prepare('SELECT * FROM review_enriched').all();
+    const news = db.prepare('SELECT * FROM news_enriched').all();
+
+    // CSV format (Excel-compatible with BOM)
+    const BOM = '\ufeff';
+    const headers = ['source', 'brand', 'sentiment', 'priority', 'themes', 'summary', 'published_at', 'rating'];
+    const rows = [
+      ...social.map(r => [r.source_name, r.brand_focus, r.sentiment_label, r.priority_score, r.themes, r.summary_short, r.published_at, '']),
+      ...reviews.map(r => [r.source_name, r.brand_focus, r.sentiment_label, r.priority_score, r.themes, r.summary_short, r.published_at, r.rating]),
+      ...news.map(r => [r.source_name, r.brand_focus, r.sentiment_label, r.priority_score, r.themes, r.summary_short, r.published_at, '']),
+    ];
+
+    const escape = (v) => {
+      const s = String(v ?? '').replace(/"/g, '""');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+    };
+
+    const csv = BOM + headers.join(',') + '\n' + rows.map(r => r.map(escape).join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="licter-export-${new Date().toISOString().slice(0,10)}.csv"`);
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve React build in production
