@@ -18,7 +18,7 @@ export default function SentimentRadar({ data }: Props) {
           contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
           formatter={(v: unknown) => [`${v}%`]}
         />
-        <Radar name="Decathlon" dataKey="decathlon" stroke="#0077c8" fill="#0077c8" fillOpacity={0.15} strokeWidth={2} />
+        <Radar name="Decathlon" dataKey="decathlon" stroke="#324DE6" fill="#324DE6" fillOpacity={0.15} strokeWidth={2} />
         <Radar name="Intersport" dataKey="intersport" stroke="#e8001c" fill="#e8001c" fillOpacity={0.15} strokeWidth={2} />
         <Legend
           iconType="circle"

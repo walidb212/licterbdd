@@ -15,7 +15,7 @@ export default function RecoPanel() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-1">Recommandations stratégiques</h2>
+        <h2 className="text-base font-semibold text-[#324DE6] mb-1">Recommandations stratégiques</h2>
         <p className="text-xs text-gray-400">Actions prioritaires pour les décideurs COMEX</p>
       </div>
       <div className="grid grid-cols-2 gap-5">

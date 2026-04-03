@@ -15,7 +15,7 @@ export default function SynthesePanel() {
       <div className="grid grid-cols-2 gap-5 mb-5">
         {/* Risks */}
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Top Risques identifiés</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Top Risques identifiés</h3>
           {top_risks.length === 0
             ? <p className="text-gray-400 text-xs">Aucun risque agrégé.</p>
             : top_risks.map((r, i) => (
@@ -28,7 +28,7 @@ export default function SynthesePanel() {
 
         {/* Opportunities */}
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Top Opportunités</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Top Opportunités</h3>
           {top_opportunities.length === 0
             ? <p className="text-gray-400 text-xs">Aucune opportunité agrégée.</p>
             : top_opportunities.map((o, i) => (
@@ -42,7 +42,7 @@ export default function SynthesePanel() {
 
       {entities.length > 0 && (
         <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Entités clés — synthèse IA ({entities.length})</h3>
+          <h3 className="text-xs font-semibold text-[#324DE6] uppercase tracking-wide mb-4">Entités clés — synthèse IA ({entities.length})</h3>
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50">
