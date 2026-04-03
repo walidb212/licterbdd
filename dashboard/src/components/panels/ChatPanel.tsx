@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import Markdown from 'react-markdown'
 
 interface Message { role: 'user' | 'assistant'; content: string }
 
@@ -66,7 +67,9 @@ export default function ChatPanel() {
                 </div>
               </div>
 
-              <div className="whitespace-pre-wrap">{msg.content}</div>
+              <div className="prose prose-sm prose-gray max-w-none [&>ul]:list-disc [&>ul]:pl-4 [&>ol]:list-decimal [&>ol]:pl-4 [&>p]:mb-2 [&>h1]:text-sm [&>h2]:text-sm [&>h3]:text-xs">
+                {msg.role === 'assistant' ? <Markdown>{msg.content}</Markdown> : msg.content}
+              </div>
             </div>
           </div>
         ))}

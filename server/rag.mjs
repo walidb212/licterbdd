@@ -1,7 +1,27 @@
 import { getDb, parseJsonCol } from './db.mjs';
 import { gravityScore, sov, npsProxy, irritants, enchantements } from './kpis.mjs';
 
-const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
+// ── LLM providers (fallback chain) ──────────────────────────
+const PROVIDERS = [
+  {
+    name: 'openai',
+    url: 'https://api.openai.com/v1/chat/completions',
+    keyEnv: 'OPENAI_API_KEY',
+    model: () => process.env.OPENAI_MODEL || 'gpt-4o-mini',
+  },
+  {
+    name: 'mistral',
+    url: 'https://api.mistral.ai/v1/chat/completions',
+    keyEnv: 'MISTRAL_API_KEY',
+    model: () => process.env.MISTRAL_MODEL || 'mistral-small-latest',
+  },
+  {
+    name: 'openrouter',
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    keyEnv: 'OPENROUTER_API_KEY',
+    model: () => process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+  },
+];
 
 function buildContext() {
   const db = getDb();
@@ -107,33 +127,53 @@ export function invalidateRagCache() {
   _contextCache = null;
 }
 
-export async function chat(userMessage, apiKey) {
-  const systemPrompt = getContext();
+async function callLLM(provider, systemPrompt, userMessage) {
+  const apiKey = process.env[provider.keyEnv];
+  if (!apiKey) throw new Error(`${provider.name}: no API key`);
 
-  const payload = {
-    model: process.env.MISTRAL_MODEL || 'mistral-small-latest',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
-    ],
-    max_tokens: 1024,
-    temperature: 0.3,
-  };
-
-  const response = await fetch(MISTRAL_API_URL, {
+  const response = await fetch(provider.url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      model: provider.model(),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 1024,
+      temperature: 0.2,
+    }),
   });
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`Mistral API ${response.status}: ${detail}`);
+    throw new Error(`${provider.name} ${response.status}: ${detail.slice(0, 200)}`);
   }
 
   const data = await response.json();
-  return data.choices?.[0]?.message?.content || 'Pas de réponse.';
+  return data.choices?.[0]?.message?.content || null;
+}
+
+export async function chat(userMessage) {
+  const systemPrompt = getContext();
+  const errors = [];
+
+  for (const provider of PROVIDERS) {
+    if (!process.env[provider.keyEnv]) continue;
+    try {
+      const content = await callLLM(provider, systemPrompt, userMessage);
+      if (content) {
+        console.log(`[chat] ${provider.name} OK`);
+        return content;
+      }
+    } catch (err) {
+      console.warn(`[chat] ${provider.name} failed: ${err.message.slice(0, 100)}`);
+      errors.push(err.message.slice(0, 80));
+    }
+  }
+
+  throw new Error(`All providers failed: ${errors.join(' | ')}`);
 }
