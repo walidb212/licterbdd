@@ -77,6 +77,31 @@ export default function CxPanel() {
         </div>
       </div>
 
+      {/* Parcours client */}
+      {(data as any).parcours_client && (
+        <div className="bg-white rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 mb-5">
+          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-4">Parcours client — Points de friction</h3>
+          <div className="flex items-center justify-between gap-2">
+            {((data as any).parcours_client || []).map((e: {etape: string; note: number; emoji: string}, i: number) => {
+              const color = e.note >= 3.5 ? '#22c55e' : e.note >= 3 ? '#f59e0b' : '#ef4444';
+              const bg = e.note >= 3.5 ? 'bg-green-50' : e.note >= 3 ? 'bg-amber-50' : 'bg-red-50';
+              return (
+                <div key={i} className="flex-1 text-center">
+                  <div className={`${bg} rounded-xl p-3 mb-1`}>
+                    <div className="text-lg mb-0.5">{e.emoji}</div>
+                    <div className="text-[18px] font-bold" style={{ color }}>{e.note}★</div>
+                  </div>
+                  <div className="text-[10px] text-gray-500 font-medium">{e.etape}</div>
+                  {i < ((data as any).parcours_client.length - 1) && (
+                    <div className="absolute right-0 top-1/2 text-gray-300">→</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 1 reco COMEX */}
       <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-xl px-5 py-4">
         <div className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1">Recommandation prioritaire</div>

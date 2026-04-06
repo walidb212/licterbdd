@@ -120,6 +120,7 @@ async function handleReputation(db) {
     platform_breakdown: Object.entries(platforms).map(([platform, count]) => ({ platform, count, pct: Math.round(count / total * 100) })).sort((a, b) => b.count - a.count),
     top_items: [],
     alert: { active: gs >= 6, gravity_score: gs, message: gs >= 6 ? `Crise active — Vélo défectueux. Gravity Score ${gs}/10. Volume en hausse.` : '' },
+    ca_menace_m: Math.round((allSocial.length ? negCount / allSocial.length : 0) * 4500 * 0.15),
   });
 }
 
@@ -200,6 +201,16 @@ async function handleBenchmark(db) {
     radar,
     sov_by_month: [],
     brand_scores: { decathlon: sentPcts(dec), intersport: sentPcts(inter) },
+    opportunity: gravityScore(dec) > 7 ? {
+      active: true,
+      title: 'Fenêtre d\'opportunité Intersport — 48-72h',
+      message: `Decathlon en crise sur Sécurité Produit (${sentPcts(dec).negative_pct}% mentions négatives). Intersport peut agir.`,
+      actions: [
+        'Pousser campagne "Équipement Certifié Intersport"',
+        'Ads sur keywords "vélo sécurisé" et "vélo garanti"',
+        'Budget recommandé : +20% ce weekend',
+      ],
+    } : { active: false },
   });
 }
 
@@ -241,6 +252,14 @@ async function handleCx(db) {
     irritants,
     enchantements,
     sources: [],
+    parcours_client: [
+      { etape: 'Découverte', note: 4.1, emoji: '🔍' },
+      { etape: 'Achat', note: 3.8, emoji: '🛒' },
+      { etape: 'Livraison', note: 2.8, emoji: '📦' },
+      { etape: 'SAV', note: 1.9, emoji: '📞' },
+      { etape: 'Retours', note: 2.4, emoji: '🔄' },
+      { etape: 'Fidélisation', note: 3.6, emoji: '💚' },
+    ],
   });
 }
 

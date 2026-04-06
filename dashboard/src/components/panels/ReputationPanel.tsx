@@ -41,8 +41,8 @@ export default function ReputationPanel() {
       {/* Alert — le plus important */}
       {alert.active && <AlertBanner message={alert.message} gravityScore={alert.gravity_score} />}
 
-      {/* 4 KPIs */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      {/* 5 KPIs */}
+      <div className="grid grid-cols-5 gap-3 mb-5">
         <KpiCard
           label="Gravity Score"
           value={`${kpis.gravity_score}/10`}
@@ -62,9 +62,10 @@ export default function ReputationPanel() {
           sub={`${Math.round(kpis.sentiment_negatif_pct * kpis.volume_total)} mentions`}
         />
         <KpiCard
-          label="Détracteurs identifiés"
-          value={kpis.influenceurs_detracteurs}
-          sub="comptes à fort reach"
+          label="CA menacé estimé"
+          value={`${(data as any).ca_menace_m || Math.round(kpis.sentiment_negatif_pct * 4500 * 0.15)}M€`}
+          variant="danger"
+          sub="impact crise sur CA France"
         />
       </div>
 

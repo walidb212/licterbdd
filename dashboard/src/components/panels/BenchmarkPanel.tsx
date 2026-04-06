@@ -61,7 +61,18 @@ export default function BenchmarkPanel() {
         <SentimentRadar data={radar} />
       </div>
 
-      {/* 1 reco COMEX */}
+      {/* Opportunité concurrentielle */}
+      {(data as any).opportunity?.active && (
+        <div className="bg-green-50 border-l-4 border-green-500 rounded-r-xl px-5 py-4 mb-5">
+          <div className="text-xs font-bold text-green-700 uppercase tracking-wide mb-1">🚀 {(data as any).opportunity.title}</div>
+          <p className="text-sm text-gray-700 mb-2">{(data as any).opportunity.message}</p>
+          <ul className="text-sm text-gray-600 list-disc list-inside">
+            {((data as any).opportunity.actions || []).map((a: string, i: number) => <li key={i}>{a}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {/* Reco COMEX */}
       <div className="bg-amber-50 border-l-4 border-amber-500 rounded-r-xl px-5 py-4">
         <div className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-1">Recommandation stratégique</div>
         <p className="text-sm text-gray-700">
