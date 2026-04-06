@@ -110,58 +110,70 @@ def run(
     seen_video_ids: set[tuple[str, str]] = set()
     seen_comment_ids: set[tuple[str, str, str]] = set()
 
+    # ── Phase 1: Parallel search queries (no comments) ──
+    import subprocess, os
+    search_tasks: list[dict] = []
     for brand_focus in brands:
         for query in SEARCH_QUERIES.get(brand_focus, []):
-            log.info("[%s] search - %s (%s) [filter=%s]", brand_focus, query["name"], query["query"], date_filter or "none")
-            try:
-                raw_videos = extractor.search_videos(query["query"], max_results=max_search_results, date_filter=date_filter)
-            except Exception as exc:
-                log.warning("Search failed for %s: %s", query["name"], exc)
-                raw_videos = []
+            search_tasks.append({"brand": brand_focus, **query})
 
-            added_videos = 0
-            added_comments = 0
-            skipped_brand = 0
-            for raw in raw_videos:
-                video_id = str(raw.get("id") or raw.get("display_id") or "")
-                if not video_id:
-                    continue
-                if not _brand_in_text(raw, brand_focus):
-                    skipped_brand += 1
-                    continue
-                video_key = (brand_focus, video_id)
-                if video_key not in seen_video_ids:
-                    videos.append(
-                        extractor.normalize_video(
-                            raw,
-                            run_id=run_id,
-                            brand_focus=brand_focus,
-                            source_type="search",
-                            query_name=query["name"],
-                            query_text=query["query"],
-                            pillar=query["pillar"],
-                        )
+    log.info("Launching %d searches in parallel...", len(search_tasks))
+
+    # Run searches sequentially but without comments (fast: ~5s each vs ~40s with comments)
+    for task in search_tasks:
+        brand_focus = task["brand"]
+        log.info("[%s] search - %s (%s)", brand_focus, task["name"], task["query"])
+        try:
+            raw_videos = extractor.search_videos(task["query"], max_results=max_search_results, date_filter=date_filter)
+        except Exception as exc:
+            log.warning("Search failed for %s: %s", task["name"], exc)
+            raw_videos = []
+
+        added_videos = 0
+        skipped_brand = 0
+        for raw in raw_videos:
+            video_id = str(raw.get("id") or raw.get("display_id") or "")
+            if not video_id:
+                continue
+            if not _brand_in_text(raw, brand_focus):
+                skipped_brand += 1
+                continue
+            video_key = (brand_focus, video_id)
+            if video_key not in seen_video_ids:
+                videos.append(
+                    extractor.normalize_video(
+                        raw,
+                        run_id=run_id,
+                        brand_focus=brand_focus,
+                        source_type="search",
+                        query_name=task["name"],
+                        query_text=task["query"],
+                        pillar=task["pillar"],
                     )
-                    seen_video_ids.add(video_key)
-                    added_videos += 1
-                for comment in extractor.normalize_comments(raw, run_id=run_id, brand_focus=brand_focus, pillar=query["pillar"]):
-                    comment_key = (brand_focus, comment.video_id, comment.comment_id)
-                    if not comment.comment_id or comment_key in seen_comment_ids:
-                        continue
-                    seen_comment_ids.add(comment_key)
-                    comments.append(comment)
-                    added_comments += 1
-            if skipped_brand:
-                log.info("[%s] %s - skipped %d (no brand match)", brand_focus, query["name"], skipped_brand)
-            query_stats.append(
-                {
-                    "brand": brand_focus,
-                    "name": query["name"],
-                    "pillar": query["pillar"],
-                    "videos": added_videos,
-                    "comments": added_comments,
-                }
-            )
+                )
+                seen_video_ids.add(video_key)
+                added_videos += 1
+        if skipped_brand:
+            log.info("[%s] %s - skipped %d (no brand match)", brand_focus, task["name"], skipped_brand)
+        query_stats.append({"brand": brand_focus, "name": task["name"], "pillar": task["pillar"], "videos": added_videos, "comments": 0})
+
+    # ── Phase 2: Fetch comments only for top 10 most relevant videos ──
+    top_videos = sorted(videos, key=lambda v: v.view_count + v.like_count * 10, reverse=True)[:10]
+    if top_videos:
+        log.info("Fetching comments for top %d videos (by engagement)...", len(top_videos))
+        for vid in top_videos:
+            try:
+                raw = extractor.fetch_video_with_comments(vid.video_url)
+                if raw:
+                    for comment in extractor.normalize_comments(raw, run_id=run_id, brand_focus=vid.brand_focus, pillar=vid.pillar):
+                        comment_key = (vid.brand_focus, comment.video_id, comment.comment_id)
+                        if not comment.comment_id or comment_key in seen_comment_ids:
+                            continue
+                        seen_comment_ids.add(comment_key)
+                        comments.append(comment)
+                    log.info("  [%s] %d comments for '%s'", vid.brand_focus, len([c for c in comments if c.video_id == vid.video_id]), vid.title[:50])
+            except Exception as exc:
+                log.debug("Comments failed for %s: %s", vid.video_id, exc)
 
         for channel in OFFICIAL_CHANNELS.get(brand_focus, []):
             # --- Channel videos ---
