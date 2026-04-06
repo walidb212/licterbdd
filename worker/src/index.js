@@ -413,6 +413,86 @@ Réponds en JSON: { "personas": [...] }`;
   } catch { return json({ personas: [] }); }
 }
 
+// ── MCP Remote Server (SSE for claude.ai) ────────────────────
+const MCP_TOOLS = [
+  { name: 'get_brand_kpis', description: 'Get KPIs: Share of Voice, sentiment, NPS proxy, Gravity Score for Decathlon or Intersport', inputSchema: { type: 'object', properties: { brand: { type: 'string', enum: ['decathlon', 'intersport'], default: 'decathlon' } } } },
+  { name: 'search_mentions', description: 'Search brand mentions by keyword across all 13 data sources', inputSchema: { type: 'object', properties: { keyword: { type: 'string', description: 'e.g. SAV, velo, boycott' }, brand: { type: 'string', enum: ['decathlon', 'intersport', ''] }, limit: { type: 'number', default: 10 } }, required: ['keyword'] } },
+  { name: 'get_crisis_alerts', description: 'Get active crisis alerts with severity, timeline, and Gravity Score', inputSchema: { type: 'object', properties: {} } },
+  { name: 'compare_brands', description: 'Compare Decathlon vs Intersport on a topic (prix, sav, qualite, all)', inputSchema: { type: 'object', properties: { topic: { type: 'string', default: 'all' } } } },
+  { name: 'get_top_irritants', description: 'Get top customer irritants from negative reviews', inputSchema: { type: 'object', properties: { limit: { type: 'number', default: 5 } } } },
+  { name: 'get_trending_topics', description: 'Get emerging trends detected in brand monitoring data', inputSchema: { type: 'object', properties: {} } },
+  { name: 'get_influencers', description: 'Get top influencers classified as ambassador/neutral/detractor', inputSchema: { type: 'object', properties: { limit: { type: 'number', default: 10 } } } },
+  { name: 'get_content_strategy', description: 'AI comparison of Decathlon vs Intersport content strategy', inputSchema: { type: 'object', properties: {} } },
+];
+
+async function handleMcpToolCall(toolName, args, db, env) {
+  const baseUrl = 'https://licter-api.sales-bwcapital.workers.dev';
+  const f = async (ep) => { const r = await fetch(baseUrl + ep); return r.json(); };
+
+  switch (toolName) {
+    case 'get_brand_kpis': {
+      const [rep, bench, cx] = await Promise.all([f('/api/reputation'), f('/api/benchmark'), f('/api/cx')]);
+      return JSON.stringify({ gravity_score: rep.kpis.gravity_score, volume: rep.kpis.volume_total, neg_pct: Math.round(rep.kpis.sentiment_negatif_pct * 100) + '%', sov_decathlon: Math.round(bench.kpis.share_of_voice_decathlon * 100) + '%', sov_intersport: Math.round(bench.kpis.share_of_voice_intersport * 100) + '%', nps: cx.kpis.nps_proxy, avg_rating: cx.kpis.avg_rating, alert: rep.alert.message });
+    }
+    case 'search_mentions': {
+      const kw = args.keyword || '';
+      const brand = args.brand || '';
+      const limit = args.limit || 10;
+      const rows = (await db.prepare(`SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? ${brand ? 'AND brand_focus = ?' : ''} ORDER BY priority_score DESC LIMIT ?`).bind(...(brand ? [`%${kw}%`, brand, limit] : [`%${kw}%`, limit])).all()).results || [];
+      return JSON.stringify({ keyword: kw, count: rows.length, mentions: rows.map(r => ({ source: r.source_name, brand: r.brand_focus, sentiment: r.sentiment_label, priority: r.priority_score, text: r.summary_short, date: r.published_at, topic: r.topic })) });
+    }
+    case 'get_crisis_alerts': {
+      const [crisis, rep] = await Promise.all([f('/api/crisis'), f('/api/reputation')]);
+      return JSON.stringify({ gravity_score: rep.kpis.gravity_score, severity: crisis.severity, escalating: crisis.is_escalating, avg_daily: crisis.avg_daily_volume, peak: crisis.peak_day, warnings: crisis.warnings, timeline_7d: (crisis.timeline || []).slice(-7) });
+    }
+    case 'compare_brands': {
+      const bench = await f('/api/benchmark');
+      return JSON.stringify({ sov: { decathlon: Math.round(bench.kpis.share_of_voice_decathlon * 100) + '%', intersport: Math.round(bench.kpis.share_of_voice_intersport * 100) + '%' }, brand_scores: bench.brand_scores, radar: bench.radar, total: bench.kpis.total_mentions });
+    }
+    case 'get_top_irritants': {
+      const cx = await f('/api/cx');
+      return JSON.stringify({ nps: cx.kpis.nps_proxy, avg_rating: cx.kpis.avg_rating, irritants: cx.irritants, enchantements: cx.enchantements });
+    }
+    case 'get_trending_topics': return JSON.stringify(await f('/api/trending'));
+    case 'get_influencers': {
+      const inf = await f('/api/influencers');
+      return JSON.stringify(inf.slice(0, args.limit || 10));
+    }
+    case 'get_content_strategy': return JSON.stringify(await f('/api/content-compare'));
+    default: return JSON.stringify({ error: 'Unknown tool' });
+  }
+}
+
+function mcpJsonRpcResponse(id, result) {
+  return JSON.stringify({ jsonrpc: '2.0', id, result });
+}
+
+async function handleMcpRequest(request, db, env) {
+  // Handle SSE transport for claude.ai
+  const body = await request.json();
+  const { method, id, params } = body;
+
+  let result;
+  switch (method) {
+    case 'initialize':
+      result = { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'LICTER Brand Intelligence', version: '1.0.0' } };
+      break;
+    case 'tools/list':
+      result = { tools: MCP_TOOLS };
+      break;
+    case 'tools/call':
+      const content = await handleMcpToolCall(params.name, params.arguments || {}, db, env);
+      result = { content: [{ type: 'text', text: content }] };
+      break;
+    default:
+      result = {};
+  }
+
+  return new Response(mcpJsonRpcResponse(id, result), {
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  });
+}
+
 // ── Main ─────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
@@ -422,6 +502,11 @@ export default {
 
     const db = env.DB;
     try {
+      // MCP endpoint
+      if (path === '/mcp' && request.method === 'POST') return handleMcpRequest(request, db, env);
+      if (path === '/mcp') return json({ name: 'LICTER Brand Intelligence MCP', version: '1.0.0', tools: MCP_TOOLS.length, endpoint: 'POST /mcp' });
+
+      // API endpoints
       if (path === '/api/health') return handleHealth();
       if (path === '/api/reputation') return handleReputation(db);
       if (path === '/api/benchmark') return handleBenchmark(db);
