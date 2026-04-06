@@ -157,7 +157,7 @@ def run(
             log.info("[%s] %s - skipped %d (no brand match)", brand_focus, task["name"], skipped_brand)
         query_stats.append({"brand": brand_focus, "name": task["name"], "pillar": task["pillar"], "videos": added_videos, "comments": 0})
 
-    # ── Phase 2: Fetch comments only for top 10 most relevant videos ──
+    # ── Phase 2: Fetch comments for top 10 + transcripts for spoken videos ──
     top_videos = sorted(videos, key=lambda v: v.view_count + v.like_count * 10, reverse=True)[:10]
     if top_videos:
         log.info("Fetching comments for top %d videos (by engagement)...", len(top_videos))
@@ -174,6 +174,58 @@ def run(
                     log.info("  [%s] %d comments for '%s'", vid.brand_focus, len([c for c in comments if c.video_id == vid.video_id]), vid.title[:50])
             except Exception as exc:
                 log.debug("Comments failed for %s: %s", vid.video_id, exc)
+
+    # ── Phase 3: Transcripts for spoken videos (>60s, likely has speech) ──
+    spoken_videos = [v for v in top_videos if v.duration_seconds > 60] if top_videos else []
+    transcripts: list[dict] = []
+    if spoken_videos:
+        log.info("Transcribing top %d spoken videos via Groq/Whisper...", min(len(spoken_videos), 5))
+        for vid in spoken_videos[:5]:
+            try:
+                import subprocess as _sp
+                import os as _os
+                groq_key = _os.environ.get("GROQ_API_KEY", "")
+                openai_key = _os.environ.get("OPENAI_API_KEY", "")
+                if not groq_key and not openai_key:
+                    break
+                # Download audio
+                audio_path = f"data/temp_audio/{vid.video_id}.mp3"
+                _os.makedirs("data/temp_audio", exist_ok=True)
+                _sp.run([sys.executable, "-m", "yt_dlp", "-x", "--audio-format", "mp3", "--audio-quality", "5", "-o", audio_path, vid.video_url],
+                        capture_output=True, text=True, timeout=30)
+                # Find actual file
+                for fn in _os.listdir("data/temp_audio"):
+                    if vid.video_id in fn:
+                        audio_path = f"data/temp_audio/{fn}"
+                        break
+                if not _os.path.exists(audio_path):
+                    continue
+                if _os.path.getsize(audio_path) > 25 * 1024 * 1024:
+                    _os.remove(audio_path)
+                    continue
+                # Whisper via curl (Groq or OpenAI)
+                api_url = "https://api.groq.com/openai/v1/audio/transcriptions" if groq_key else "https://api.openai.com/v1/audio/transcriptions"
+                api_key = groq_key or openai_key
+                model = "whisper-large-v3" if groq_key else "whisper-1"
+                result = _sp.run(["curl", "-sf", "-X", "POST", api_url,
+                    "-H", f"Authorization: Bearer {api_key}",
+                    "-F", f"file=@{audio_path}", "-F", f"model={model}",
+                    "-F", "language=fr", "-F", "response_format=text"],
+                    capture_output=True, text=True, timeout=60)
+                _os.remove(audio_path)
+                transcript = result.stdout.strip()
+                if transcript and len(transcript) > 20:
+                    transcripts.append({
+                        "video_id": vid.video_id,
+                        "video_url": vid.video_url,
+                        "brand_focus": vid.brand_focus,
+                        "title": vid.title,
+                        "transcript": transcript,
+                        "chars": len(transcript),
+                    })
+                    log.info("  [transcript] %s: %d chars", vid.title[:40], len(transcript))
+            except Exception as exc:
+                log.debug("Transcript failed for %s: %s", vid.video_id, exc)
 
         for channel in OFFICIAL_CHANNELS.get(brand_focus, []):
             # --- Channel videos ---
@@ -238,6 +290,9 @@ def run(
 
     _write_jsonl(run_dir / "videos.jsonl", videos)
     _write_jsonl(run_dir / "comments.jsonl", comments)
+    if transcripts:
+        _write_jsonl(run_dir / "transcripts.jsonl", transcripts)
+        log.info("Saved %d transcripts (%d total chars)", len(transcripts), sum(t["chars"] for t in transcripts))
     (run_dir / "results.md").write_text(
         _build_results_markdown(
             run_id=run_id,
