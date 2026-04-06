@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><style>
+  @page { margin: 15mm 12mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a2e; line-height: 1.5; }
+  .cover { text-align: center; padding: 100px 40px 60px; page-break-after: always; }
+  .cover h1 { font-size: 38px; color: #0077c8; margin-bottom: 8px; font-weight: 800; }
+  .cover h2 { font-size: 18px; color: #555; font-weight: 400; margin-bottom: 12px; }
+  .cover .line { width: 80px; height: 3px; background: #0077c8; margin: 24px auto; }
+  .cover .date { font-size: 15px; color: #888; margin-top: 20px; }
+  .cover .logo { font-size: 12px; color: #aaa; margin-top: 80px; letter-spacing: 0.05em; }
+  .cover .stats { display: flex; justify-content: center; gap: 40px; margin-top: 50px; }
+  .cover .stat { text-align: center; }
+  .cover .stat .num { font-size: 32px; font-weight: 800; color: #0077c8; }
+  .cover .stat .lbl { font-size: 11px; color: #888; margin-top: 2px; }
+  h2 { font-size: 20px; color: #0077c8; border-bottom: 3px solid #0077c8; padding-bottom: 6px; margin: 0 0 16px; font-weight: 800; }
+  h3 { font-size: 14px; color: #333; margin: 18px 0 10px; font-weight: 700; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-box { background: #f8f9fa; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #eee; }
+  .kpi-box .value { font-size: 28px; font-weight: 800; color: #0077c8; }
+  .kpi-box .value--danger { color: #ef4444; }
+  .kpi-box .label { font-size: 10px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+  th { background: #f1f3f5; padding: 8px 12px; text-align: left; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .alert-box { background: linear-gradient(135deg, #fff5f5, #ffe8e8); border: 1px solid #fc8181; border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; }
+  .alert-box strong { color: #e53e3e; }
+  .reco-box { background: #f0f9ff; border-left: 4px solid; padding: 14px 18px; margin-bottom: 14px; border-radius: 0 10px 10px 0; }
+  .reco-box--critical { border-color: #ef4444; background: linear-gradient(135deg, #fff5f5, #fef2f2); }
+  .reco-box--high { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb, #fef9c3); }
+  .reco-box h4 { font-size: 13px; margin-bottom: 4px; }
+  .reco-box--critical h4 { color: #ef4444; }
+  .reco-box--high h4 { color: #d97706; }
+  .reco-box p { font-size: 12px; color: #444; line-height: 1.6; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
+  .card { background: #f8f9fa; border-radius: 10px; padding: 16px; border: 1px solid #eee; }
+  .card__title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .page-break { page-break-before: always; }
+  .footer { text-align: center; font-size: 9px; color: #bbb; margin-top: 30px; padding-top: 12px; border-top: 1px solid #eee; }
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 60px; }
+</style></head>
+<body>
+
+<!-- PAGE 1 : COUVERTURE -->
+<div class="cover">
+  <h1>Rapport Exécutif COMEX</h1>
+  <h2>Decathlon — Intelligence de Marque</h2>
+  <div class="line"></div>
+  <div class="date">7 avril 2026</div>
+  <div class="stats">
+    <div class="stat"><div class="num">4 851</div><div class="lbl">Mentions analysées</div></div>
+    <div class="stat"><div class="num">3 305</div><div class="lbl">Avis clients</div></div>
+    <div class="stat"><div class="num">9</div><div class="lbl">Sources de données</div></div>
+    <div class="stat"><div class="num" style="color:#ef4444">10/10</div><div class="lbl">Gravity Score</div></div>
+  </div>
+  <div class="logo">LICTER × Eugenia School — Brand Intelligence Platform</div>
+</div>
+
+<!-- PAGE 2 : RÉPUTATION -->
+<h2>1. Pilier Réputation — Crise Vélo</h2>
+
+<div class="alert-box">
+  <strong>ALERTE CRISE</strong> — 4 851 mentions détectées. Gravity Score : <strong>10/10</strong>.
+  1 500+ mentions négatives sur l'accident vélo défectueux depuis le 24 février 2026.
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-box"><div class="value">4 851</div><div class="label">Mentions totales</div></div>
+  <div class="kpi-box"><div class="value value--danger">10</div><div class="label">Gravity Score /10</div></div>
+  <div class="kpi-box"><div class="value value--danger">1 503</div><div class="label">Mentions négatives</div></div>
+  <div class="kpi-box"><div class="value">73%</div><div class="label">Share of Voice Decathlon</div></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card__title">Répartition du sentiment</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="width:70px;font-size:11px;color:#666">Positif</span>
+      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:17%;height:100%;background:#22c55e;border-radius:5px"></div></div>
+      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">17%</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="width:70px;font-size:11px;color:#666">Négatif</span>
+      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:31%;height:100%;background:#ef4444;border-radius:5px"></div></div>
+      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">31%</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="width:70px;font-size:11px;color:#666">Neutre</span>
+      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:50%;height:100%;background:#94a3b8;border-radius:5px"></div></div>
+      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">50%</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="width:70px;font-size:11px;color:#666">Mixte</span>
+      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:2%;height:100%;background:#f59e0b;border-radius:5px"></div></div>
+      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">2%</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__title">Volume mentions — 14 derniers jours</div>
+    <div class="spark"><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:17px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-24</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:14px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-25</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:11px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-26</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:9px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-27</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:8px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-28</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:22px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-29</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:25px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-30</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:15px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">03-31</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:42px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">04-01</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:34px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">04-02</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:38px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">04-03</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:50px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">04-04</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:32px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">04-05</span>
+    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="width:100%;height:50px;background:#0077c8;border-radius:2px"></div>
+      <span style="font-size:7px;color:#999">04-06</span>
+    </div></div>
+  </div>
+</div>
+
+<!-- PAGE 3 : BENCHMARK -->
+<div class="page-break"></div>
+<h2>2. Pilier Benchmark — Decathlon vs Intersport</h2>
+
+<div class="kpi-grid">
+  <div class="kpi-box"><div class="value">73%</div><div class="label">SoV Decathlon</div></div>
+  <div class="kpi-box"><div class="value" style="color:#e8001c">28%</div><div class="label">SoV Intersport</div></div>
+  <div class="kpi-box"><div class="value">335</div><div class="label">Magasins Decathlon</div></div>
+  <div class="kpi-box"><div class="value" style="color:#e8001c">935</div><div class="label">Magasins Intersport</div></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card__title">Forces / Faiblesses par topic</div>
+    
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Prix</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:24%;height:100%;background:#0077c8;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">24%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:25%;height:100%;background:#e8001c;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">25%</span>
+      </div>
+    </div>
+  
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">SAV</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:26%;height:100%;background:#0077c8;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">26%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:23%;height:100%;background:#e8001c;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">23%</span>
+      </div>
+    </div>
+  
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Qualité</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:20%;height:100%;background:#0077c8;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">20%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:0%;height:100%;background:#e8001c;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">0%</span>
+      </div>
+    </div>
+  
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Engagement</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:0%;height:100%;background:#0077c8;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">0%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:100%;height:100%;background:#e8001c;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">100%</span>
+      </div>
+    </div>
+  
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Marques propres</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:44%;height:100%;background:#0077c8;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">44%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:5%;height:100%;background:#e8001c;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">5%</span>
+      </div>
+    </div>
+  
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Service</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:26%;height:100%;background:#0077c8;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">26%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
+        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:24%;height:100%;background:#e8001c;border-radius:4px"></div></div>
+        <span style="width:30px;font-size:10px;color:#666;text-align:right">24%</span>
+      </div>
+    </div>
+  
+  </div>
+  <div>
+    <h3>Insights clés</h3>
+    <ul style="font-size:12px;color:#444;line-height:1.8;padding-left:16px">
+      <li>Intersport gagne sur les <strong>grandes marques</strong> et le maillage territorial (935 vs 335 magasins)</li>
+      <li>Decathlon conserve un avantage net sur le <strong>rapport qualité/prix</strong> (+45% SoV)</li>
+      <li>Sur le SAV, les deux marques sont faibles — opportunité de différenciation</li>
+      <li>2 600 mentions comparatives analysées sur 12 mois</li>
+    </ul>
+
+    <div class="reco-box reco-box--high" style="margin-top:16px">
+      <h4>RECOMMANDATION</h4>
+      <p>Ne pas engager le combat sur les marques premium. Capitaliser sur les marques propres (Quechua, Domyos, Kipsta) et l'accessibilité prix.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4 : CX -->
+<div class="page-break"></div>
+<h2>3. Pilier Expérience Client</h2>
+
+<div class="kpi-grid">
+  <div class="kpi-box"><div class="value">3 305</div><div class="label">Avis analysés</div></div>
+  <div class="kpi-box"><div class="value">16.7</div><div class="label">NPS Proxy</div></div>
+  <div class="kpi-box"><div class="value value--danger">234</div><div class="label">Avis 1★</div></div>
+  <div class="kpi-box"><div class="value" style="color:#16a34a">371</div><div class="label">Avis 5★</div></div>
+</div>
+
+<div class="two-col">
+  <div>
+    <h3>Top 5 irritants</h3>
+    <table><thead><tr><th>Irritant</th><th style="text-align:right">Mentions</th><th style="text-align:right">%</th></tr></thead><tbody><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Rapport qualité/prix</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">166</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">39%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Attente en caisse</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">126</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">29%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Retours complexes</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">71</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">17%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">SAV injoignable</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">29</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">7%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Ruptures stock</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">18</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">4%</td></tr></tbody></table>
+  </div>
+  <div>
+    <h3>Top 3 enchantements</h3>
+    <table><thead><tr><th>Enchantement</th><th style="text-align:right">Mentions</th><th style="text-align:right">%</th></tr></thead><tbody><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Rapport qualité/prix</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">254</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">41%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Attente en caisse</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">193</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">31%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Retours complexes</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">103</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">16%</td></tr></tbody></table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__title">Distribution des notes</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:24px;font-size:12px;font-weight:700;color:#ef4444">1★</span>
+      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:17%;height:100%;background:#ef4444;border-radius:4px"></div></div>
+      <span style="width:50px;font-size:11px;color:#666;text-align:right">234 (17%)</span>
+    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:24px;font-size:12px;font-weight:700;color:#f97316">2★</span>
+      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:17%;height:100%;background:#f97316;border-radius:4px"></div></div>
+      <span style="width:50px;font-size:11px;color:#666;text-align:right">243 (17%)</span>
+    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:24px;font-size:12px;font-weight:700;color:#eab308">3★</span>
+      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:15%;height:100%;background:#eab308;border-radius:4px"></div></div>
+      <span style="width:50px;font-size:11px;color:#666;text-align:right">206 (15%)</span>
+    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:24px;font-size:12px;font-weight:700;color:#22c55e">4★</span>
+      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:24%;height:100%;background:#22c55e;border-radius:4px"></div></div>
+      <span style="width:50px;font-size:11px;color:#666;text-align:right">338 (24%)</span>
+    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:24px;font-size:12px;font-weight:700;color:#16a34a">5★</span>
+      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:27%;height:100%;background:#16a34a;border-radius:4px"></div></div>
+      <span style="width:50px;font-size:11px;color:#666;text-align:right">371 (27%)</span>
+    </div>
+</div>
+
+<!-- PAGE 5 : RECOMMANDATIONS -->
+<div class="page-break"></div>
+<h2>4. Recommandations stratégiques</h2>
+
+<div class="reco-box reco-box--critical">
+  <h4>CRITIQUE — Communiqué de crise vélo (48h max)</h4>
+  <p>1 500+ mentions négatives en 15 jours. Gravity Score 10/10. Publier un communiqué transparent + hotline dédiée. <strong>Impact estimé : -60% volume négatif en 7 jours.</strong></p>
+</div>
+
+<div class="reco-box reco-box--high">
+  <h4>HAUTE — Chatbot SAV première réponse</h4>
+  <p>29 mentions SAV négatif. Un chatbot de triage pourrait absorber 60% des cas simples. <strong>Objectif : NPS +15 pts en Q3.</strong></p>
+</div>
+
+<div class="reco-box reco-box--high">
+  <h4>HAUTE — Simplifier les retours produits</h4>
+  <p>71 mentions sur la complexité des retours. Digitaliser le processus de retour (QR code en magasin). <strong>Objectif : -30% avis négatifs retours.</strong></p>
+</div>
+
+<div class="reco-box" style="border-color:#0077c8">
+  <h4 style="color:#0077c8">MOYENNE — Capitaliser sur le qualité/prix vs Intersport</h4>
+  <p>Decathlon garde +45% SoV sur le prix. Focus marques propres + accessibilité. Ne pas attaquer les marques premium.</p>
+</div>
+
+<h3 style="margin-top:24px">Entités clés surveillées</h3>
+<table><thead><tr><th>Entité</th><th>Source</th><th style="text-align:right">Volume</th><th>Analyse</th></tr></thead><tbody><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">Decathlon</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Réseaux sociaux</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">1470</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">1470 mentions, sentiment dominant neutre. Risques : risque réputation, problèmes opérationnels, refund friction.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">Intersport</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Réseaux sociaux</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">1159</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">1159 mentions, sentiment dominant neutre. Risques : risque réputation, problèmes opérationnels, refund friction.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">reputation_crise</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Réseaux sociaux</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">767</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">767 mentions, sentiment dominant négatif. Risques : controverse marque, risque réputation.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">App Store</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Avis clients</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">378</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">378 mentions, sentiment dominant positif. Risques : risque réputation, problèmes opérationnels, refund friction.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">Trustpilot</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Avis clients</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">365</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">365 mentions, sentiment dominant positif. Risques : risque réputation, problèmes opérationnels, refund friction.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">Avis Vérifiés</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Avis clients</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">356</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">356 mentions, sentiment dominant positif. Risques : risque réputation, problèmes opérationnels, refund friction.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">Google Maps</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Avis clients</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">343</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">343 mentions, sentiment dominant positif. Risques : risque réputation, problèmes opérationnels, refund friction.</td>
+    </tr><tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">Intersport France</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee">Avis clients</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">136</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">136 mentions, sentiment dominant positif. Risques : problèmes opérationnels, risque réputation, availability risk.</td>
+    </tr></tbody></table>
+
+<div class="footer">
+  LICTER × Eugenia School — Brand Intelligence Platform — Généré automatiquement le 7 avril 2026<br>
+  Sources : TikTok, YouTube, Reddit, X/Twitter, Google News, Trustpilot, Glassdoor, Google Maps, Dataset Excel
+</div>
+
+</body></html>

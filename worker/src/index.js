@@ -558,6 +558,9 @@ export default {
       if (path === '/api/content-compare') return handleContentCompare(db, env);
       if (path === '/api/personas') return handlePersonas(db, env);
       if (path === '/api/chat' && request.method === 'POST') return handleChat(db, env, await request.json());
+      if (path === '/api/report/pdf') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.pdf', 302);
+      if (path === '/api/report/html') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.html', 302);
+      if (path === '/api/export/excel') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.pdf', 302); // TODO: generate CSV
       return json({ error: 'Not found' }, 404);
     } catch (err) {
       return json({ error: err.message }, 500);
