@@ -30,6 +30,9 @@ import reportRouter from './routes/report.mjs';
 import personasRouter from './routes/personas.mjs';
 import { crisisAnalysis } from './crisis.mjs';
 import { checkAndAlert, sendAlert } from './alerts.mjs';
+import { detectTrends, enrichTrendsWithLLM } from './trending.mjs';
+import { discoverSources } from './autodiscover.mjs';
+import { startEvent, stopEvent, getEventStatus } from './eventmode.mjs';
 
 const PORT = process.env.PORT || 8000;
 
@@ -148,6 +151,39 @@ app.get('/api/export/excel', async (_req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Trending Opportunity ──
+app.get('/api/trending', async (req, res) => {
+  try {
+    let trends = detectTrends();
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey && req.query.enrich === 'true') {
+      trends = await enrichTrendsWithLLM(trends, apiKey);
+    }
+    res.json(trends);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Auto-Discovery ──
+app.get('/api/autodiscover', (_req, res) => {
+  try {
+    res.json(discoverSources());
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Event Mode ──
+app.post('/api/event/start', (req, res) => {
+  const result = startEvent(req.body || {});
+  res.json(result);
+});
+
+app.post('/api/event/stop', (_req, res) => {
+  res.json(stopEvent());
+});
+
+app.get('/api/event/status', (_req, res) => {
+  res.json(getEventStatus());
 });
 
 // Serve React build in production
