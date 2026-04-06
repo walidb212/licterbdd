@@ -114,6 +114,8 @@ _OUTPUT_ROOTS = {
     "tiktok_monitor": (Path("data/tiktok_runs"), "results.md"),
     "x_monitor": (Path("data/x_runs"), "results.md"),
     "instagram_monitor": (Path("data/instagram_runs"), "results.md"),
+    "facebook_monitor": (Path("data/facebook_runs"), "results.md"),
+    "facebook_ads_monitor": (Path("data/facebook_ads_runs"), "results.md"),
     "context_monitor": (Path("data/context_runs"), "results.md"),
     "product_monitor": (Path("data/product_runs"), "results.md"),
     "global_summary": (Path("data/global_runs"), "global_summary.md"),
@@ -139,6 +141,8 @@ def build_default_steps(*, brand: str, state_db: str, clix_bin: str) -> list[Ste
         StepConfig("youtube_monitor", "youtube_monitor", ("--brand", brand, "--max-search-results", "10"), 1800, 1),
         StepConfig("tiktok_monitor", "tiktok_monitor", ("--brand", brand, "--max-items-per-source", "10"), 1800, 1),
         StepConfig("instagram_monitor", "instagram_monitor", ("--brand", brand), 300, 0),
+        StepConfig("facebook_monitor", "facebook_monitor", ("--brand", brand), 600, 0, optional=True),
+        StepConfig("facebook_ads_monitor", "facebook_ads_monitor", ("--brand", brand, "--max-ads", "20"), 300, 0, optional=True),
         StepConfig("x_monitor", "x_monitor", ("--brand", brand, "--clix-bin", clix_bin), 1800, 0, optional=True),
         StepConfig("context_monitor", "context_monitor", ("--brand", brand, "--document-types", "all", "--incremental", "true", "--state-db", state_db), 3600, 0),
         StepConfig("product_monitor", "product_monitor", ("--brand", brand, "--max-products-per-brand", "20", "--incremental", "true", "--state-db", state_db), 3600, 0, optional=True),
@@ -225,6 +229,7 @@ def _run_step(step: StepConfig, *, artifact_dir: Path, env: dict[str, str]) -> S
 _PARALLEL_GROUP = {
     "news_monitor", "reddit_monitor", "youtube_monitor",
     "tiktok_monitor", "x_monitor", "instagram_monitor", "context_monitor",
+    "facebook_monitor", "facebook_ads_monitor",
 }
 # Steps that MUST run after parallel group (depend on scraper outputs)
 _SEQUENTIAL_AFTER = {"global_summary", "ai_batch"}
