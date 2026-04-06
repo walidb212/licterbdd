@@ -922,6 +922,26 @@ def _enrich_partition(
     if not records:
         return []
 
+    # ── Optimization: skip rated records (heuristic is 95%+ accurate with rating) ──
+    rated_records = []
+    unrated_records = []
+    for r in records:
+        if r.rating is not None and r.rating > 0:
+            rated_records.append(r)
+        else:
+            unrated_records.append(r)
+
+    rated_enriched = []
+    if rated_records:
+        rated_enriched = [_heuristic_enrichment(r, run_id=run_id, provider="heuristic_rated", model="rating_based") for r in rated_records]
+        log.info("%s: %d/%d records with rating → heuristic (skip API)", partition_name, len(rated_records), len(records))
+
+    if not unrated_records:
+        return rated_enriched
+
+    # Continue with unrated records only
+    records = unrated_records
+
     # --- Mistral branch ---
     if provider == "mistral":
         import os as _os
@@ -933,7 +953,7 @@ def _enrich_partition(
         else:
             mistral_client = MistralChatClient(api_key=mistral_key, model=mistral_model)
             try:
-                return _enrich_with_openai(
+                api_results = _enrich_with_openai(
                     client=mistral_client,
                     records=records,
                     partition_name=partition_name,
@@ -943,6 +963,7 @@ def _enrich_partition(
                     background_threshold=background_threshold,
                     warnings=warnings,
                 )
+                return rated_enriched + api_results
             except Exception as exc:
                 warnings.append(f"{partition_name}: Mistral enrichment failed ({exc}), using heuristic fallback.")
 
@@ -957,7 +978,7 @@ def _enrich_partition(
         else:
             openrouter_client = OpenRouterChatClient(api_key=openrouter_key, model=openrouter_model)
             try:
-                return _enrich_with_openai(
+                api_results = _enrich_with_openai(
                     client=openrouter_client,
                     records=records,
                     partition_name=partition_name,
@@ -967,6 +988,7 @@ def _enrich_partition(
                     background_threshold=background_threshold,
                     warnings=warnings,
                 )
+                return rated_enriched + api_results
             except Exception as exc:
                 warnings.append(f"{partition_name}: OpenRouter enrichment failed ({exc}), using heuristic fallback.")
 
@@ -983,7 +1005,7 @@ def _enrich_partition(
     if use_openai:
         client = OpenAIResponsesClient(api_key=api_key, model=model)
         try:
-            return _enrich_with_openai(
+            api_results = _enrich_with_openai(
                 client=client,
                 records=records,
                 partition_name=partition_name,
@@ -993,6 +1015,7 @@ def _enrich_partition(
                 background_threshold=background_threshold,
                 warnings=warnings,
             )
+            return rated_enriched + api_results
         except Exception as exc:
             if strict_openai or provider == "openai":
                 raise
@@ -1001,7 +1024,8 @@ def _enrich_partition(
     provider_name = "heuristic"
     if provider == "auto" and api_key:
         provider_name = "heuristic_fallback"
-    return [_heuristic_enrichment(record, run_id=run_id, provider=provider_name, model=model) for record in records]
+    unrated_enriched = [_heuristic_enrichment(record, run_id=run_id, provider=provider_name, model=model) for record in records]
+    return rated_enriched + unrated_enriched
 
 
 def _build_entity_summaries(records: list[EnrichedRecord]) -> list[EntitySummaryRecord]:

@@ -132,7 +132,7 @@ def _resolve_clix_bin(candidate: str) -> str:
 
 def build_default_steps(*, brand: str, state_db: str, clix_bin: str) -> list[StepConfig]:
     return [
-        StepConfig("store_monitor", "store_monitor", ("--brand", brand, "--stage", "all", "--incremental", "true", "--state-db", state_db, "--stale-after-days", "30"), 5400, 0),
+        StepConfig("store_monitor", "store_monitor", ("--brand", brand, "--stage", "all", "--incremental", "true", "--state-db", state_db, "--stale-after-days", "30", "--limit-stores", "10"), 1800, 0),
         StepConfig("review_monitor", "review_monitor", ("--brand", brand, "--site", "all", "--scope", "all", "--incremental", "true", "--state-db", state_db), 3600, 0),
         StepConfig("news_monitor", "news_monitor", ("--brand", brand, "--days-back", "7", "--enrich-mode", "auto", "--max-enriched-items", "5"), 1800, 1),
         StepConfig("reddit_monitor", "reddit_monitor", ("--brand", brand), 3600, 0),
@@ -143,7 +143,7 @@ def build_default_steps(*, brand: str, state_db: str, clix_bin: str) -> list[Ste
         StepConfig("context_monitor", "context_monitor", ("--brand", brand, "--document-types", "all", "--incremental", "true", "--state-db", state_db), 3600, 0),
         StepConfig("product_monitor", "product_monitor", ("--brand", brand, "--max-products-per-brand", "20", "--incremental", "true", "--state-db", state_db), 3600, 0, optional=True),
         StepConfig("global_summary", "global_summary", tuple(), 600, 0),
-        StepConfig("ai_batch", "ai_batch", ("--brand", brand, "--input-run", "latest", "--provider", "auto"), 3600, 0),
+        StepConfig("ai_batch", "ai_batch", ("--brand", brand, "--input-run", "latest", "--provider", "auto", "--chunk-size", "20"), 3600, 0),
     ]
 
 
