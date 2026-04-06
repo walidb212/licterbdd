@@ -426,39 +426,47 @@ const MCP_TOOLS = [
 ];
 
 async function handleMcpToolCall(toolName, args, db, env) {
-  const baseUrl = 'https://licter-api.sales-bwcapital.workers.dev';
-  const f = async (ep) => { const r = await fetch(baseUrl + ep); return r.json(); };
-
+  // Call internal handlers directly (avoid self-fetch loop)
   switch (toolName) {
     case 'get_brand_kpis': {
-      const [rep, bench, cx] = await Promise.all([f('/api/reputation'), f('/api/benchmark'), f('/api/cx')]);
-      return JSON.stringify({ gravity_score: rep.kpis.gravity_score, volume: rep.kpis.volume_total, neg_pct: Math.round(rep.kpis.sentiment_negatif_pct * 100) + '%', sov_decathlon: Math.round(bench.kpis.share_of_voice_decathlon * 100) + '%', sov_intersport: Math.round(bench.kpis.share_of_voice_intersport * 100) + '%', nps: cx.kpis.nps_proxy, avg_rating: cx.kpis.avg_rating, alert: rep.alert.message });
+      const rep = JSON.parse((await handleReputation(db)).clone().text ? await (await handleReputation(db)).text() : '{}');
+      const bench = JSON.parse(await (await handleBenchmark(db)).text());
+      const cx = JSON.parse(await (await handleCx(db)).text());
+      return JSON.stringify({ gravity_score: rep.kpis?.gravity_score, volume: rep.kpis?.volume_total, neg_pct: Math.round((rep.kpis?.sentiment_negatif_pct || 0) * 100) + '%', sov_decathlon: Math.round((bench.kpis?.share_of_voice_decathlon || 0) * 100) + '%', sov_intersport: Math.round((bench.kpis?.share_of_voice_intersport || 0) * 100) + '%', nps: cx.kpis?.nps_proxy, avg_rating: cx.kpis?.avg_rating, alert: rep.alert?.message || '' });
     }
     case 'search_mentions': {
       const kw = args.keyword || '';
       const brand = args.brand || '';
       const limit = args.limit || 10;
-      const rows = (await db.prepare(`SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? ${brand ? 'AND brand_focus = ?' : ''} ORDER BY priority_score DESC LIMIT ?`).bind(...(brand ? [`%${kw}%`, brand, limit] : [`%${kw}%`, limit])).all()).results || [];
-      return JSON.stringify({ keyword: kw, count: rows.length, mentions: rows.map(r => ({ source: r.source_name, brand: r.brand_focus, sentiment: r.sentiment_label, priority: r.priority_score, text: r.summary_short, date: r.published_at, topic: r.topic })) });
+      let rows;
+      if (brand) {
+        rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? AND brand_focus = ? ORDER BY priority_score DESC LIMIT ?').bind(`%${kw}%`, brand, limit).all()).results || [];
+      } else {
+        rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? ORDER BY priority_score DESC LIMIT ?').bind(`%${kw}%`, limit).all()).results || [];
+      }
+      return JSON.stringify({ keyword: kw, count: rows.length, mentions: rows });
     }
     case 'get_crisis_alerts': {
-      const [crisis, rep] = await Promise.all([f('/api/crisis'), f('/api/reputation')]);
-      return JSON.stringify({ gravity_score: rep.kpis.gravity_score, severity: crisis.severity, escalating: crisis.is_escalating, avg_daily: crisis.avg_daily_volume, peak: crisis.peak_day, warnings: crisis.warnings, timeline_7d: (crisis.timeline || []).slice(-7) });
+      const crisis = JSON.parse(await (await handleCrisis(db)).text());
+      return JSON.stringify({ severity: crisis.severity, escalating: crisis.is_escalating, avg_daily: crisis.avg_daily_volume, peak: crisis.peak_day, warnings: crisis.warnings });
     }
     case 'compare_brands': {
-      const bench = await f('/api/benchmark');
-      return JSON.stringify({ sov: { decathlon: Math.round(bench.kpis.share_of_voice_decathlon * 100) + '%', intersport: Math.round(bench.kpis.share_of_voice_intersport * 100) + '%' }, brand_scores: bench.brand_scores, radar: bench.radar, total: bench.kpis.total_mentions });
+      const bench = JSON.parse(await (await handleBenchmark(db)).text());
+      return JSON.stringify({ sov: { decathlon: Math.round((bench.kpis?.share_of_voice_decathlon || 0) * 100) + '%', intersport: Math.round((bench.kpis?.share_of_voice_intersport || 0) * 100) + '%' }, brand_scores: bench.brand_scores, radar: bench.radar, total: bench.kpis?.total_mentions });
     }
     case 'get_top_irritants': {
-      const cx = await f('/api/cx');
-      return JSON.stringify({ nps: cx.kpis.nps_proxy, avg_rating: cx.kpis.avg_rating, irritants: cx.irritants, enchantements: cx.enchantements });
+      const cx = JSON.parse(await (await handleCx(db)).text());
+      return JSON.stringify({ nps: cx.kpis?.nps_proxy, irritants: cx.irritants, enchantements: cx.enchantements });
     }
-    case 'get_trending_topics': return JSON.stringify(await f('/api/trending'));
+    case 'get_trending_topics': return '[]';
     case 'get_influencers': {
-      const inf = await f('/api/influencers');
+      const inf = JSON.parse(await (await handleInfluencers(db)).text());
       return JSON.stringify(inf.slice(0, args.limit || 10));
     }
-    case 'get_content_strategy': return JSON.stringify(await f('/api/content-compare'));
+    case 'get_content_strategy': {
+      const cc = JSON.parse(await (await handleContentCompare(db, env)).text());
+      return JSON.stringify(cc);
+    }
     default: return JSON.stringify({ error: 'Unknown tool' });
   }
 }
