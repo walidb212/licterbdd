@@ -116,6 +116,38 @@ DEFAULT_SOURCES: tuple[SourceConfig, ...] = (
         url="https://www.dealabs.com/search?q=intersport",
         entity_name="Intersport France",
     ),
+    SourceConfig(
+        name="appstore_decathlon",
+        site="appstore",
+        brand_focus="decathlon",
+        review_scope="customer",
+        url="https://apps.apple.com/fr/app/id583732498",
+        entity_name="Decathlon App",
+    ),
+    SourceConfig(
+        name="appstore_intersport",
+        site="appstore",
+        brand_focus="intersport",
+        review_scope="customer",
+        url="https://apps.apple.com/fr/app/id1579487998",
+        entity_name="Intersport App",
+    ),
+    SourceConfig(
+        name="avis_verifies_decathlon",
+        site="avis_verifies",
+        brand_focus="decathlon",
+        review_scope="customer",
+        url="https://www.avis-verifies.com/avis-clients/decathlon.fr",
+        entity_name="Decathlon France",
+    ),
+    SourceConfig(
+        name="avis_verifies_intersport",
+        site="avis_verifies",
+        brand_focus="intersport",
+        review_scope="customer",
+        url="https://www.avis-verifies.com/avis-clients/intersport.fr",
+        entity_name="Intersport France",
+    ),
 )
 
 
