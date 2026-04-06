@@ -1,3 +1,4 @@
+import { apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 
 interface Persona {
@@ -13,7 +14,7 @@ function toArray(val: unknown): string[] {
 
 export default function PersonasPanel() {
   const { data, isLoading, error } = useQuery<{ personas: Persona[] }>({
-    queryKey: ['personas'], queryFn: () => fetch('/api/personas').then(r => r.json()), staleTime: 1800_000,
+    queryKey: ['personas'], queryFn: () => fetch(apiUrl('/api/personas')).then(r => r.json()), staleTime: 1800_000,
   })
 
   if (isLoading) return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Génération des personas via IA...</div>

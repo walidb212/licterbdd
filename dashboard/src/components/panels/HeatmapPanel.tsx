@@ -1,3 +1,4 @@
+import { apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 
 interface CityData {
@@ -8,7 +9,7 @@ interface CityData {
 export default function HeatmapPanel() {
   const { data, isLoading, error } = useQuery<CityData[]>({
     queryKey: ['heatmap'],
-    queryFn: () => fetch('/api/heatmap').then(r => r.json()),
+    queryFn: () => fetch(apiUrl('/api/heatmap')).then(r => r.json()),
   })
 
   if (isLoading) return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Chargement...</div>

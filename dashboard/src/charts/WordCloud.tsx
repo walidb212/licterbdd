@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiUrl } from '../api/client'
 
 interface Word { text: string; value: number }
 
@@ -29,7 +30,7 @@ function humanize(text: string) {
 export default function WordCloud() {
   const { data, isLoading } = useQuery<Word[]>({
     queryKey: ['wordcloud'],
-    queryFn: () => fetch('/api/wordcloud').then(r => r.json()),
+    queryFn: () => fetch(apiUrl('/api/wordcloud')).then(r => r.json()),
   })
 
   if (isLoading || !data) return <div className="text-gray-400 text-xs text-center py-8">Chargement...</div>

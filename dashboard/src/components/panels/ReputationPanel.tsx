@@ -1,3 +1,4 @@
+import { apiUrl } from '../../api/client'
 import { useReputation } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 import AlertBanner from '../AlertBanner'
@@ -16,7 +17,7 @@ interface CrisisData {
 
 export default function ReputationPanel() {
   const { data, isLoading, error } = useReputation()
-  const { data: crisis } = useQuery<CrisisData>({ queryKey: ['crisis'], queryFn: () => fetch('/api/crisis').then(r => r.json()) })
+  const { data: crisis } = useQuery<CrisisData>({ queryKey: ['crisis'], queryFn: () => fetch(apiUrl('/api/crisis')).then(r => r.json()) })
 
   if (isLoading) return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Chargement...</div>
   if (error || !data) return <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-500 text-sm">Erreur de chargement.</div>

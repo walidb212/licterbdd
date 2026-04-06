@@ -1,3 +1,4 @@
+import { apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 
 interface Influencer {
@@ -21,7 +22,7 @@ const PLATFORM_ICONS: Record<string, string> = {
 export default function InfluencersPanel() {
   const { data, isLoading, error } = useQuery<Influencer[]>({
     queryKey: ['influencers'],
-    queryFn: () => fetch('/api/influencers').then(r => r.json()),
+    queryFn: () => fetch(apiUrl('/api/influencers')).then(r => r.json()),
   })
 
   if (isLoading) return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Chargement...</div>

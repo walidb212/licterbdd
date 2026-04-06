@@ -1,3 +1,4 @@
+import { apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 
@@ -37,7 +38,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 export default function CrisisPanel() {
   const { data, isLoading, error } = useQuery<CrisisData>({
     queryKey: ['crisis'],
-    queryFn: () => fetch('/api/crisis').then(r => r.json()),
+    queryFn: () => fetch(apiUrl('/api/crisis')).then(r => r.json()),
   })
 
   if (isLoading) return <div className="loading">Analyse de crise en cours...</div>

@@ -1,3 +1,4 @@
+import { apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 import Markdown from 'react-markdown'
 
@@ -10,7 +11,7 @@ interface CompareData {
 export default function ContentComparePanel() {
   const { data, isLoading, error } = useQuery<CompareData>({
     queryKey: ['content-compare'],
-    queryFn: () => fetch('/api/content-compare').then(r => r.json()),
+    queryFn: () => fetch(apiUrl('/api/content-compare')).then(r => r.json()),
     staleTime: 3600_000, // 1h cache
   })
 
