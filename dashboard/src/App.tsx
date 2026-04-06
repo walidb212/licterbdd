@@ -80,7 +80,7 @@ function App() {
               {item.label}
             </button>
           ))}
-          <a href="/api/report/pdf" target="_blank"
+          <a href="/rapport-comex.pdf" target="_blank"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] text-gray-500 hover:bg-white/60 hover:text-gray-700 no-underline transition-all">
             <span className="w-5 text-center text-sm">⬡</span>
             Rapport PDF
@@ -110,7 +110,7 @@ function App() {
             <p className="text-[11px] text-gray-400 mt-0.5">Dashboard COMEX — Matrice de Bataille</p>
           </div>
           <div className="flex items-center gap-2">
-            <a href="/api/report/pdf" target="_blank"
+            <a href="/rapport-comex.pdf" target="_blank"
               className="px-4 py-1.5 rounded-full text-[12px] font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 no-underline transition-all flex items-center gap-2 shadow-sm">
               Rapport PDF <span className="opacity-40">↓</span>
             </a>
