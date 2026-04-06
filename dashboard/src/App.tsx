@@ -114,7 +114,7 @@ function App() {
               className="px-4 py-1.5 rounded-full text-[12px] font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 no-underline transition-all flex items-center gap-2 shadow-sm">
               Rapport PDF <span className="opacity-40">↓</span>
             </a>
-            <a href="/api/export/excel" target="_blank"
+            <a href="/licter-export.csv" download="licter-export.csv"
               className="px-4 py-1.5 rounded-full text-[12px] font-bold border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300 no-underline transition-all flex items-center gap-2 shadow-sm">
               Export Excel <span className="opacity-40">↓</span>
             </a>

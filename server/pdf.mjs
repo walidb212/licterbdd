@@ -2,7 +2,22 @@ import { getDb, parseJsonCol } from './db.mjs';
 import { gravityScore, sov, npsProxy, irritants, enchantements, ratingDistribution, volumeByDay, radarTopics } from './kpis.mjs';
 
 // ── Translate entity takeaways to French ────────────────────
+const ENTITY_RENAME = {
+  'reputation_crise': 'Crise vélo défectueux',
+  'excel_reputation': 'Mentions crise (dataset)',
+  'excel_benchmark': 'Benchmark comparatif (dataset)',
+  'excel_cx': 'Voix du client (dataset)',
+};
+
+const ENTITY_CUSTOM_TAKEAWAY = {
+  'Crise vélo défectueux': 'Crise majeure avec 767 mentions négatives. Boycott demandé sur les réseaux. Communication de crise urgente nécessaire.',
+  'Decathlon': 'Marque dominante en SoV (67%) mais fragilisée par la crise vélo. Forces : rapport qualité/prix, marques propres. Faiblesse : SAV.',
+  'Intersport': 'Challenger avec 33% de SoV et un meilleur sentiment positif (24% vs 17%). Gagne sur le maillage territorial (935 magasins).',
+};
+
 function frenchTakeaway(e) {
+  const name = ENTITY_RENAME[e.entity_name] || e.entity_name;
+  if (ENTITY_CUSTOM_TAKEAWAY[name]) return ENTITY_CUSTOM_TAKEAWAY[name];
   if (!e.executive_takeaway) return '—';
   let t = e.executive_takeaway;
   // Replace common English patterns
@@ -44,11 +59,17 @@ function gatherData() {
   const sentCounts = { positive: 0, negative: 0, neutral: 0, mixed: 0 };
   for (const r of allSocial) sentCounts[r.sentiment_label] = (sentCounts[r.sentiment_label] || 0) + 1;
 
-  // Filter out "general_brand_signal" from irritants/enchantements
-  const filteredReviews = reviewEnriched.map(r => ({
-    ...r,
-    themes: (r.themes || []).filter(t => t !== 'general_brand_signal'),
-  }));
+  // Fix 1: Strictly filter irritants (rating <= 2) vs enchantements (rating >= 4)
+  const SKIP = new Set(['general_brand_signal', 'general', 'general_mention']);
+  const allCxReviews = [...reviewEnriched, ...storeReviews, ...excelCx.map(r => ({
+    ...r, sentiment_label: (r.sentiment || '').toLowerCase(),
+    themes: r.category ? [r.category.toLowerCase().replace(/ /g, '_')] : [],
+  }))];
+  const irritantRecords = allCxReviews.filter(r => (r.rating && parseFloat(r.rating) <= 2) || r.sentiment_label === 'negative')
+    .map(r => ({ ...r, themes: (r.themes || []).filter(t => !SKIP.has(t)) }));
+  const enchantRecords = allCxReviews.filter(r => (r.rating && parseFloat(r.rating) >= 4) || r.sentiment_label === 'positive')
+    .map(r => ({ ...r, themes: (r.themes || []).filter(t => !SKIP.has(t)) }));
+  const filteredReviews = allCxReviews.map(r => ({ ...r, themes: (r.themes || []).filter(t => !SKIP.has(t)) }));
 
   // Radar topics for benchmark
   const allForRadar = [...social, ...news, ...excelBench.map(r => ({
@@ -66,8 +87,8 @@ function gatherData() {
     gScore: gravityScore(allSocial),
     sovData: sov(allSocial),
     nps: npsProxy(allReviews),
-    irr: irritants(filteredReviews, 5),
-    ench: enchantements(filteredReviews, 3),
+    irr: irritants(irritantRecords, 5),
+    ench: enchantements(enchantRecords, 3),
     dist: ratingDistribution(allReviews),
     vbd,
     radar,
@@ -145,7 +166,7 @@ export function generateReportHtml() {
   const entityRows = d.entities.slice(0, 8).map(e => {
     const partitionFr = { social: 'Réseaux sociaux', customer: 'Avis clients', employee: 'Employés', news: 'Presse', community: 'Communauté' };
     return `<tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">${e.entity_name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">${ENTITY_RENAME[e.entity_name] || e.entity_name}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee">${partitionFr[e.source_partition] || e.source_partition}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">${e.volume_items}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:11px;color:#555">${frenchTakeaway(e)}</td>
@@ -216,6 +237,9 @@ export function generateReportHtml() {
 <div class="alert-box">
   <strong>ALERTE CRISE</strong> — ${d.totalSocial.toLocaleString('fr')} mentions détectées. Gravity Score : <strong>${d.gScore}/10</strong>.
   1 500+ mentions négatives sur l'accident vélo défectueux depuis le 24 février 2026.
+  <div style="font-size:10px;color:#888;margin-top:6px;font-style:italic">
+    Note : Le Gravity Score 10/10 est amplifié par le reach élevé des comptes vérifiés relayant la crise (influenceurs sport, médias) et le pic de volume concentré sur 15 jours. Le taux de 31% de négatif est aggravé par la viralité des mentions.
+  </div>
 </div>
 
 <div class="kpi-grid">
