@@ -214,10 +214,12 @@ const THEME_LABELS = {
   brand_controversy: 'Image de marque', football_teamwear: 'Marques sportives',
 };
 
+const SKIP_THEMES = new Set(['general_brand_signal', 'general', 'general_mention', 'other']);
+
 export function irritants(records, topN = 5) {
   const neg = records.filter(r => r.sentiment_label === 'negative' || r.sentiment_label === 'mixed');
   const counts = {};
-  for (const r of neg) for (const t of (r.themes || [])) counts[t] = (counts[t] || 0) + 1;
+  for (const r of neg) for (const t of (r.themes || [])) { if (!SKIP_THEMES.has(t)) counts[t] = (counts[t] || 0) + 1; }
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, topN);
   const maxCount = sorted[0]?.[1] || 1;
@@ -230,7 +232,7 @@ export function irritants(records, topN = 5) {
 export function enchantements(records, topN = 3) {
   const pos = records.filter(r => r.sentiment_label === 'positive');
   const counts = {};
-  for (const r of pos) for (const t of (r.themes || [])) counts[t] = (counts[t] || 0) + 1;
+  for (const r of pos) for (const t of (r.themes || [])) { if (!SKIP_THEMES.has(t)) counts[t] = (counts[t] || 0) + 1; }
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, topN);
   const maxCount = sorted[0]?.[1] || 1;

@@ -62,8 +62,21 @@ export default function AdminDbPanel() {
           <option value="neutral">Neutre</option>
           <option value="mixed">Mixte</option>
         </select>
-        <input value={source} onChange={e => { setSource(e.target.value); setPage(0); }}
-          placeholder="Source..." className="w-32 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[12px] outline-none focus:border-blue-400" />
+        <select value={source} onChange={e => { setSource(e.target.value); setPage(0); }}
+          className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[12px]">
+          <option value="">Toutes sources</option>
+          <option value="reddit_post">Reddit</option>
+          <option value="youtube_video">YouTube</option>
+          <option value="tiktok_video">TikTok</option>
+          <option value="x_post">X/Twitter</option>
+          <option value="news_article">Presse</option>
+          <option value="review_site">Avis</option>
+          <option value="store">Google Maps</option>
+          <option value="social">Social</option>
+          <option value="customer">Customer</option>
+          <option value="employee">Employee</option>
+          <option value="community">Community</option>
+        </select>
       </div>
 
       {/* Results count */}
