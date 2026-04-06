@@ -311,13 +311,26 @@ async function handleRecommendations() {
 
 async function handleSummary(db) {
   const entities = (await db.prepare('SELECT * FROM entity_summaries ORDER BY volume_items DESC LIMIT 20').all()).results || [];
+  // Aggregate risks/opportunities from entity data
+  const riskCounts = {};
+  const oppCounts = {};
+  for (const e of entities) {
+    const takeaway = (e.executive_takeaway || '').toLowerCase();
+    if (takeaway.includes('reputation') || takeaway.includes('crisis') || takeaway.includes('crise')) riskCounts['Risque réputation'] = (riskCounts['Risque réputation'] || 0) + 1;
+    if (takeaway.includes('sav') || takeaway.includes('service')) riskCounts['SAV défaillant'] = (riskCounts['SAV défaillant'] || 0) + 1;
+    if (takeaway.includes('negative') || takeaway.includes('négatif')) riskCounts['Sentiment négatif'] = (riskCounts['Sentiment négatif'] || 0) + 1;
+    if (takeaway.includes('positive') || takeaway.includes('positif')) oppCounts['Sentiment positif'] = (oppCounts['Sentiment positif'] || 0) + 1;
+    if (takeaway.includes('qualit') || takeaway.includes('prix')) oppCounts['Rapport qualité/prix'] = (oppCounts['Rapport qualité/prix'] || 0) + 1;
+    if (takeaway.includes('community') || takeaway.includes('engagement')) oppCounts['Engagement communauté'] = (oppCounts['Engagement communauté'] || 0) + 1;
+  }
   return json({
     entities: entities.map(e => ({
       name: e.entity_name, partition: e.source_partition, brand: e.brand_focus,
       volume: e.volume_items, themes: parseJson(e.top_themes), risks: [], opportunities: [],
       takeaway: e.executive_takeaway || '',
     })),
-    top_risks: [], top_opportunities: [],
+    top_risks: Object.entries(riskCounts).sort((a, b) => b[1] - a[1]).map(([flag, count]) => ({ flag, count })),
+    top_opportunities: Object.entries(oppCounts).sort((a, b) => b[1] - a[1]).map(([flag, count]) => ({ flag, count })),
   });
 }
 
@@ -560,7 +573,40 @@ export default {
       if (path === '/api/chat' && request.method === 'POST') return handleChat(db, env, await request.json());
       if (path === '/api/report/pdf') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.pdf', 302);
       if (path === '/api/report/html') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.html', 302);
-      if (path === '/api/export/excel') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.pdf', 302); // TODO: generate CSV
+      if (path === '/api/export/excel') return Response.redirect('https://licter-dashboard.pages.dev/licter-export.csv', 302);
+
+      // Admin DB explorer
+      if (path === '/api/admindb') {
+        const table = url.searchParams.get('table') || 'social_enriched';
+        const search = url.searchParams.get('search') || '';
+        const brand = url.searchParams.get('brand') || '';
+        const sentiment = url.searchParams.get('sentiment') || '';
+        const source = url.searchParams.get('source') || '';
+        const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 500);
+        const offset = parseInt(url.searchParams.get('offset')) || 0;
+        const tables = ['social_enriched','review_enriched','news_enriched','entity_summaries','excel_reputation','excel_benchmark','excel_cx','store_reviews'];
+        if (!tables.includes(table)) return json({ error: 'Unknown table', tables });
+        const tableStats = {};
+        for (const t of tables) { try { tableStats[t] = (await db.prepare('SELECT COUNT(*) as c FROM ' + t).first())?.c || 0; } catch { tableStats[t] = 0; } }
+        let columns = [];
+        try { const info = (await db.prepare("PRAGMA table_info(" + table + ")").all()).results; columns = info.map(c => c.name); } catch {}
+        const conditions = [];
+        const binds = [];
+        if (search) { conditions.push("(summary_short LIKE ? OR entity_name LIKE ? OR text LIKE ?)"); binds.push('%'+search+'%','%'+search+'%','%'+search+'%'); }
+        if (brand) { conditions.push("brand_focus = ?"); binds.push(brand); }
+        if (sentiment) { conditions.push("sentiment_label = ?"); binds.push(sentiment); }
+        if (source) { conditions.push("(source_name = ? OR source_partition = ?)"); binds.push(source, source); }
+        const where = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
+        let total = 0;
+        try { total = (await db.prepare('SELECT COUNT(*) as c FROM ' + table + where).bind(...binds).first())?.c || 0; } catch {}
+        let rows = [];
+        try { rows = (await db.prepare('SELECT * FROM ' + table + where + ' LIMIT ? OFFSET ?').bind(...binds, limit, offset).all()).results || []; } catch {}
+        return json({ table, tables, table_stats: tableStats, columns, total, limit, offset, rows, filters: { search, brand, sentiment, source } });
+      }
+
+      // Transcripts (from D1 — not available in prod, return placeholder)
+      if (path === '/api/transcripts') return json({ total: 0, transcripts: [], message: 'Transcripts disponibles en local uniquement (Groq Whisper).' });
+
       return json({ error: 'Not found' }, 404);
     } catch (err) {
       return json({ error: err.message }, 500);
