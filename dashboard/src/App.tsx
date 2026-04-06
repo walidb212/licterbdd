@@ -6,15 +6,21 @@ import RecoPanel from './components/panels/RecoPanel'
 import SynthesePanel from './components/panels/SynthesePanel'
 import PersonasPanel from './components/panels/PersonasPanel'
 import ChatPanel from './components/panels/ChatPanel'
+import HeatmapPanel from './components/panels/HeatmapPanel'
+import InfluencersPanel from './components/panels/InfluencersPanel'
+import ContentComparePanel from './components/panels/ContentComparePanel'
 import { useHealth } from './api/client'
 
-type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'personas'
+type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'personas' | 'heatmap' | 'influencers' | 'content'
 
 const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] = [
   { id: 'rep', label: 'Réputation', icon: '🛡', section: 'GENERAL' },
   { id: 'bench', label: 'Benchmark', icon: '⚔', section: 'GENERAL' },
   { id: 'cx', label: 'Expérience Client', icon: '★', section: 'GENERAL' },
   { id: 'reco', label: 'Recommandations', icon: '◎', section: 'GENERAL' },
+  { id: 'heatmap', label: 'Carte Sentiment', icon: '📍', section: 'TOOLS' },
+  { id: 'influencers', label: 'Influenceurs', icon: '👥', section: 'TOOLS' },
+  { id: 'content', label: 'Comparateur IA', icon: '⚡', section: 'TOOLS' },
   { id: 'synthese', label: 'Synthèse IA', icon: '◈', section: 'TOOLS' },
   { id: 'personas', label: 'Personas', icon: '♟', section: 'TOOLS' },
 ]
@@ -117,6 +123,9 @@ function App() {
           {activeNav === 'bench' && <BenchmarkPanel />}
           {activeNav === 'cx' && <CxPanel />}
           {activeNav === 'reco' && <RecoPanel />}
+          {activeNav === 'heatmap' && <HeatmapPanel />}
+          {activeNav === 'influencers' && <InfluencersPanel />}
+          {activeNav === 'content' && <ContentComparePanel />}
           {activeNav === 'synthese' && <SynthesePanel />}
           {activeNav === 'personas' && <PersonasPanel />}
         </div>
