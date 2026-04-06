@@ -9,9 +9,11 @@ import ChatPanel from './components/panels/ChatPanel'
 import HeatmapPanel from './components/panels/HeatmapPanel'
 import InfluencersPanel from './components/panels/InfluencersPanel'
 import ContentComparePanel from './components/panels/ContentComparePanel'
+import AdminDbPanel from './components/panels/AdminDbPanel'
+import TranscriptsPanel from './components/panels/TranscriptsPanel'
 import { useHealth } from './api/client'
 
-type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'personas' | 'heatmap' | 'influencers' | 'content'
+type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'personas' | 'heatmap' | 'influencers' | 'content' | 'admindb' | 'transcripts'
 
 const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] = [
   { id: 'rep', label: 'Réputation', icon: '🛡', section: 'GENERAL' },
@@ -21,8 +23,10 @@ const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] =
   { id: 'heatmap', label: 'Carte Sentiment', icon: '📍', section: 'TOOLS' },
   { id: 'influencers', label: 'Influenceurs', icon: '👥', section: 'TOOLS' },
   { id: 'content', label: 'Comparateur IA', icon: '⚡', section: 'TOOLS' },
+  { id: 'transcripts', label: 'Transcripts', icon: '🎙', section: 'TOOLS' },
   { id: 'synthese', label: 'Synthèse IA', icon: '◈', section: 'TOOLS' },
   { id: 'personas', label: 'Personas', icon: '♟', section: 'TOOLS' },
+  { id: 'admindb', label: 'Admin DB', icon: '🗄', section: 'TOOLS' },
 ]
 
 function App() {
@@ -126,8 +130,10 @@ function App() {
           {activeNav === 'heatmap' && <HeatmapPanel />}
           {activeNav === 'influencers' && <InfluencersPanel />}
           {activeNav === 'content' && <ContentComparePanel />}
+          {activeNav === 'transcripts' && <TranscriptsPanel />}
           {activeNav === 'synthese' && <SynthesePanel />}
           {activeNav === 'personas' && <PersonasPanel />}
+          {activeNav === 'admindb' && <AdminDbPanel />}
         </div>
       </main>
 

@@ -208,6 +208,152 @@ app.get('/api/content-compare', async (_req, res) => {
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ── Admin DB Explorer ──
+app.get('/api/admindb', async (req, res) => {
+  try {
+    const { getDb } = await import('./db.mjs');
+    const db = getDb();
+
+    const table = req.query.table || 'social_enriched';
+    const search = req.query.search || '';
+    const source = req.query.source || '';
+    const brand = req.query.brand || '';
+    const sentiment = req.query.sentiment || '';
+    const limit = Math.min(parseInt(req.query.limit) || 50, 500);
+    const offset = parseInt(req.query.offset) || 0;
+
+    // List available tables
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all().map(r => r.name);
+
+    // Validate table name (prevent SQL injection)
+    if (!tables.includes(table)) {
+      return res.json({ error: `Table '${table}' not found`, tables });
+    }
+
+    // Build query with filters
+    const conditions = [];
+    const params = {};
+
+    if (search) {
+      conditions.push("(summary_short LIKE @search OR body LIKE @search OR text LIKE @search OR entity_name LIKE @search)");
+      params.search = `%${search}%`;
+    }
+    if (source) {
+      conditions.push("(source_name = @source OR source_partition = @source OR site = @source)");
+      params.source = source;
+    }
+    if (brand) {
+      conditions.push("brand_focus = @brand");
+      params.brand = brand;
+    }
+    if (sentiment) {
+      conditions.push("sentiment_label = @sentiment");
+      params.sentiment = sentiment;
+    }
+
+    const where = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
+
+    // Count total
+    let totalCount = 0;
+    try {
+      totalCount = db.prepare(`SELECT COUNT(*) as c FROM ${table}${where}`).get(params)?.c || 0;
+    } catch { totalCount = 0; }
+
+    // Fetch rows
+    let rows = [];
+    try {
+      rows = db.prepare(`SELECT * FROM ${table}${where} LIMIT @limit OFFSET @offset`).all({ ...params, limit, offset });
+    } catch (err) {
+      return res.json({ error: err.message, tables });
+    }
+
+    // Get columns
+    let columns = [];
+    try {
+      columns = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+    } catch { /* */ }
+
+    // Stats per table
+    const tableStats = {};
+    for (const t of tables) {
+      try {
+        tableStats[t] = db.prepare(`SELECT COUNT(*) as c FROM ${t}`).get()?.c || 0;
+      } catch { tableStats[t] = 0; }
+    }
+
+    res.json({
+      table,
+      tables,
+      table_stats: tableStats,
+      columns,
+      total: totalCount,
+      limit,
+      offset,
+      rows,
+      filters: { search, source, brand, sentiment },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Transcripts ──
+app.get('/api/transcripts', (_req, res) => {
+  try {
+    const dataDir = join(__dirname, '..', 'data');
+    const transcripts = [];
+
+    // Scan YouTube transcripts
+    const ytBase = join(dataDir, 'youtube_runs');
+    if (existsSync(ytBase)) {
+      const runs = readdirSync(ytBase).sort().reverse();
+      for (const run of runs.slice(0, 3)) {
+        const tPath = join(ytBase, run, 'transcripts.jsonl');
+        if (existsSync(tPath)) {
+          for (const line of readFileSync(tPath, 'utf-8').split('\n')) {
+            if (line.trim()) {
+              try {
+                const t = JSON.parse(line);
+                t.platform = 'youtube';
+                t.run = run;
+                transcripts.push(t);
+              } catch { /* */ }
+            }
+          }
+        }
+      }
+    }
+
+    // Scan TikTok transcripts
+    const tkBase = join(dataDir, 'tiktok_runs');
+    if (existsSync(tkBase)) {
+      const runs = readdirSync(tkBase).sort().reverse();
+      for (const run of runs.slice(0, 3)) {
+        const tPath = join(tkBase, run, 'transcripts.jsonl');
+        if (existsSync(tPath)) {
+          for (const line of readFileSync(tPath, 'utf-8').split('\n')) {
+            if (line.trim()) {
+              try {
+                const t = JSON.parse(line);
+                t.platform = 'tiktok';
+                t.run = run;
+                transcripts.push(t);
+              } catch { /* */ }
+            }
+          }
+        }
+      }
+    }
+
+    res.json({
+      total: transcripts.length,
+      transcripts: transcripts.sort((a, b) => (b.chars || 0) - (a.chars || 0)),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Transcript ──
 app.post('/api/transcript', async (req, res) => {
   const { url } = req.body || {};
