@@ -575,6 +575,69 @@ export default {
       if (path === '/api/report/html') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.html', 302);
       if (path === '/api/export/excel') return Response.redirect('https://licter-dashboard.pages.dev/licter-export.csv', 302);
 
+      // RAG vectoriel
+      if (path === '/api/rag' && request.method === 'POST') {
+        const body = await request.json();
+        const question = body.question || body.message || '';
+        if (!question) return json({ error: 'question is required' }, 400);
+        const apiKey = env.OPENAI_API_KEY;
+        if (!apiKey) return json({ error: 'OPENAI_API_KEY not configured' }, 503);
+
+        try {
+          // 1. Embed the question
+          const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'text-embedding-3-small', input: question, dimensions: 1024 }),
+          });
+          if (!embedResp.ok) return json({ error: 'Embedding failed' }, 500);
+          const embedData = await embedResp.json();
+          const queryVector = embedData.data[0].embedding;
+
+          // 2. Search Vectorize
+          const matches = await env.VECTORIZE.query(queryVector, { topK: 10, returnMetadata: 'all' });
+
+          // 3. Build context from matches
+          const passages = (matches.matches || []).map((m, i) => {
+            const meta = m.metadata || {};
+            return `[${i + 1}] (${meta.source || '?'}, ${meta.brand || '?'}, score=${m.score?.toFixed(3)})\n${meta.text_preview || ''}`;
+          }).join('\n\n');
+
+          // 4. LLM call with retrieved context
+          const systemPrompt = `Tu es l'assistant analytique LICTER Brand Intelligence pour Decathlon/Intersport.
+Tu réponds en français, de manière concise et actionnable (style COMEX).
+Base tes réponses UNIQUEMENT sur les passages ci-dessous. Cite les sources entre crochets [1], [2], etc.
+Si tu ne trouves pas l'information dans les passages, dis-le clairement.
+
+PASSAGES PERTINENTS :
+${passages}`;
+
+          const llmResp = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: question }],
+              max_tokens: 1024, temperature: 0.2,
+            }),
+          });
+          if (!llmResp.ok) return json({ error: 'LLM failed' }, 500);
+          const llmData = await llmResp.json();
+
+          return json({
+            response: llmData.choices?.[0]?.message?.content || 'Pas de réponse.',
+            sources: (matches.matches || []).map(m => ({
+              id: m.id, score: m.score,
+              source: m.metadata?.source, brand: m.metadata?.brand,
+              text: m.metadata?.text_preview,
+            })),
+            method: 'vectorize_rag',
+          });
+        } catch (err) {
+          return json({ error: err.message }, 500);
+        }
+      }
+
       // Admin DB explorer
       if (path === '/api/admindb') {
         const table = url.searchParams.get('table') || 'social_enriched';

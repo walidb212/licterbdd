@@ -7,5 +7,8 @@ binding = "DB"
 database_name = "licter-db"
 database_id = "1009c19a-ca6b-4db4-9e7a-91174de23dac"
 
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "licter-embeddings"
+
 # API keys are set as secrets via: wrangler secret put OPENAI_API_KEY
-# No vars needed — secrets are accessed via env.OPENAI_API_KEY
