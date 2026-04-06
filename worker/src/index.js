@@ -353,16 +353,40 @@ async function handleChat(db, env, body) {
   const { message } = body || {};
   if (!message) return json({ error: 'message is required' }, 400);
   const apiKey = env.OPENAI_API_KEY || env.GROQ_API_KEY;
-  if (!apiKey) return json({ error: 'No LLM API key. Set OPENAI_API_KEY or GROQ_API_KEY as Worker secret.' }, 503);
+  if (!apiKey) return json({ error: 'No LLM API key.' }, 503);
 
+  // Try RAG vectoriel first (if Vectorize available)
+  let ragContext = '';
+  let ragSources = [];
+  if (env.VECTORIZE && env.OPENAI_API_KEY) {
+    try {
+      const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'text-embedding-3-small', input: message, dimensions: 1024 }),
+      });
+      if (embedResp.ok) {
+        const embedData = await embedResp.json();
+        const matches = await env.VECTORIZE.query(embedData.data[0].embedding, { topK: 8, returnMetadata: 'all' });
+        ragSources = (matches.matches || []).map(m => ({ source: m.metadata?.source, text: m.metadata?.text_preview, score: m.score }));
+        ragContext = ragSources.map((s, i) => `[${i+1}] (${s.source}) ${s.text}`).join('\n');
+      }
+    } catch { /* fallback to KPIs only */ }
+  }
+
+  // Build system prompt with KPIs + RAG context
   const sentiments = (await db.prepare('SELECT sentiment_label, COUNT(*) as c FROM social_enriched GROUP BY sentiment_label').all()).results || [];
   const totalSocial = sentiments.reduce((s, r) => s + r.c, 0);
   const negPct = totalSocial ? Math.round((sentiments.find(r => r.sentiment_label === 'negative')?.c || 0) / totalSocial * 100) : 0;
 
-  const systemPrompt = `Tu es l'assistant IA de LICTER Brand Intelligence pour Decathlon.
+  let systemPrompt = `Tu es l'assistant IA de LICTER Brand Intelligence pour Decathlon.
 KPIs actuels: ${totalSocial} mentions social, ${negPct}% négatives, Gravity Score 10/10, NPS 16.7, SoV Decathlon 65%.
 Crise en cours: accident vélo défectueux, 1500+ mentions négatives.
-Réponds en français, cite les chiffres, sois concis et actionnable (style COMEX).`;
+Réponds en français, cite les chiffres et les sources entre crochets [1][2]. Sois concis et actionnable (style COMEX).`;
+
+  if (ragContext) {
+    systemPrompt += `\n\nPASSAGES PERTINENTS (issus de la base de veille) :\n${ragContext}`;
+  }
 
   const url = env.OPENAI_API_KEY ? 'https://api.openai.com/v1/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
   const model = env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'llama-3.3-70b-versatile';
@@ -374,7 +398,7 @@ Réponds en français, cite les chiffres, sois concis et actionnable (style COME
   });
   if (!response.ok) return json({ error: `LLM error ${response.status}` }, 500);
   const data = await response.json();
-  return json({ response: data.choices?.[0]?.message?.content || 'Pas de réponse.' });
+  return json({ response: data.choices?.[0]?.message?.content || 'Pas de réponse.', sources: ragSources.length ? ragSources : undefined, method: ragContext ? 'vectorize_rag' : 'kpi_context' });
 }
 
 async function handleContentCompare(db, env) {
@@ -470,16 +494,32 @@ async function handleMcpToolCall(toolName, args, db, env) {
       const kw = args.keyword || '';
       const brand = args.brand || '';
       const limit = args.limit || 10;
+
+      // Try Vectorize semantic search first
+      if (env.VECTORIZE && env.OPENAI_API_KEY) {
+        try {
+          const er = await fetch('https://api.openai.com/v1/embeddings', {
+            method: 'POST', headers: { 'Authorization': `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'text-embedding-3-small', input: kw, dimensions: 1024 }),
+          });
+          if (er.ok) {
+            const ed = await er.json();
+            const matches = await env.VECTORIZE.query(ed.data[0].embedding, { topK: limit, returnMetadata: 'all', filter: brand ? { brand } : undefined });
+            const results = (matches.matches || []).map(m => ({ source: m.metadata?.source, brand: m.metadata?.brand, text: m.metadata?.text_preview, score: Math.round(m.score * 1000) / 1000, table: m.metadata?.table }));
+            if (results.length) return JSON.stringify({ keyword: kw, brand: brand || 'both', count: results.length, mentions: results, method: 'vectorize_semantic' });
+          }
+        } catch { /* fallback to SQL */ }
+      }
+
+      // Fallback: SQL LIKE search
       let rows;
       if (brand) {
         rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? AND brand_focus = ? ORDER BY priority_score DESC LIMIT ?').bind(`%${kw}%`, brand, limit).all()).results || [];
-        // Fallback to reviews
-        if (!rows.length) rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at FROM review_enriched WHERE summary_short LIKE ? AND brand_focus = ? LIMIT ?').bind(`%${kw}%`, brand, limit).all()).results || [];
       } else {
         rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? ORDER BY priority_score DESC LIMIT ?').bind(`%${kw}%`, limit).all()).results || [];
       }
-      if (!rows.length) return JSON.stringify({ keyword: kw, brand: brand || 'both', count: 0, mentions: [], message: `Aucune mention trouvée pour "${kw}"${brand ? ` (${brand})` : ''}. Essayez un autre mot-clé.` });
-      return JSON.stringify({ keyword: kw, brand: brand || 'both', count: rows.length, mentions: rows });
+      if (!rows.length) return JSON.stringify({ keyword: kw, brand: brand || 'both', count: 0, mentions: [], message: `Aucune mention trouvée pour "${kw}".` });
+      return JSON.stringify({ keyword: kw, brand: brand || 'both', count: rows.length, mentions: rows, method: 'sql_like' });
     }
     case 'get_crisis_alerts': {
       const crisis = JSON.parse(await (await handleCrisis(db)).text());
