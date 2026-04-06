@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { apiUrl } from '../../api/client'
 
 interface VisResult {
-  question: string; decathlon_mentioned: boolean; intersport_mentioned: boolean;
-  decathlon_first: boolean; sentiment: string; answer_preview: string;
+  model: string; provider: string; question: string; decathlon_mentioned: boolean;
+  intersport_mentioned: boolean; decathlon_first: boolean; sentiment: string; answer_preview: string;
 }
+interface ModelBreakdown { model: string; questions: number; decathlon_pct: number; intersport_pct: number; first_pct: number }
 interface VisData {
-  total_questions: number; decathlon_mentioned_pct: number; intersport_mentioned_pct: number;
-  decathlon_first_pct: number; results: VisResult[]; insight: string;
+  total_questions: number; models_tested: number; decathlon_mentioned_pct: number; intersport_mentioned_pct: number;
+  decathlon_first_pct: number; model_breakdown: ModelBreakdown[]; results: VisResult[]; insight: string;
 }
 
 export default function LlmVisibilityPanel() {
@@ -28,7 +29,7 @@ export default function LlmVisibilityPanel() {
   return (
     <div>
       <h2 className="text-lg font-bold text-gray-800 mb-1">LLM Visibility Score</h2>
-      <p className="text-[11px] text-gray-400 mb-5">Comment les IA (GPT-4o) perçoivent Decathlon vs Intersport</p>
+      <p className="text-[11px] text-gray-400 mb-5">Comment les IA (GPT-4o, Gemini, Claude, Perplexity) perçoivent Decathlon vs Intersport — {data.models_tested} modèles testés</p>
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3 mb-5">
@@ -46,6 +47,26 @@ export default function LlmVisibilityPanel() {
         </div>
       </div>
 
+      {/* Model breakdown */}
+      {data.model_breakdown?.length > 1 && (
+        <div className="bg-white rounded-[20px] shadow-sm p-5 mb-5">
+          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Visibilité par LLM</h3>
+          <div className="grid grid-cols-4 gap-3">
+            {data.model_breakdown.map((m, i) => (
+              <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
+                <div className="text-[12px] font-bold text-gray-700 mb-1">{m.model}</div>
+                <div className="text-[20px] font-bold text-[#0077c8]">{m.decathlon_pct}%</div>
+                <div className="text-[9px] text-gray-400">Decathlon cité</div>
+                <div className="flex justify-center gap-2 mt-1">
+                  <span className="text-[9px] text-red-400">{m.intersport_pct}% Int.</span>
+                  <span className="text-[9px] text-green-500">{m.first_pct}% 1er</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Insight */}
       <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-xl px-5 py-3 mb-5">
         <div className="text-sm text-gray-700">{data.insight}</div>
@@ -57,7 +78,10 @@ export default function LlmVisibilityPanel() {
         <div className="space-y-3">
           {data.results.map((r, i) => (
             <div key={i} className="border border-gray-100 rounded-xl p-3">
-              <div className="text-[12px] font-semibold text-gray-700 mb-1">"{r.question}"</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-bold">{r.model || 'GPT-4o'}</span>
+                <span className="text-[12px] font-semibold text-gray-700">"{r.question}"</span>
+              </div>
               <div className="flex gap-2 mb-2">
                 {r.decathlon_mentioned && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${r.decathlon_first ? 'bg-blue-100 text-blue-700' : 'bg-blue-50 text-blue-500'}`}>

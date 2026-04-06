@@ -697,10 +697,11 @@ ${passages}`;
         }
       }
 
-      // LLM Visibility Score
+      // LLM Visibility Score — multi-model via OpenRouter
       if (path === '/api/llm-visibility') {
-        const apiKey = env.OPENAI_API_KEY;
-        if (!apiKey) return json({ error: 'OPENAI_API_KEY not configured' }, 503);
+        const orKey = env.OPENROUTER_API_KEY;
+        const oaKey = env.OPENAI_API_KEY;
+        if (!orKey && !oaKey) return json({ error: 'No API key' }, 503);
 
         const questions = [
           'Meilleur magasin de sport en France ?',
@@ -710,36 +711,64 @@ ${passages}`;
           'Équipement running entrée de gamme ?',
         ];
 
+        const models = orKey ? [
+          { id: 'openai/gpt-4o-mini', name: 'GPT-4o', provider: 'OpenAI' },
+          { id: 'google/gemini-2.0-flash-001', name: 'Gemini 2.0', provider: 'Google' },
+          { id: 'anthropic/claude-3.5-haiku', name: 'Claude 3.5', provider: 'Anthropic' },
+          { id: 'perplexity/sonar', name: 'Perplexity', provider: 'Perplexity' },
+        ] : [
+          { id: 'gpt-4o-mini', name: 'GPT-4o', provider: 'OpenAI' },
+        ];
+
+        const apiUrl = orKey ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
+        const apiKey = orKey || oaKey;
         const results = [];
-        for (const q of questions) {
-          try {
-            const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: q }], max_tokens: 300, temperature: 0.7 }),
-            });
-            if (!resp.ok) continue;
-            const data = await resp.json();
-            const answer = (data.choices?.[0]?.message?.content || '').toLowerCase();
-            const decMentioned = answer.includes('decathlon') || answer.includes('décathlon');
-            const intMentioned = answer.includes('intersport');
-            const decFirst = decMentioned && (!intMentioned || answer.indexOf('decathlon') < answer.indexOf('intersport'));
-            const sentiment = answer.includes('excellent') || answer.includes('recommand') || answer.includes('leader') ? 'positive' : answer.includes('problème') || answer.includes('critique') || answer.includes('attention') ? 'negative' : 'neutral';
-            results.push({ question: q, decathlon_mentioned: decMentioned, intersport_mentioned: intMentioned, decathlon_first: decFirst, sentiment, answer_preview: (data.choices?.[0]?.message?.content || '').slice(0, 150) });
-          } catch { /* skip */ }
+        const modelStats = {};
+
+        for (const model of models) {
+          modelStats[model.name] = { dec: 0, int: 0, first: 0, total: 0 };
+          for (const q of questions) {
+            try {
+              const resp = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: model.id, messages: [{ role: 'user', content: q }], max_tokens: 300, temperature: 0.7 }),
+              });
+              if (!resp.ok) continue;
+              const d = await resp.json();
+              const answer = (d.choices?.[0]?.message?.content || '').toLowerCase();
+              const decM = answer.includes('decathlon') || answer.includes('décathlon');
+              const intM = answer.includes('intersport');
+              const decF = decM && (!intM || answer.indexOf('decathlon') < answer.indexOf('intersport'));
+              const sent = answer.includes('recommand') || answer.includes('leader') || answer.includes('incontournable') ? 'positive' : answer.includes('problème') || answer.includes('critique') ? 'negative' : 'neutral';
+              modelStats[model.name].total++;
+              if (decM) modelStats[model.name].dec++;
+              if (intM) modelStats[model.name].int++;
+              if (decF) modelStats[model.name].first++;
+              results.push({ model: model.name, provider: model.provider, question: q, decathlon_mentioned: decM, intersport_mentioned: intM, decathlon_first: decF, sentiment: sent, answer_preview: (d.choices?.[0]?.message?.content || '').slice(0, 150) });
+            } catch { /* skip */ }
+          }
         }
 
+        const total = results.length || 1;
         const decCount = results.filter(r => r.decathlon_mentioned).length;
         const intCount = results.filter(r => r.intersport_mentioned).length;
-        const decFirstCount = results.filter(r => r.decathlon_first).length;
+        const decFirst = results.filter(r => r.decathlon_first).length;
 
         return json({
-          total_questions: questions.length,
-          decathlon_mentioned_pct: Math.round(decCount / questions.length * 100),
-          intersport_mentioned_pct: Math.round(intCount / questions.length * 100),
-          decathlon_first_pct: Math.round(decFirstCount / questions.length * 100),
+          total_questions: results.length,
+          models_tested: Object.keys(modelStats).filter(k => modelStats[k].total > 0).length,
+          decathlon_mentioned_pct: Math.round(decCount / total * 100),
+          intersport_mentioned_pct: Math.round(intCount / total * 100),
+          decathlon_first_pct: Math.round(decFirst / total * 100),
+          model_breakdown: Object.entries(modelStats).filter(([, s]) => s.total > 0).map(([name, s]) => ({
+            model: name, questions: s.total,
+            decathlon_pct: Math.round(s.dec / s.total * 100),
+            intersport_pct: Math.round(s.int / s.total * 100),
+            first_pct: Math.round(s.first / s.total * 100),
+          })),
           results,
-          insight: `Decathlon mentionné dans ${Math.round(decCount / questions.length * 100)}% des réponses IA (1er cité dans ${Math.round(decFirstCount / questions.length * 100)}% des cas).`,
+          insight: `Decathlon mentionné dans ${Math.round(decCount / total * 100)}% des réponses across ${Object.keys(modelStats).filter(k => modelStats[k].total > 0).length} LLMs.`,
         });
       }
 
