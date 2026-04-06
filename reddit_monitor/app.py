@@ -220,6 +220,11 @@ async def run_monitor(
                 report.filtered_count = (report.filtered_count or 0) + 1
                 continue
 
+            # Filter out non-FR/EN posts (Portuguese, Hindi, etc.)
+            if lang not in ("fr", "en"):
+                report.filtered_count = (report.filtered_count or 0) + 1
+                continue
+
             all_posts.append(post)
 
             # Fetch comments for posts with discussions
