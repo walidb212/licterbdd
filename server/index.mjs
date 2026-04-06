@@ -32,6 +32,9 @@ import { crisisAnalysis } from './crisis.mjs';
 import { checkAndAlert, sendAlert } from './alerts.mjs';
 import { detectTrends, enrichTrendsWithLLM } from './trending.mjs';
 import { getTranscript } from './transcript.mjs';
+import { getHeatmapData } from './heatmap.mjs';
+import { getInfluencers } from './influencers.mjs';
+import { compareContent } from './content-compare.mjs';
 import { discoverSources } from './autodiscover.mjs';
 import { startEvent, stopEvent, getEventStatus } from './eventmode.mjs';
 
@@ -185,6 +188,24 @@ app.post('/api/event/stop', (_req, res) => {
 
 app.get('/api/event/status', (_req, res) => {
   res.json(getEventStatus());
+});
+
+// ── Heatmap ──
+app.get('/api/heatmap', (_req, res) => {
+  try { res.json(getHeatmapData()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Influencers ──
+app.get('/api/influencers', (_req, res) => {
+  try { res.json(getInfluencers()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Content Compare ──
+app.get('/api/content-compare', async (_req, res) => {
+  try { res.json(await compareContent()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ── Transcript ──
