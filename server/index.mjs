@@ -31,6 +31,7 @@ import personasRouter from './routes/personas.mjs';
 import { crisisAnalysis } from './crisis.mjs';
 import { checkAndAlert, sendAlert } from './alerts.mjs';
 import { detectTrends, enrichTrendsWithLLM } from './trending.mjs';
+import { getTranscript } from './transcript.mjs';
 import { discoverSources } from './autodiscover.mjs';
 import { startEvent, stopEvent, getEventStatus } from './eventmode.mjs';
 
@@ -184,6 +185,16 @@ app.post('/api/event/stop', (_req, res) => {
 
 app.get('/api/event/status', (_req, res) => {
   res.json(getEventStatus());
+});
+
+// ── Transcript ──
+app.post('/api/transcript', async (req, res) => {
+  const { url } = req.body || {};
+  if (!url) return res.status(400).json({ error: 'url is required' });
+  try {
+    const result = await getTranscript(url);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Serve React build in production
