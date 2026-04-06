@@ -18,7 +18,25 @@ const ENTITY_CUSTOM_TAKEAWAY = {
   'Avis Vérifiés': 'Source complémentaire confirmant les tendances Trustpilot. Sentiment globalement positif.',
   'Google Maps': '40 magasins analysés. Note moyenne 4.1/5. Disparités géographiques importantes.',
   'Intersport France': 'Bonne perception client (4.2/5 Trustpilot). Forces : grandes marques, maillage. Faiblesse : digital.',
+  'TikTok': 'Vidéo Decathlon ceinture hydratation à 3.1M vues. Contenu produit viral. Intersport actif en SAV vélo.',
+  'YouTube': 'Chaînes officielles actives. Reviews produits (Transition Vélo, 178k vues). Transcripts analysés par Whisper.',
+  'Reddit': '1006 posts/commentaires collectés. Communauté r/Decathlon active. Perception SAV mixte.',
+  'Instagram': '@decathlon 595k followers, @intersportfr 148k. Kiprun record Europe = 26k likes.',
+  'Facebook Ads': '50k+ pubs Decathlon vs 46k Intersport. Intersport a 65% plus de fans. Decathlon = carousel, Intersport = vidéo.',
+  'X/Twitter': 'Mentions Jimmy Gressier (5.6k likes). Crise vélo relayée par comptes vérifiés.',
+  'Facebook Groups': 'Running Club France, groupe DECATHLON. Verbatim SAV brut non filtré.',
+  'Forums FR': 'Doctissimo, HardwareFR, Que Choisir. Discussions consommateurs indépendantes.',
 };
+
+// Extra entities to add at the end of the table (sources not in entity_summaries)
+const EXTRA_ENTITIES = [
+  { entity_name: 'TikTok', source_partition: 'social', volume_items: 76 },
+  { entity_name: 'YouTube', source_partition: 'social', volume_items: 175 },
+  { entity_name: 'Reddit', source_partition: 'community', volume_items: 1006 },
+  { entity_name: 'Instagram', source_partition: 'social', volume_items: 26 },
+  { entity_name: 'Facebook Ads', source_partition: 'social', volume_items: 60 },
+  { entity_name: 'X/Twitter', source_partition: 'social', volume_items: 112 },
+];
 
 function frenchTakeaway(e) {
   const name = ENTITY_RENAME[e.entity_name] || e.entity_name;
@@ -182,7 +200,14 @@ export function generateReportHtml() {
     `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">${e.label}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">${e.count}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">${e.pct}%</td></tr>`
   ).join('');
 
-  const entityRows = d.entities.slice(0, 8).map(e => {
+  // Merge DB entities + extra source entities
+  const allEntities = [...d.entities];
+  for (const extra of EXTRA_ENTITIES) {
+    if (!allEntities.find(e => e.entity_name === extra.entity_name)) {
+      allEntities.push(extra);
+    }
+  }
+  const entityRows = allEntities.slice(0, 12).map(e => {
     const partitionFr = { social: 'Réseaux sociaux', customer: 'Avis clients', employee: 'Employés', news: 'Presse', community: 'Communauté' };
     return `<tr>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">${ENTITY_RENAME[e.entity_name] || e.entity_name}</td>

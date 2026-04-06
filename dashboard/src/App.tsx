@@ -87,16 +87,15 @@ function App() {
           </a>
         </nav>
 
-        {/* Footer */}
-        <div className="mt-auto px-4 py-4 border-t border-gray-100">
-          {health?.status === 'ok' && (
-            <div className="flex items-center gap-2 text-[11px] text-green-600 mb-2">
+        {/* Status indicator only */}
+        {health?.status === 'ok' && (
+          <div className="mt-auto px-4 py-3">
+            <div className="flex items-center gap-2 text-[11px] text-green-600">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-dot" />
               Pipeline actif
             </div>
-          )}
-          <div className="text-[10px] text-gray-400">LICTER v1.0 — Mars 2026</div>
-        </div>
+          </div>
+        )}
       </aside>
 
       {/* ── Main ── */}
