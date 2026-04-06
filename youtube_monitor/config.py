@@ -2,6 +2,7 @@ from __future__ import annotations
 
 SEARCH_QUERIES: dict[str, list[dict[str, str]]] = {
     "decathlon": [
+        {"name": "decathlon_general", "query": "Decathlon", "pillar": "reputation"},
         {"name": "rep_crise_velo", "query": "Decathlon velo accident defectueux", "pillar": "reputation"},
         {"name": "rep_scandale", "query": "Decathlon scandale boycott", "pillar": "reputation"},
         {"name": "bench_vs_intersport", "query": "Decathlon vs Intersport", "pillar": "benchmark"},
@@ -9,6 +10,7 @@ SEARCH_QUERIES: dict[str, list[dict[str, str]]] = {
         {"name": "cx_qualite", "query": "test produit Decathlon qualite", "pillar": "cx"},
     ],
     "intersport": [
+        {"name": "intersport_general", "query": "Intersport", "pillar": "reputation"},
         {"name": "rep_avis", "query": "Intersport avis probleme", "pillar": "reputation"},
         {"name": "bench_vs_decathlon", "query": "Intersport vs Decathlon", "pillar": "benchmark"},
         {"name": "cx_sav", "query": "SAV Intersport qualite retour", "pillar": "cx"},

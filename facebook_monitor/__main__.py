@@ -27,7 +27,7 @@ GROUPS = [
 # Search queries
 SEARCHES = {
     "decathlon": ["decathlon france", "decathlon avis SAV"],
-    "intersport": ["intersport france"],
+    "intersport": ["intersport france", "intersport avis SAV"],
 }
 
 DELAY_BETWEEN_PAGES = 4  # seconds — stay polite
