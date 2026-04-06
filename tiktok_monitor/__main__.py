@@ -340,6 +340,52 @@ def run(
     _write_jsonl(run_dir / "comments.jsonl", all_comments)
     _write_jsonl(run_dir / "sources.jsonl", source_stats)
     log.info("Comments collected: %d", len(all_comments))
+
+    # ── Transcripts for top spoken TikToks (>15s, likely has speech) ──
+    import subprocess as _sp
+    import os as _os
+    groq_key = _os.environ.get("GROQ_API_KEY", "")
+    openai_key = _os.environ.get("OPENAI_API_KEY", "")
+    transcripts: list[dict] = []
+    if groq_key or openai_key:
+        spoken = [v for v in videos if v.duration_seconds > 15]
+        spoken.sort(key=lambda v: v.view_count + v.like_count * 10, reverse=True)
+        top_spoken = spoken[:5]
+        if top_spoken:
+            log.info("Transcribing top %d TikToks via Whisper...", len(top_spoken))
+            _os.makedirs("data/temp_audio", exist_ok=True)
+            for vid in top_spoken:
+                try:
+                    audio_path = f"data/temp_audio/{vid.video_id}.mp3"
+                    _sp.run([sys.executable, "-m", "yt_dlp", "-x", "--audio-format", "mp3", "--audio-quality", "5", "-o", audio_path, vid.video_url],
+                            capture_output=True, text=True, timeout=30)
+                    for fn in _os.listdir("data/temp_audio"):
+                        if vid.video_id in fn:
+                            audio_path = f"data/temp_audio/{fn}"
+                            break
+                    if not _os.path.exists(audio_path) or _os.path.getsize(audio_path) > 25 * 1024 * 1024:
+                        try: _os.remove(audio_path)
+                        except: pass
+                        continue
+                    api_url = "https://api.groq.com/openai/v1/audio/transcriptions" if groq_key else "https://api.openai.com/v1/audio/transcriptions"
+                    api_key = groq_key or openai_key
+                    model = "whisper-large-v3" if groq_key else "whisper-1"
+                    result = _sp.run(["curl", "-sf", "-X", "POST", api_url,
+                        "-H", f"Authorization: Bearer {api_key}",
+                        "-F", f"file=@{audio_path}", "-F", f"model={model}",
+                        "-F", "language=fr", "-F", "response_format=text"],
+                        capture_output=True, text=True, timeout=60)
+                    try: _os.remove(audio_path)
+                    except: pass
+                    transcript = result.stdout.strip()
+                    if transcript and len(transcript) > 20:
+                        transcripts.append({"video_id": vid.video_id, "video_url": vid.video_url, "brand_focus": vid.brand_focus, "title": vid.title, "transcript": transcript, "chars": len(transcript)})
+                        log.info("  [transcript] %s: %d chars", vid.title[:40] if vid.title else vid.video_id, len(transcript))
+                except Exception as exc:
+                    log.debug("Transcript failed for %s: %s", vid.video_id, exc)
+        if transcripts:
+            _write_jsonl(run_dir / "transcripts.jsonl", transcripts)
+            log.info("Saved %d TikTok transcripts", len(transcripts))
     (run_dir / "results.md").write_text(
         _build_results_markdown(
             run_id=run_id,
