@@ -1,7 +1,0 @@
-{"brand": "decathlon", "name": "decathlon_official_account", "source_type": "account", "pillar": "reputation", "production_status": "supported", "enabled_in_run": true, "videos": 5, "note": ""}
-{"brand": "decathlon", "name": "decathlon_tag", "source_type": "hashtag", "pillar": "reputation", "production_status": "supported", "enabled_in_run": true, "videos": 5, "note": ""}
-{"brand": "decathlon", "name": "decathlonfrance_tag", "source_type": "hashtag", "pillar": "reputation", "production_status": "supported", "enabled_in_run": true, "videos": 1, "note": ""}
-{"brand": "decathlon", "name": "decathlonsport_tag", "source_type": "hashtag", "pillar": "reputation", "production_status": "supported", "enabled_in_run": true, "videos": 0, "note": ""}
-{"brand": "decathlon", "name": "decathlonfr_tag", "source_type": "hashtag", "pillar": "reputation", "production_status": "supported", "enabled_in_run": true, "videos": 0, "note": ""}
-{"brand": "decathlon", "name": "rockrider_tag", "source_type": "hashtag", "pillar": "cx", "production_status": "supported", "enabled_in_run": true, "videos": 5, "note": ""}
-{"brand": "both", "name": "sportpascher_tag", "source_type": "hashtag", "pillar": "benchmark", "production_status": "supported", "enabled_in_run": true, "videos": 0, "note": ""}
