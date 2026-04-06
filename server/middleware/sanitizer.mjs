@@ -6,19 +6,26 @@
 
 // ── Injection patterns ──────────────────────────────────────
 const INJECTION_PATTERNS = [
-  /ignore.*(?:instruction|r[eè]gle|directive)/i,
+  /ignore.*(?:instruction|r[eèé]gle|directive|consigne)/i,
+  /ignor[eé].*(?:instruction|r[eèé]gle|directive|consigne)/i,
   /system\s*prompt/i,
   /mode\s*(?:debug|admin|dev|test)/i,
-  /r[eé]p[eè]te.*(?:instruction|prompt|r[eè]gle)/i,
-  /oublie.*(?:r[eè]gle|instruction|directive)/i,
-  /tu\s*es\s*quel\s*mod[eè]le/i,
+  /r[eéè]p[eèé]te.*(?:instruction|prompt|r[eèé]gle|consigne)/i,
+  /oublie.*(?:r[eèé]gle|instruction|directive|consigne)/i,
+  /montre.*(?:prompt|instruction|config|r[eèé]gle)/i,
+  /donne.*(?:prompt|instruction|config|r[eèé]gle)/i,
+  /(?:tes|vos|les)\s+instructions/i,
+  /ton\s+(?:prompt|system|fonctionnement)/i,
+  /tu\s*es\s*quel\s*mod[eèé]le/i,
   /(?:DAN|jailbreak|bypass|hack)/i,
   /traduis.*(?:instruction|prompt)/i,
   /(?:GPT|Claude|Mistral|OpenAI|Anthropic|LLM)\s*\?/i,
   /affiche.*(?:config|instruction|prompt)/i,
   /(?:pretend|imagine|act\s+as).*(?:no\s+rules|unrestricted)/i,
-  /compl[eè]te\s*[:\s]*["']?tu\s*es/i,
-  /quel.*(?:mod[eè]le|IA|intelligence\s*artificielle).*(?:utilise|es-tu)/i,
+  /compl[eèé]te\s*[:\s]*["']?tu\s*es/i,
+  /quel.*(?:mod[eèé]le|IA|intelligence\s*artificielle).*(?:utilise|es-tu)/i,
+  /divulgu/i,
+  /r[eéè]v[eéè]le.*(?:instruction|prompt|config)/i,
 ];
 
 // ── Rate limit store (in-memory, keyed by IP) ───────────────
@@ -110,15 +117,11 @@ export function sanitize(message, ip) {
         return result;
       }
 
-      if (session.injectionCount >= RATE_LIMIT.injectionThreshold) {
-        result.clean = false;
-        result.reason = 'injection_throttled';
-        return result;
-      }
-
-      // 1-2 injections: let through but flag
-      result.reason = 'injection_flagged';
-      break;
+      // Block immediately on first injection attempt
+      result.clean = false;
+      result.blocked = true;
+      result.reason = 'injection_blocked';
+      return result;
     }
   }
 

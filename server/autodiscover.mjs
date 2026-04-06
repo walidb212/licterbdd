@@ -100,6 +100,18 @@ export function discoverSources() {
     }
   }
 
+  // Filter generic/noisy hashtags
+  const GENERIC_HASHTAGS = new Set([
+    'shopping', 'client', 'consommation', 'avis', 'retour', 'review',
+    'experience', 'honte', 'alerte', 'fail', 'good', 'bad', 'best',
+    'love', 'like', 'follow', 'instagood', 'photooftheday', 'tbt',
+    'repost', 'vibes', 'mood', 'motivation', 'lifestyle', 'happy',
+    'fun', 'beautiful', 'amazing', 'cool', 'nice', 'great', 'top',
+    'new', 'sale', 'promo', 'discount', 'deal', 'offre', 'soldes',
+    'achat', 'commande', 'produit', 'marque', 'magasin', 'boutique',
+    'prix', 'qualite', 'qualité', 'service', 'livraison', 'colis',
+  ]);
+
   // Build suggestions
   const suggestions = [];
 
@@ -119,6 +131,8 @@ export function discoverSources() {
 
   for (const [name, count] of Object.entries(hashtagCounts)) {
     if (count < 2) continue;
+    if (GENERIC_HASHTAGS.has(name)) continue;
+    if (name.length < 4) continue;
     const relevant = isRelevant(name);
     suggestions.push({
       type: 'hashtag',
