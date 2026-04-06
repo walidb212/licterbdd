@@ -10,9 +10,10 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA = join(__dirname, '..', 'data');
 
-// Cache 1 hour
+// Cache 24 hours (content strategy doesn't change every hour)
 let _cache = null;
 let _cacheTime = 0;
+const CACHE_TTL = 86400_000;
 
 function loadLatestJsonl(source, file) {
   const base = join(DATA, `${source}_runs`);
@@ -90,14 +91,15 @@ Sois concret, cite des exemples des données ci-dessus.`;
 
 export async function compareContent() {
   const now = Date.now();
-  if (_cache && (now - _cacheTime) < 3600_000) return _cache;
+  if (_cache && (now - _cacheTime) < CACHE_TTL) return _cache;
 
   const prompt = buildComparisonPrompt();
 
-  // Try OpenAI first, then Groq
+  // Provider fallback: OpenAI → Groq → Mistral
   const providers = [
     { url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-4o-mini' },
     { url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' },
+    { url: 'https://api.mistral.ai/v1/chat/completions', key: process.env.MISTRAL_API_KEY, model: process.env.MISTRAL_MODEL || 'mistral-small-latest' },
   ];
 
   for (const p of providers) {

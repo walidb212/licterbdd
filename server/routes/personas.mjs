@@ -48,49 +48,56 @@ Réponds en JSON avec la structure : { "personas": [{ "name", "age", "profile", 
 Réponds uniquement en français.`;
 }
 
-router.get('/personas', async (req, res) => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: 'MISTRAL_API_KEY not configured' });
+// Provider fallback chain
+const PROVIDERS = [
+  { name: 'openai', url: 'https://api.openai.com/v1/chat/completions', keyEnv: 'OPENAI_API_KEY', model: () => process.env.OPENAI_MODEL || 'gpt-4o-mini' },
+  { name: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', keyEnv: 'GROQ_API_KEY', model: () => 'llama-3.3-70b-versatile' },
+  { name: 'mistral', url: 'https://api.mistral.ai/v1/chat/completions', keyEnv: 'MISTRAL_API_KEY', model: () => process.env.MISTRAL_MODEL || 'mistral-small-latest' },
+];
 
-  // Cache 30 min
+router.get('/personas', async (req, res) => {
+  // Cache 24h
   const now = Date.now();
-  if (_personaCache && (now - _personaCacheTime) < 1800_000) {
+  if (_personaCache && (now - _personaCacheTime) < 86400_000) {
     return res.json(_personaCache);
   }
 
-  try {
-    const prompt = buildPersonaPrompt();
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: process.env.MISTRAL_MODEL || 'mistral-small-latest',
-        messages: [
-          { role: 'system', content: 'Tu es un expert consumer insights. Réponds uniquement en JSON valide.' },
-          { role: 'user', content: prompt },
-        ],
-        max_tokens: 2048,
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-      }),
-    });
+  const prompt = buildPersonaPrompt();
+  const messages = [
+    { role: 'system', content: 'Tu es un expert consumer insights. Réponds uniquement en JSON valide.' },
+    { role: 'user', content: prompt },
+  ];
 
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(`Mistral ${response.status}: ${detail}`);
+  for (const p of PROVIDERS) {
+    const apiKey = process.env[p.keyEnv];
+    if (!apiKey) continue;
+    try {
+      const body = { model: p.model(), messages, max_tokens: 2048, temperature: 0.4 };
+      if (p.name !== 'groq') body.response_format = { type: 'json_object' };
+
+      const response = await fetch(p.url, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) continue;
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '{}';
+      const match = content.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        _personaCache = parsed;
+        _personaCacheTime = now;
+        console.log(`[personas] Generated via ${p.name}`);
+        return res.json(parsed);
+      }
+    } catch (err) {
+      console.warn(`[personas] ${p.name} failed: ${err.message?.slice(0, 80)}`);
     }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '{}';
-    const parsed = JSON.parse(content);
-
-    _personaCache = parsed;
-    _personaCacheTime = now;
-    res.json(parsed);
-  } catch (err) {
-    console.error('[personas] Error:', err.message);
-    res.status(500).json({ error: err.message });
   }
+
+  res.status(503).json({ error: 'No LLM API key configured (OPENAI_API_KEY, GROQ_API_KEY, or MISTRAL_API_KEY)' });
 });
 
 export default router;
