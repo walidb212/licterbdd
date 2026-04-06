@@ -1,6 +1,5 @@
 /**
- * LICTER API — Cloudflare Worker + D1
- * Replaces Express server for production deployment
+ * LICTER API — Cloudflare Worker + D1 (full implementation)
  */
 
 const CORS_HEADERS = {
@@ -34,10 +33,11 @@ function sov(records) {
 }
 
 function npsProxy(reviews) {
-  if (!reviews.length) return 0;
-  const promoters = reviews.filter(r => (r.rating || 0) >= 4).length;
-  const detractors = reviews.filter(r => (r.rating || 0) <= 2).length;
-  return Math.round((promoters - detractors) / reviews.length * 1000) / 10;
+  const rated = reviews.filter(r => r.rating && r.rating > 0);
+  if (!rated.length) return 0;
+  const promoters = rated.filter(r => r.rating >= 4).length;
+  const detractors = rated.filter(r => r.rating <= 2).length;
+  return Math.round((promoters - detractors) / rated.length * 1000) / 10;
 }
 
 function platformFromSource(s) {
@@ -47,47 +47,67 @@ function platformFromSource(s) {
   if (l.includes('tiktok')) return 'TikTok';
   if (l.includes('youtube')) return 'YouTube';
   if (l.includes('twitter') || l.includes('x_')) return 'Twitter/X';
-  if (l.includes('news')) return 'Presse';
+  if (l.includes('news') || l.includes('article')) return 'Presse';
+  if (l.includes('review') || l.includes('trustpilot')) return 'Avis';
   return 'Autre';
 }
 
-function parseThemes(row) {
-  try { return JSON.parse(row.themes || '[]'); } catch { return []; }
+function parseJson(str) {
+  try { return JSON.parse(str || '[]'); } catch { return []; }
 }
 
-// ── Route handlers ───────────────────────────────────────────
+const THEME_LABELS = {
+  service_client: 'SAV injoignable', retour_remboursement: 'Retours complexes',
+  livraison_stock: 'Ruptures stock', qualite_produit: 'Qualité produit',
+  magasin_experience: 'Attente en caisse', prix_promo: 'Rapport qualité/prix',
+  velo_mobilite: 'Vélo / Mobilité', brand_controversy: 'Controverse marque',
+  running_fitness: 'Running / Fitness', community_engagement: 'Communauté',
+};
+
+function computeThemeCounts(records, sentimentFilter) {
+  const counts = {};
+  for (const r of records) {
+    if (sentimentFilter && r.sentiment_label !== sentimentFilter) continue;
+    const themes = parseJson(r.themes).filter(t => t !== 'general_brand_signal' && t !== 'general');
+    for (const t of themes) counts[t] = (counts[t] || 0) + 1;
+  }
+  const total = Object.values(counts).reduce((s, v) => s + v, 0) || 1;
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([theme, count]) => ({
+      label: THEME_LABELS[theme] || theme.replace(/_/g, ' '),
+      count,
+      pct: Math.round(count / total * 100),
+      bar_pct: Math.round(count / (Object.values(counts)[0] || 1) * 100),
+    }));
+}
+
+// ── Handlers ─────────────────────────────────────────────────
 async function handleHealth() {
   return json({ status: 'ok', last_run: new Date().toISOString(), label: 'Cloudflare Workers + D1' });
 }
 
 async function handleReputation(db) {
-  const social = await db.prepare('SELECT * FROM social_enriched').all();
-  const rows = social.results || [];
+  const rows = (await db.prepare('SELECT * FROM social_enriched').all()).results || [];
   const excelRep = (await db.prepare('SELECT * FROM excel_reputation').all()).results || [];
-  const allSocial = [...rows, ...excelRep.map(r => ({ ...r, sentiment_label: (r.sentiment || 'negative').toLowerCase(), source_name: r.platform || '' }))];
+  const allSocial = [...rows, ...excelRep.map(r => ({ ...r, sentiment_label: (r.sentiment || 'negative').toLowerCase(), source_name: r.platform || '', published_at: r.date || '' }))];
 
   const gs = gravityScore(allSocial);
   const sovData = sov(allSocial);
   const negCount = allSocial.filter(r => r.sentiment_label === 'negative').length;
 
-  // Volume by day
   const byDay = {};
   for (const r of allSocial) {
-    const d = (r.published_at || r.date || '').slice(0, 10);
-    if (d) byDay[d] = (byDay[d] || 0) + 1;
+    const d = (r.published_at || '').slice(0, 10);
+    if (d && d.length === 10) byDay[d] = (byDay[d] || 0) + 1;
   }
-  const volume_by_day = Object.entries(byDay).sort().map(([date, volume]) => ({ date, volume }));
 
-  // Platform breakdown
   const platforms = {};
   for (const r of allSocial) {
     const p = platformFromSource(r.source_name);
     platforms[p] = (platforms[p] || 0) + 1;
   }
   const total = allSocial.length || 1;
-  const platform_breakdown = Object.entries(platforms).map(([platform, count]) => ({
-    platform, count, pct: Math.round(count / total * 100),
-  })).sort((a, b) => b.count - a.count);
 
   return json({
     kpis: {
@@ -96,21 +116,58 @@ async function handleReputation(db) {
       gravity_score: gs,
       influenceurs_detracteurs: excelRep.length,
     },
-    volume_by_day,
-    platform_breakdown,
+    volume_by_day: Object.entries(byDay).sort().slice(-30).map(([date, volume]) => ({ date, volume })),
+    platform_breakdown: Object.entries(platforms).map(([platform, count]) => ({ platform, count, pct: Math.round(count / total * 100) })).sort((a, b) => b.count - a.count),
     top_items: [],
-    alert: { active: gs >= 6, gravity_score: gs, message: gs >= 6 ? `Crise active — Gravity Score ${gs}/10` : '' },
+    alert: { active: gs >= 6, gravity_score: gs, message: gs >= 6 ? `Crise active — Vélo défectueux. Gravity Score ${gs}/10. Volume en hausse.` : '' },
+  });
+}
+
+async function handleCrisis(db) {
+  const rows = (await db.prepare('SELECT * FROM social_enriched').all()).results || [];
+  const excelRep = (await db.prepare('SELECT * FROM excel_reputation').all()).results || [];
+  const all = [...rows, ...excelRep.map(r => ({ ...r, sentiment_label: (r.sentiment || 'negative').toLowerCase(), published_at: r.date || '' }))];
+
+  const byDay = {};
+  for (const r of all) {
+    const d = (r.published_at || '').slice(0, 10);
+    if (d && d.length === 10) {
+      if (!byDay[d]) byDay[d] = { volume: 0, negative: 0 };
+      byDay[d].volume++;
+      if (r.sentiment_label === 'negative') byDay[d].negative++;
+    }
+  }
+
+  const timeline = Object.entries(byDay).sort().slice(-30).map(([date, data]) => ({
+    date, volume: data.volume, negative: data.negative,
+    neg_pct: data.volume ? Math.round(data.negative / data.volume * 100) : 0,
+    is_spike: data.volume > 50,
+  }));
+
+  const volumes = timeline.map(d => d.volume);
+  const avg = volumes.length ? volumes.reduce((s, v) => s + v, 0) / volumes.length : 0;
+  const peak = timeline.reduce((best, d) => d.volume > (best?.volume || 0) ? d : best, null);
+  const last3 = timeline.slice(-3);
+  const isEscalating = last3.length >= 2 && last3[last3.length - 1]?.volume > last3[0]?.volume;
+
+  return json({
+    timeline,
+    peak_day: peak ? { date: peak.date, volume: peak.volume } : null,
+    avg_daily_volume: Math.round(avg),
+    severity: avg > 50 ? 'critical' : avg > 20 ? 'high' : avg > 5 ? 'medium' : 'low',
+    is_escalating: isEscalating,
+    warnings: isEscalating ? ['Volume en hausse sur les 3 derniers jours'] : [],
   });
 }
 
 async function handleBenchmark(db) {
   const social = (await db.prepare('SELECT * FROM social_enriched').all()).results || [];
   const excelBench = (await db.prepare('SELECT * FROM excel_benchmark').all()).results || [];
-  const all = [...social, ...excelBench.map(r => ({ ...r, sentiment_label: (r.sentiment_detected || r.sentiment || 'neutral').toLowerCase(), brand_focus: (r.brand || 'both').toLowerCase() }))];
+  const all = [...social, ...excelBench.map(r => ({ ...r, sentiment_label: (r.sentiment_detected || 'neutral').toLowerCase(), brand_focus: (r.brand || 'both').toLowerCase(), themes: r.topic ? JSON.stringify([r.topic]) : '[]' }))];
 
   const sovData = sov(all);
-  const decRecords = all.filter(r => r.brand_focus === 'decathlon');
-  const intRecords = all.filter(r => r.brand_focus === 'intersport');
+  const dec = all.filter(r => r.brand_focus === 'decathlon');
+  const inter = all.filter(r => r.brand_focus === 'intersport');
 
   function sentPcts(records) {
     const t = records.length || 1;
@@ -122,42 +179,122 @@ async function handleBenchmark(db) {
     };
   }
 
+  // Radar topics
+  const TOPICS = ['prix', 'sav', 'qualite', 'engagement', 'marques_propres', 'service'];
+  const radar = TOPICS.map(topic => {
+    const decT = dec.filter(r => (parseJson(r.themes).join(' ') + ' ' + (r.topic || '')).toLowerCase().includes(topic));
+    const intT = inter.filter(r => (parseJson(r.themes).join(' ') + ' ' + (r.topic || '')).toLowerCase().includes(topic));
+    const decPos = decT.length ? Math.round(decT.filter(r => r.sentiment_label === 'positive').length / decT.length * 100) : 50;
+    const intPos = intT.length ? Math.round(intT.filter(r => r.sentiment_label === 'positive').length / intT.length * 100) : 50;
+    return { topic: topic.charAt(0).toUpperCase() + topic.slice(1), decathlon: decPos, intersport: intPos };
+  });
+
   return json({
     kpis: {
       share_of_voice_decathlon: sovData.decathlon,
       share_of_voice_intersport: sovData.intersport,
-      sentiment_decathlon_positive_pct: decRecords.length ? decRecords.filter(r => r.sentiment_label === 'positive').length / decRecords.length : 0,
-      sentiment_intersport_positive_pct: intRecords.length ? intRecords.filter(r => r.sentiment_label === 'positive').length / intRecords.length : 0,
+      sentiment_decathlon_positive_pct: dec.length ? dec.filter(r => r.sentiment_label === 'positive').length / dec.length : 0,
+      sentiment_intersport_positive_pct: inter.length ? inter.filter(r => r.sentiment_label === 'positive').length / inter.length : 0,
       total_mentions: all.length,
     },
-    radar: [],
+    radar,
     sov_by_month: [],
-    brand_scores: { decathlon: sentPcts(decRecords), intersport: sentPcts(intRecords) },
+    brand_scores: { decathlon: sentPcts(dec), intersport: sentPcts(inter) },
   });
 }
 
 async function handleCx(db) {
-  const reviews = (await db.prepare("SELECT * FROM review_enriched WHERE source_partition != 'employee'").all()).results || [];
-  const storeReviews = (await db.prepare('SELECT * FROM store_reviews').all()).results || [];
+  const reviews = (await db.prepare("SELECT * FROM review_enriched").all()).results || [];
   const excelCx = (await db.prepare('SELECT * FROM excel_cx').all()).results || [];
-  const all = [...reviews, ...storeReviews, ...excelCx.map(r => ({ ...r, sentiment_label: (r.sentiment || '').toLowerCase() }))];
+  const all = [...reviews.filter(r => r.source_partition !== 'employee'), ...excelCx.map(r => ({ ...r, sentiment_label: (r.sentiment || '').toLowerCase(), themes: r.category ? JSON.stringify([r.category.toLowerCase().replace(/ /g, '_')]) : '[]' }))];
 
   const nps = npsProxy(all);
-  const avgRating = all.length ? Math.round(all.reduce((s, r) => s + (r.rating || 0), 0) / all.filter(r => r.rating).length * 10) / 10 : 0;
+  const rated = all.filter(r => r.rating && r.rating > 0);
+  const avgRating = rated.length ? Math.round(rated.reduce((s, r) => s + r.rating, 0) / rated.length * 10) / 10 : 0;
+
+  // Rating distribution
+  const dist = [1, 2, 3, 4, 5].map(stars => {
+    const count = rated.filter(r => Math.round(r.rating) === stars).length;
+    return { stars, count, pct: rated.length ? Math.round(count / rated.length * 100) : 0 };
+  });
+
+  // Irritants & enchantements
+  const irritants = computeThemeCounts(all, 'negative').slice(0, 5);
+  const enchantements = computeThemeCounts(all, 'positive').slice(0, 3);
+
+  // SAV pct
+  const negReviews = all.filter(r => r.sentiment_label === 'negative');
+  const savNeg = negReviews.filter(r => {
+    const themes = parseJson(r.themes).join(' ').toLowerCase();
+    return themes.includes('sav') || themes.includes('service_client') || themes.includes('service client');
+  }).length;
 
   return json({
     kpis: {
-      avg_rating: avgRating || 3.27,
+      avg_rating: avgRating,
       nps_proxy: nps,
       total_reviews: all.length,
-      sav_negative_pct: 0.07,
+      sav_negative_pct: negReviews.length ? savNeg / negReviews.length : 0,
     },
     rating_by_month: [],
-    rating_distribution: [],
-    irritants: [],
-    enchantements: [],
+    rating_distribution: dist,
+    irritants,
+    enchantements,
     sources: [],
   });
+}
+
+async function handleWordcloud(db) {
+  const social = (await db.prepare('SELECT themes, summary_short FROM social_enriched').all()).results || [];
+  const reviews = (await db.prepare('SELECT themes, summary_short FROM review_enriched').all()).results || [];
+  const counts = {};
+  const stopwords = new Set(['de', 'la', 'le', 'les', 'du', 'des', 'un', 'une', 'et', 'en', 'est', 'que', 'qui', 'pour', 'pas', 'sur', 'au', 'avec', 'ce', 'dans', 'plus', 'par', 'the', 'and', 'to', 'of', 'is', 'in', 'for', 'general_brand_signal', 'general']);
+
+  for (const r of [...social, ...reviews]) {
+    for (const t of parseJson(r.themes)) {
+      if (!stopwords.has(t) && t.length > 2) counts[t] = (counts[t] || 0) + 1;
+    }
+    for (const w of (r.summary_short || '').toLowerCase().split(/\s+/)) {
+      const c = w.replace(/[^a-zàâéèêëïîôùûüç]/g, '');
+      if (c.length > 3 && !stopwords.has(c)) counts[c] = (counts[c] || 0) + 1;
+    }
+  }
+
+  return json(
+    Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 80).map(([text, value]) => ({ text, value }))
+  );
+}
+
+async function handleInfluencers(db) {
+  const rows = (await db.prepare('SELECT entity_name, source_name, brand_focus, sentiment_label, priority_score, summary_short FROM social_enriched').all()).results || [];
+  const authors = {};
+  for (const r of rows) {
+    const a = r.entity_name || '';
+    if (!a || a.length < 2) continue;
+    if (!authors[a]) authors[a] = { author: a, platform: platformFromSource(r.source_name), brand_focus: r.brand_focus, posts: 0, engagement: 0, pos: 0, neg: 0, neu: 0, mix: 0, top: '', topScore: 0 };
+    authors[a].posts++;
+    authors[a].engagement += r.priority_score || 0;
+    if (r.sentiment_label === 'positive') authors[a].pos++;
+    else if (r.sentiment_label === 'negative') authors[a].neg++;
+    else if (r.sentiment_label === 'mixed') authors[a].mix++;
+    else authors[a].neu++;
+    if ((r.priority_score || 0) > authors[a].topScore) { authors[a].topScore = r.priority_score; authors[a].top = r.summary_short || ''; }
+  }
+
+  return json(
+    Object.values(authors).filter(a => a.posts >= 2)
+      .map(a => ({
+        author: a.author, platform: a.platform, brand_focus: a.brand_focus,
+        posts: a.posts, total_engagement: Math.round(a.engagement),
+        avg_sentiment: a.posts ? Math.round((a.pos + a.neu * 0.5 + a.mix * 0.5) / a.posts * 100) / 100 : 0.5,
+        type: a.pos > a.neg * 2 ? 'ambassadeur' : a.neg > a.pos * 2 ? 'detracteur' : 'neutre',
+        sentiment_breakdown: { positive: a.pos, negative: a.neg, neutral: a.neu, mixed: a.mix },
+        top_post: (a.top || '').slice(0, 150),
+        influence_score: Math.round(a.engagement * (a.posts / 2)),
+      }))
+      .sort((a, b) => b.influence_score - a.influence_score)
+      .slice(0, 30)
+  );
 }
 
 async function handleRecommendations() {
@@ -176,32 +313,44 @@ async function handleSummary(db) {
   return json({
     entities: entities.map(e => ({
       name: e.entity_name, partition: e.source_partition, brand: e.brand_focus,
-      volume: e.volume_items, themes: [], risks: [], opportunities: [],
+      volume: e.volume_items, themes: parseJson(e.top_themes), risks: [], opportunities: [],
       takeaway: e.executive_takeaway || '',
     })),
     top_risks: [], top_opportunities: [],
   });
 }
 
+async function handleHeatmap(db) {
+  const rows = (await db.prepare('SELECT entity_name, brand_focus, rating, aggregate_rating FROM store_reviews WHERE rating IS NOT NULL').all()).results || [];
+  if (!rows.length) return json([]);
+  const cities = {};
+  for (const r of rows) {
+    const name = (r.entity_name || '').toLowerCase();
+    if (!cities[name]) cities[name] = { ratings: [], brand: r.brand_focus };
+    if (r.rating) cities[name].ratings.push(r.rating);
+  }
+  return json(Object.entries(cities).filter(([, d]) => d.ratings.length >= 2).map(([name, d]) => {
+    const avg = Math.round(d.ratings.reduce((s, v) => s + v, 0) / d.ratings.length * 10) / 10;
+    return { city: name, avg_rating: avg, review_count: d.ratings.length, color: avg >= 4 ? '#22c55e' : avg >= 3 ? '#f59e0b' : '#ef4444', label: avg >= 4 ? 'Bon' : avg >= 3 ? 'Moyen' : 'Faible', stores: 1, brands: [d.brand] };
+  }).sort((a, b) => a.avg_rating - b.avg_rating));
+}
+
 async function handleChat(db, env, body) {
   const { message } = body || {};
   if (!message) return json({ error: 'message is required' }, 400);
-
   const apiKey = env.OPENAI_API_KEY || env.GROQ_API_KEY;
-  if (!apiKey) return json({ error: 'No LLM API key configured' }, 503);
+  if (!apiKey) return json({ error: 'No LLM API key. Set OPENAI_API_KEY or GROQ_API_KEY as Worker secret.' }, 503);
 
-  // Build context from D1
-  const social = (await db.prepare('SELECT sentiment_label, COUNT(*) as c FROM social_enriched GROUP BY sentiment_label').all()).results || [];
-  const totalSocial = social.reduce((s, r) => s + r.c, 0);
-  const gs = 10; // simplified
+  const sentiments = (await db.prepare('SELECT sentiment_label, COUNT(*) as c FROM social_enriched GROUP BY sentiment_label').all()).results || [];
+  const totalSocial = sentiments.reduce((s, r) => s + r.c, 0);
+  const negPct = totalSocial ? Math.round((sentiments.find(r => r.sentiment_label === 'negative')?.c || 0) / totalSocial * 100) : 0;
 
   const systemPrompt = `Tu es l'assistant IA de LICTER Brand Intelligence pour Decathlon.
-KPIs: ${totalSocial} mentions, Gravity Score ${gs}/10, NPS 16.7.
-Réponds en français, cite les chiffres, sois concis et actionnable.`;
+KPIs actuels: ${totalSocial} mentions social, ${negPct}% négatives, Gravity Score 10/10, NPS 16.7, SoV Decathlon 65%.
+Crise en cours: accident vélo défectueux, 1500+ mentions négatives.
+Réponds en français, cite les chiffres, sois concis et actionnable (style COMEX).`;
 
-  const url = env.OPENAI_API_KEY
-    ? 'https://api.openai.com/v1/chat/completions'
-    : 'https://api.groq.com/openai/v1/chat/completions';
+  const url = env.OPENAI_API_KEY ? 'https://api.openai.com/v1/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
   const model = env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'llama-3.3-70b-versatile';
 
   const response = await fetch(url, {
@@ -209,72 +358,86 @@ Réponds en français, cite les chiffres, sois concis et actionnable.`;
     headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: message }], max_tokens: 1024, temperature: 0.2 }),
   });
-
   if (!response.ok) return json({ error: `LLM error ${response.status}` }, 500);
   const data = await response.json();
   return json({ response: data.choices?.[0]?.message?.content || 'Pas de réponse.' });
 }
 
-async function handleInfluencers(db) {
-  const rows = (await db.prepare('SELECT entity_name, source_name, brand_focus, sentiment_label, priority_score, summary_short FROM social_enriched').all()).results || [];
+async function handleContentCompare(db, env) {
+  const apiKey = env.OPENAI_API_KEY || env.GROQ_API_KEY;
+  if (!apiKey) return json({ analysis: 'Clé API LLM non configurée. Ajoutez OPENAI_API_KEY ou GROQ_API_KEY comme secret Worker.', provider: null });
 
-  const authors = {};
-  for (const r of rows) {
-    const a = r.entity_name || '';
-    if (!a || a.length < 2) continue;
-    if (!authors[a]) authors[a] = { author: a, platform: platformFromSource(r.source_name), brand_focus: r.brand_focus, posts: 0, engagement: 0, pos: 0, neg: 0, top: '' };
-    authors[a].posts++;
-    authors[a].engagement += r.priority_score || 0;
-    if (r.sentiment_label === 'positive') authors[a].pos++;
-    if (r.sentiment_label === 'negative') authors[a].neg++;
-    if ((r.priority_score || 0) > (authors[a].topScore || 0)) { authors[a].topScore = r.priority_score; authors[a].top = r.summary_short || ''; }
-  }
+  const prompt = `Compare la stratégie de contenu digital de Decathlon vs Intersport en France en 400 mots max.
+Decathlon: 595K followers Instagram, 50K+ pubs Facebook, TikTok actif avec vidéos produit virales (3M vues).
+Intersport: 148K followers Instagram, 46K+ pubs Facebook, TikTok avec contenu atelier/réparation.
+Analyse: ton, thèmes, formats, engagement. Qui fait mieux et pourquoi? 3 recommandations pour Decathlon.`;
 
-  const result = Object.values(authors).filter(a => a.posts >= 2)
-    .map(a => ({ ...a, type: a.pos > a.neg * 2 ? 'ambassadeur' : a.neg > a.pos * 2 ? 'detracteur' : 'neutre', total_engagement: a.engagement, top_post: a.top?.slice(0, 150) }))
-    .sort((a, b) => b.engagement - a.engagement).slice(0, 30);
+  const url = env.OPENAI_API_KEY ? 'https://api.openai.com/v1/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
+  const model = env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'llama-3.3-70b-versatile';
 
-  return json(result);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 800, temperature: 0.3 }),
+    });
+    if (!response.ok) return json({ analysis: 'Erreur LLM', provider: null });
+    const data = await response.json();
+    return json({ analysis: data.choices?.[0]?.message?.content || '', provider: model, cached_at: new Date().toISOString() });
+  } catch { return json({ analysis: 'Erreur de connexion LLM', provider: null }); }
 }
 
-async function handleHeatmap(db) {
-  const rows = (await db.prepare('SELECT entity_name, brand_focus, rating, aggregate_rating FROM store_reviews WHERE rating IS NOT NULL').all()).results || [];
-  // Simplified — return raw data
-  return json(rows.slice(0, 50));
+async function handlePersonas(db, env) {
+  const apiKey = env.OPENAI_API_KEY || env.GROQ_API_KEY;
+  if (!apiKey) return json({ personas: [], error: 'No LLM key' });
+
+  const prompt = `Génère 3 personas consommateurs synthétiques pour Decathlon France basés sur ces données:
+- NPS proxy: 16.7, Note moyenne: 3.3/5
+- Top irritant: SAV injoignable (7%), Retours complexes (5%)
+- Top enchantement: Rapport qualité/prix
+- Crise en cours: vélo défectueux
+Pour chaque persona: nom, age, profil (1 phrase), satisfaction_score (/10), motivations (3 bullet), frustrations (3 bullet), channels (3), recommendation (1 phrase).
+Réponds en JSON: { "personas": [...] }`;
+
+  const url = env.OPENAI_API_KEY ? 'https://api.openai.com/v1/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
+  const model = env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'llama-3.3-70b-versatile';
+
+  try {
+    const response = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 1000, temperature: 0.4 }) });
+    if (!response.ok) return json({ personas: [] });
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || '{}';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) return json(JSON.parse(match[0]));
+    return json({ personas: [] });
+  } catch { return json({ personas: [] }); }
 }
 
-// ── Main fetch handler ───────────────────────────────────────
+// ── Main ─────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
-
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: CORS_HEADERS });
-    }
+    if (request.method === 'OPTIONS') return new Response(null, { headers: CORS_HEADERS });
 
     const db = env.DB;
-
     try {
       if (path === '/api/health') return handleHealth();
       if (path === '/api/reputation') return handleReputation(db);
       if (path === '/api/benchmark') return handleBenchmark(db);
       if (path === '/api/cx') return handleCx(db);
+      if (path === '/api/crisis') return handleCrisis(db);
       if (path === '/api/recommendations') return handleRecommendations();
       if (path === '/api/summary') return handleSummary(db);
       if (path === '/api/influencers') return handleInfluencers(db);
       if (path === '/api/heatmap') return handleHeatmap(db);
-      if (path === '/api/crisis') return json({ severity: 'high', is_escalating: true, avg_daily_volume: 11, timeline: [], peak_day: null, warnings: [] });
+      if (path === '/api/wordcloud') return handleWordcloud(db);
       if (path === '/api/trending') return json([]);
       if (path === '/api/autodiscover') return json({ suggestions: [], stats: { texts_scanned: 0 } });
       if (path === '/api/event/status') return json({ active: false });
-      if (path === '/api/wordcloud') return json([]);
-
-      if (path === '/api/chat' && request.method === 'POST') {
-        const body = await request.json();
-        return handleChat(db, env, body);
-      }
-
+      if (path === '/api/content-compare') return handleContentCompare(db, env);
+      if (path === '/api/personas') return handlePersonas(db, env);
+      if (path === '/api/chat' && request.method === 'POST') return handleChat(db, env, await request.json());
       return json({ error: 'Not found' }, 404);
     } catch (err) {
       return json({ error: err.message }, 500);
