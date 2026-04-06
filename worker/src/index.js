@@ -72,14 +72,14 @@ function computeThemeCounts(records, sentimentFilter) {
     for (const t of themes) counts[t] = (counts[t] || 0) + 1;
   }
   const total = Object.values(counts).reduce((s, v) => s + v, 0) || 1;
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([theme, count]) => ({
-      label: THEME_LABELS[theme] || theme.replace(/_/g, ' '),
-      count,
-      pct: Math.round(count / total * 100),
-      bar_pct: Math.round(count / (Object.values(counts)[0] || 1) * 100),
-    }));
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const maxCount = sorted[0]?.[1] || 1;
+  return sorted.map(([theme, count]) => ({
+    label: THEME_LABELS[theme] || theme.replace(/_/g, ' '),
+    count,
+    pct: Math.round(count / total * 100),
+    bar_pct: Math.round(count / maxCount * 100),
+  }));
 }
 
 // ── Handlers ─────────────────────────────────────────────────
@@ -267,10 +267,11 @@ async function handleWordcloud(db) {
 
 async function handleInfluencers(db) {
   const rows = (await db.prepare('SELECT entity_name, source_name, brand_focus, sentiment_label, priority_score, summary_short FROM social_enriched').all()).results || [];
+  const SKIP_AUTHORS = new Set(['decathlon', 'intersport', 'reputation_crise', 'excel_reputation', 'reddit_post', 'reddit_comment', 'news_article', 'review_site', 'store_review']);
   const authors = {};
   for (const r of rows) {
     const a = r.entity_name || '';
-    if (!a || a.length < 2) continue;
+    if (!a || a.length < 2 || SKIP_AUTHORS.has(a.toLowerCase())) continue;
     if (!authors[a]) authors[a] = { author: a, platform: platformFromSource(r.source_name), brand_focus: r.brand_focus, posts: 0, engagement: 0, pos: 0, neg: 0, neu: 0, mix: 0, top: '', topScore: 0 };
     authors[a].posts++;
     authors[a].engagement += r.priority_score || 0;
@@ -437,9 +438,12 @@ async function handleMcpToolCall(toolName, args, db, env) {
       const pos = social.filter(r => r.sentiment_label === 'positive').length;
       const gs = gravityScore(social);
       const sovData = sov(allSocial);
-      const nps = npsProxy(reviews);
-      const rated = reviews.filter(r => r.rating && r.rating > 0);
-      const avgR = rated.length ? Math.round(rated.reduce((s, r) => s + r.rating, 0) / rated.length * 10) / 10 : 0;
+      // Also include excel_cx for NPS/rating
+      const excelCx = (await db.prepare('SELECT * FROM excel_cx WHERE brand_focus = ?').bind(brand).all()).results || [];
+      const allReviews = [...reviews, ...excelCx.map(r => ({ ...r, rating: parseFloat(r.rating) || 0 }))];
+      const nps = npsProxy(allReviews);
+      const rated = allReviews.filter(r => r.rating && parseFloat(r.rating) > 0);
+      const avgR = rated.length ? Math.round(rated.reduce((s, r) => s + parseFloat(r.rating), 0) / rated.length * 10) / 10 : 0;
       return JSON.stringify({
         brand, gravity_score: gs, volume: social.length,
         positive_pct: social.length ? Math.round(pos / social.length * 100) + '%' : '0%',
