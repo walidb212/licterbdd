@@ -116,7 +116,7 @@ async function main() {
     const embeddings = await embedBatch(texts);
 
     const vectors = batch.map((r, j) => ({
-      id: `${r.tbl}_${r.item_key}`,
+      id: `${r.tbl}_${String(r.item_key).slice(0, 50)}`.slice(0, 64),
       values: embeddings[j],
       metadata: {
         source: r.source_name || '',
