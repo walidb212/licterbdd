@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getDb } from './db.mjs';
+import { enrichRecord } from './enrich.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA = join(__dirname, '..', 'data');
@@ -48,10 +49,12 @@ export function ingest() {
     const insertSocial = db.prepare(`INSERT OR REPLACE INTO social_enriched
       (item_key, source_run_id, source_partition, brand_focus, entity_name,
        sentiment_label, sentiment_confidence, themes, risk_flags, opportunity_flags,
-       priority_score, summary_short, evidence_spans, pillar, source_name, published_at, provider, model)
+       priority_score, summary_short, evidence_spans, pillar, source_name, published_at, provider, model,
+       topic, post_type, brand_target)
       VALUES (@item_key, @source_run_id, @source_partition, @brand_focus, @entity_name,
        @sentiment_label, @sentiment_confidence, @themes, @risk_flags, @opportunity_flags,
-       @priority_score, @summary_short, @evidence_spans, @pillar, @source_name, @published_at, @provider, @model)`);
+       @priority_score, @summary_short, @evidence_spans, @pillar, @source_name, @published_at, @provider, @model,
+       @topic, @post_type, @brand_target)`);
 
     const txSocial = db.transaction((rows) => {
       for (const r of rows) {
@@ -74,9 +77,13 @@ export function ingest() {
           published_at: r.published_at || '',
           provider: r.provider || '',
           model: r.model || '',
+          topic: r.topic || 'general',
+          post_type: r.post_type || 'mention',
+          brand_target: r.brand_target || 'brand_only',
         });
       }
     });
+    socialRecords.forEach(enrichRecord);
     txSocial(socialRecords);
     counts.social = socialRecords.length;
 
@@ -84,11 +91,11 @@ export function ingest() {
       (item_key, source_run_id, source_partition, brand_focus, entity_name,
        sentiment_label, sentiment_confidence, themes, risk_flags, opportunity_flags,
        priority_score, summary_short, evidence_spans, pillar, source_name, published_at, provider, model,
-       rating, aggregate_rating, aggregate_count)
+       rating, aggregate_rating, aggregate_count, topic, post_type, brand_target)
       VALUES (@item_key, @source_run_id, @source_partition, @brand_focus, @entity_name,
        @sentiment_label, @sentiment_confidence, @themes, @risk_flags, @opportunity_flags,
        @priority_score, @summary_short, @evidence_spans, @pillar, @source_name, @published_at, @provider, @model,
-       @rating, @aggregate_rating, @aggregate_count)`);
+       @rating, @aggregate_rating, @aggregate_count, @topic, @post_type, @brand_target)`);
 
     const txReview = db.transaction((rows) => {
       for (const r of rows) {
@@ -114,19 +121,25 @@ export function ingest() {
           rating: r.rating || null,
           aggregate_rating: r.aggregate_rating || null,
           aggregate_count: r.aggregate_count || null,
+          topic: r.topic || 'general',
+          post_type: r.post_type || 'review',
+          brand_target: r.brand_target || 'brand_only',
         });
       }
     });
+    reviewRecords.forEach(enrichRecord);
     txReview(reviewRecords);
     counts.review = reviewRecords.length;
 
     const insertNews = db.prepare(`INSERT OR REPLACE INTO news_enriched
       (item_key, source_run_id, source_partition, brand_focus, entity_name,
        sentiment_label, sentiment_confidence, themes, risk_flags, opportunity_flags,
-       priority_score, summary_short, evidence_spans, pillar, source_name, published_at, provider, model)
+       priority_score, summary_short, evidence_spans, pillar, source_name, published_at, provider, model,
+       topic, post_type, brand_target)
       VALUES (@item_key, @source_run_id, @source_partition, @brand_focus, @entity_name,
        @sentiment_label, @sentiment_confidence, @themes, @risk_flags, @opportunity_flags,
-       @priority_score, @summary_short, @evidence_spans, @pillar, @source_name, @published_at, @provider, @model)`);
+       @priority_score, @summary_short, @evidence_spans, @pillar, @source_name, @published_at, @provider, @model,
+       @topic, @post_type, @brand_target)`);
 
     const txNews = db.transaction((rows) => {
       for (const r of rows) {
@@ -149,9 +162,13 @@ export function ingest() {
           published_at: r.published_at || '',
           provider: r.provider || '',
           model: r.model || '',
+          topic: r.topic || 'general',
+          post_type: r.post_type || 'mention',
+          brand_target: r.brand_target || 'brand_only',
         });
       }
     });
+    newsRecords.forEach(enrichRecord);
     txNews(newsRecords);
     counts.news = newsRecords.length;
 

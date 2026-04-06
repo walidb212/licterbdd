@@ -152,6 +152,15 @@ function _initSchema(db) {
       sentiment_label TEXT
     );
   `);
+
+  // Add enrichment columns if missing (topic, post_type, brand_target)
+  const enrichCols = ['topic TEXT', 'post_type TEXT', 'brand_target TEXT'];
+  const enrichTables = ['social_enriched', 'review_enriched', 'news_enriched', 'store_reviews', 'excel_reputation', 'excel_benchmark', 'excel_cx'];
+  for (const table of enrichTables) {
+    for (const col of enrichCols) {
+      try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col}`); } catch { /* already exists */ }
+    }
+  }
 }
 
 export function queryAll(table, where) {

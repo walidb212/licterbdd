@@ -148,6 +148,22 @@ DEFAULT_SOURCES: tuple[SourceConfig, ...] = (
         url="https://www.avis-verifies.com/avis-clients/intersport.fr",
         entity_name="Intersport France",
     ),
+    SourceConfig(
+        name="forums_decathlon",
+        site="forum",
+        brand_focus="decathlon",
+        review_scope="community",
+        url="",
+        entity_name="Decathlon (forums)",
+    ),
+    SourceConfig(
+        name="forums_intersport",
+        site="forum",
+        brand_focus="intersport",
+        review_scope="community",
+        url="",
+        entity_name="Intersport (forums)",
+    ),
 )
 
 
