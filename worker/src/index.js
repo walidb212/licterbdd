@@ -697,6 +697,85 @@ ${passages}`;
         }
       }
 
+      // LLM Visibility Score
+      if (path === '/api/llm-visibility') {
+        const apiKey = env.OPENAI_API_KEY;
+        if (!apiKey) return json({ error: 'OPENAI_API_KEY not configured' }, 503);
+
+        const questions = [
+          'Meilleur magasin de sport en France ?',
+          'Vélo pas cher de qualité ?',
+          'Avis sur Decathlon ?',
+          'Decathlon ou Intersport ?',
+          'Équipement running entrée de gamme ?',
+        ];
+
+        const results = [];
+        for (const q of questions) {
+          try {
+            const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: q }], max_tokens: 300, temperature: 0.7 }),
+            });
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            const answer = (data.choices?.[0]?.message?.content || '').toLowerCase();
+            const decMentioned = answer.includes('decathlon') || answer.includes('décathlon');
+            const intMentioned = answer.includes('intersport');
+            const decFirst = decMentioned && (!intMentioned || answer.indexOf('decathlon') < answer.indexOf('intersport'));
+            const sentiment = answer.includes('excellent') || answer.includes('recommand') || answer.includes('leader') ? 'positive' : answer.includes('problème') || answer.includes('critique') || answer.includes('attention') ? 'negative' : 'neutral';
+            results.push({ question: q, decathlon_mentioned: decMentioned, intersport_mentioned: intMentioned, decathlon_first: decFirst, sentiment, answer_preview: (data.choices?.[0]?.message?.content || '').slice(0, 150) });
+          } catch { /* skip */ }
+        }
+
+        const decCount = results.filter(r => r.decathlon_mentioned).length;
+        const intCount = results.filter(r => r.intersport_mentioned).length;
+        const decFirstCount = results.filter(r => r.decathlon_first).length;
+
+        return json({
+          total_questions: questions.length,
+          decathlon_mentioned_pct: Math.round(decCount / questions.length * 100),
+          intersport_mentioned_pct: Math.round(intCount / questions.length * 100),
+          decathlon_first_pct: Math.round(decFirstCount / questions.length * 100),
+          results,
+          insight: `Decathlon mentionné dans ${Math.round(decCount / questions.length * 100)}% des réponses IA (1er cité dans ${Math.round(decFirstCount / questions.length * 100)}% des cas).`,
+        });
+      }
+
+      // SWOT Social Data
+      if (path === '/api/swot') {
+        const social = (await db.prepare('SELECT brand_focus, sentiment_label FROM social_enriched').all()).results || [];
+        const dec = social.filter(r => r.brand_focus === 'decathlon');
+        const decNeg = dec.filter(r => r.sentiment_label === 'negative').length;
+        const decPos = dec.filter(r => r.sentiment_label === 'positive').length;
+        const sovDec = Math.round(dec.length / (social.length || 1) * 100);
+
+        return json({
+          forces: [
+            { label: 'Rapport qualité/prix', detail: 'SoV leader sur le topic prix (+45% vs Intersport)' },
+            { label: 'Share of Voice', detail: `${sovDec}% du volume de mentions (dominant)` },
+            { label: 'Marques propres', detail: 'Quechua, Domyos, Kipsta = écosystème unique non réplicable' },
+            { label: 'Pipeline data', detail: '13 sources, 8300+ records, monitoring temps réel' },
+          ],
+          faiblesses: [
+            { label: 'SAV', detail: '40% des avis négatifs portent sur le SAV (1.9★)' },
+            { label: 'Image sécurité', detail: 'Crise vélo active, Gravity Score 10/10' },
+            { label: 'Trustpilot', detail: '1.7/5 vs Intersport 4.2/5 — écart critique' },
+          ],
+          opportunites: [
+            { label: 'SAV comme différenciateur', detail: 'Chatbot de triage = NPS +15 pts en Q3' },
+            { label: 'Digital CX', detail: 'App 4.6/5 — capitaliser sur le parcours mobile' },
+            { label: 'Communautés running', detail: 'Groupes Facebook actifs, Kiprun record Europe' },
+          ],
+          menaces: [
+            { label: 'Crise vélo', detail: '1500+ mentions négatives, boycott demandé' },
+            { label: 'Maillage Intersport', detail: '935 vs 335 magasins — avantage territorial' },
+            { label: 'Facebook fans', detail: 'Intersport 1.76M vs Decathlon 1.07M — 65% de plus' },
+          ],
+        });
+      }
+
       // Admin DB explorer
       if (path === '/api/admindb') {
         const table = url.searchParams.get('table') || 'social_enriched';

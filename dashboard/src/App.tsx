@@ -11,15 +11,19 @@ import InfluencersPanel from './components/panels/InfluencersPanel'
 import ContentComparePanel from './components/panels/ContentComparePanel'
 import AdminDbPanel from './components/panels/AdminDbPanel'
 import TranscriptsPanel from './components/panels/TranscriptsPanel'
+import LlmVisibilityPanel from './components/panels/LlmVisibilityPanel'
+import SwotPanel from './components/panels/SwotPanel'
 import { useHealth } from './api/client'
 
-type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'synthese' | 'personas' | 'heatmap' | 'influencers' | 'content' | 'admindb' | 'transcripts'
+type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'swot' | 'llmvis' | 'synthese' | 'personas' | 'heatmap' | 'influencers' | 'content' | 'admindb' | 'transcripts'
 
 const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] = [
   { id: 'rep', label: 'Réputation', icon: '🛡', section: 'GENERAL' },
   { id: 'bench', label: 'Benchmark', icon: '⚔', section: 'GENERAL' },
   { id: 'cx', label: 'Expérience Client', icon: '★', section: 'GENERAL' },
   { id: 'reco', label: 'Recommandations', icon: '◎', section: 'GENERAL' },
+  { id: 'swot', label: 'SWOT', icon: '⊞', section: 'GENERAL' },
+  { id: 'llmvis', label: 'LLM Visibility', icon: '🤖', section: 'GENERAL' },
   { id: 'heatmap', label: 'Carte Sentiment', icon: '📍', section: 'TOOLS' },
   { id: 'influencers', label: 'Influenceurs', icon: '👥', section: 'TOOLS' },
   { id: 'content', label: 'Comparateur IA', icon: '⚡', section: 'TOOLS' },
@@ -126,6 +130,8 @@ function App() {
           {activeNav === 'bench' && <BenchmarkPanel />}
           {activeNav === 'cx' && <CxPanel />}
           {activeNav === 'reco' && <RecoPanel />}
+          {activeNav === 'swot' && <SwotPanel />}
+          {activeNav === 'llmvis' && <LlmVisibilityPanel />}
           {activeNav === 'heatmap' && <HeatmapPanel />}
           {activeNav === 'influencers' && <InfluencersPanel />}
           {activeNav === 'content' && <ContentComparePanel />}
