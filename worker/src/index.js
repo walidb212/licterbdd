@@ -429,10 +429,25 @@ async function handleMcpToolCall(toolName, args, db, env) {
   // Call internal handlers directly (avoid self-fetch loop)
   switch (toolName) {
     case 'get_brand_kpis': {
-      const rep = JSON.parse((await handleReputation(db)).clone().text ? await (await handleReputation(db)).text() : '{}');
-      const bench = JSON.parse(await (await handleBenchmark(db)).text());
-      const cx = JSON.parse(await (await handleCx(db)).text());
-      return JSON.stringify({ gravity_score: rep.kpis?.gravity_score, volume: rep.kpis?.volume_total, neg_pct: Math.round((rep.kpis?.sentiment_negatif_pct || 0) * 100) + '%', sov_decathlon: Math.round((bench.kpis?.share_of_voice_decathlon || 0) * 100) + '%', sov_intersport: Math.round((bench.kpis?.share_of_voice_intersport || 0) * 100) + '%', nps: cx.kpis?.nps_proxy, avg_rating: cx.kpis?.avg_rating, alert: rep.alert?.message || '' });
+      const brand = args.brand || 'decathlon';
+      const social = (await db.prepare('SELECT * FROM social_enriched WHERE brand_focus = ?').bind(brand).all()).results || [];
+      const allSocial = (await db.prepare('SELECT * FROM social_enriched').all()).results || [];
+      const reviews = (await db.prepare('SELECT * FROM review_enriched WHERE brand_focus = ?').bind(brand).all()).results || [];
+      const neg = social.filter(r => r.sentiment_label === 'negative').length;
+      const pos = social.filter(r => r.sentiment_label === 'positive').length;
+      const gs = gravityScore(social);
+      const sovData = sov(allSocial);
+      const nps = npsProxy(reviews);
+      const rated = reviews.filter(r => r.rating && r.rating > 0);
+      const avgR = rated.length ? Math.round(rated.reduce((s, r) => s + r.rating, 0) / rated.length * 10) / 10 : 0;
+      return JSON.stringify({
+        brand, gravity_score: gs, volume: social.length,
+        positive_pct: social.length ? Math.round(pos / social.length * 100) + '%' : '0%',
+        negative_pct: social.length ? Math.round(neg / social.length * 100) + '%' : '0%',
+        sov: Math.round((brand === 'decathlon' ? sovData.decathlon : sovData.intersport) * 100) + '%',
+        nps, avg_rating: avgR, total_reviews: reviews.length,
+        alert: gs >= 6 ? `Crise active pour ${brand}. Gravity Score ${gs}/10.` : 'Aucune alerte.',
+      });
     }
     case 'search_mentions': {
       const kw = args.keyword || '';
@@ -441,10 +456,13 @@ async function handleMcpToolCall(toolName, args, db, env) {
       let rows;
       if (brand) {
         rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? AND brand_focus = ? ORDER BY priority_score DESC LIMIT ?').bind(`%${kw}%`, brand, limit).all()).results || [];
+        // Fallback to reviews
+        if (!rows.length) rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at FROM review_enriched WHERE summary_short LIKE ? AND brand_focus = ? LIMIT ?').bind(`%${kw}%`, brand, limit).all()).results || [];
       } else {
         rows = (await db.prepare('SELECT source_name, brand_focus, sentiment_label, priority_score, summary_short, published_at, topic FROM social_enriched WHERE summary_short LIKE ? ORDER BY priority_score DESC LIMIT ?').bind(`%${kw}%`, limit).all()).results || [];
       }
-      return JSON.stringify({ keyword: kw, count: rows.length, mentions: rows });
+      if (!rows.length) return JSON.stringify({ keyword: kw, brand: brand || 'both', count: 0, mentions: [], message: `Aucune mention trouvée pour "${kw}"${brand ? ` (${brand})` : ''}. Essayez un autre mot-clé.` });
+      return JSON.stringify({ keyword: kw, brand: brand || 'both', count: rows.length, mentions: rows });
     }
     case 'get_crisis_alerts': {
       const crisis = JSON.parse(await (await handleCrisis(db)).text());
@@ -458,7 +476,12 @@ async function handleMcpToolCall(toolName, args, db, env) {
       const cx = JSON.parse(await (await handleCx(db)).text());
       return JSON.stringify({ nps: cx.kpis?.nps_proxy, irritants: cx.irritants, enchantements: cx.enchantements });
     }
-    case 'get_trending_topics': return '[]';
+    case 'get_trending_topics': {
+      // Extract top themes from social data as proxy for trends
+      const themes = (await db.prepare("SELECT topic, COUNT(*) as c FROM social_enriched WHERE topic IS NOT NULL AND topic != 'general' GROUP BY topic ORDER BY c DESC LIMIT 10").all()).results || [];
+      if (!themes.length) return JSON.stringify({ message: 'Aucun trending topic détecté. Lancez un run pour collecter des données fraîches.', topics: [] });
+      return JSON.stringify({ topics: themes.map(t => ({ topic: t.topic, mentions: t.c })), total_topics: themes.length });
+    }
     case 'get_influencers': {
       const inf = JSON.parse(await (await handleInfluencers(db)).text());
       return JSON.stringify(inf.slice(0, args.limit || 10));
