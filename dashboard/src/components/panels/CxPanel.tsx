@@ -4,12 +4,17 @@ import { useQuery } from '@tanstack/react-query'
 
 const IRRITANT_RENAME: Record<string, string> = {
   'Rapport qualité/prix': 'Qualité insuffisante vs prix',
-  'Attente en caisse': 'Files d\'attente',
+  'Attente en caisse': 'Temps d\'attente en caisse',
+  'marques propres': 'Qualité marques propres',
+  'conseils vendeur': 'Conseils vendeur insuffisants',
+  'choix en rayon': 'Choix en rayon limité',
 }
 const ENCHANT_RENAME: Record<string, string> = {
   'Rapport qualité/prix': 'Excellent rapport qualité/prix',
-  'Attente en caisse': 'Rapidité en magasin',
+  'Attente en caisse': 'Expérience en magasin',
   'choix en rayon': 'Large choix produits',
+  'marques propres': 'Marques propres appréciées',
+  'conseils vendeur': 'Conseils vendeur appréciés',
 }
 
 const PLATFORM_ICONS: Record<string, { icon: string; label: string }> = {
