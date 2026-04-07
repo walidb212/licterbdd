@@ -1,392 +1,249 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="utf-8"><style>
-  @page { margin: 15mm 12mm; }
+  @page { margin: 14mm 12mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a2e; line-height: 1.5; }
-  .cover { text-align: center; padding: 100px 40px 60px; page-break-after: always; }
-  .cover h1 { font-size: 38px; color: #0077c8; margin-bottom: 8px; font-weight: 800; }
-  .cover h2 { font-size: 18px; color: #555; font-weight: 400; margin-bottom: 12px; }
-  .cover .line { width: 80px; height: 3px; background: #0077c8; margin: 24px auto; }
-  .cover .date { font-size: 15px; color: #888; margin-top: 20px; }
-  .cover .logo { font-size: 12px; color: #aaa; margin-top: 80px; letter-spacing: 0.05em; }
-  .cover .stats { display: flex; justify-content: center; gap: 40px; margin-top: 50px; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
+  .cover { text-align: center; padding: 80px 40px 40px; page-break-after: always; }
+  .cover h1 { font-size: 36px; color: #0077c8; margin-bottom: 6px; font-weight: 800; }
+  .cover h2 { font-size: 16px; color: #555; font-weight: 400; margin-bottom: 10px; }
+  .cover .line { width: 80px; height: 3px; background: #0077c8; margin: 20px auto; }
+  .cover .date { font-size: 14px; color: #888; margin-top: 16px; }
+  .cover .stats { display: flex; justify-content: center; gap: 36px; margin-top: 40px; }
   .cover .stat { text-align: center; }
-  .cover .stat .num { font-size: 32px; font-weight: 800; color: #0077c8; }
-  .cover .stat .lbl { font-size: 11px; color: #888; margin-top: 2px; }
-  h2 { font-size: 20px; color: #0077c8; border-bottom: 3px solid #0077c8; padding-bottom: 6px; margin: 0 0 16px; font-weight: 800; }
-  h3 { font-size: 14px; color: #333; margin: 18px 0 10px; font-weight: 700; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-  .kpi-box { background: #f8f9fa; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #eee; }
-  .kpi-box .value { font-size: 28px; font-weight: 800; color: #0077c8; }
-  .kpi-box .value--danger { color: #ef4444; }
-  .kpi-box .label { font-size: 10px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
-  th { background: #f1f3f5; padding: 8px 12px; text-align: left; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-  .alert-box { background: linear-gradient(135deg, #fff5f5, #ffe8e8); border: 1px solid #fc8181; border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; }
-  .alert-box strong { color: #e53e3e; }
-  .reco-box { background: #f0f9ff; border-left: 4px solid; padding: 10px 14px; margin-bottom: 8px; border-radius: 0 10px 10px 0; }
-  .reco-box--critical { border-color: #ef4444; background: linear-gradient(135deg, #fff5f5, #fef2f2); }
-  .reco-box--high { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb, #fef9c3); }
-  .reco-box h4 { font-size: 12px; margin-bottom: 2px; }
-  .reco-box--critical h4 { color: #ef4444; }
-  .reco-box--high h4 { color: #d97706; }
-  .reco-box p { font-size: 11px; color: #444; line-height: 1.4; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
-  .card { background: #f8f9fa; border-radius: 10px; padding: 16px; border: 1px solid #eee; }
-  .card__title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .cover .stat .num { font-size: 28px; font-weight: 800; color: #0077c8; }
+  .cover .stat .lbl { font-size: 10px; color: #888; margin-top: 2px; }
+  .cover .logo { font-size: 11px; color: #aaa; margin-top: 60px; }
+  .cover .summary { max-width: 520px; margin: 30px auto 0; text-align: left; font-size: 12px; color: #555; line-height: 1.7; }
+  h2 { font-size: 18px; color: #0077c8; border-bottom: 3px solid #0077c8; padding-bottom: 5px; margin: 0 0 14px; font-weight: 800; }
+  h3 { font-size: 13px; color: #333; margin: 14px 0 8px; font-weight: 700; }
+  p { margin-bottom: 10px; }
+  .kpi-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .kpi { background: #f8f9fa; border-radius: 8px; padding: 10px 14px; text-align: center; border: 1px solid #eee; flex: 1; }
+  .kpi .v { font-size: 22px; font-weight: 800; color: #0077c8; }
+  .kpi .v--red { color: #ef4444; }
+  .kpi .v--green { color: #16a34a; }
+  .kpi .l { font-size: 9px; color: #888; text-transform: uppercase; margin-top: 2px; }
+  .alert { background: linear-gradient(135deg, #fff5f5, #ffe8e8); border: 1px solid #fc8181; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+  .alert strong { color: #e53e3e; }
+  .insight { background: #f0f9ff; border-left: 4px solid #0077c8; padding: 10px 14px; margin-bottom: 10px; border-radius: 0 8px 8px 0; }
+  .insight--red { border-color: #ef4444; background: #fef2f2; }
+  .insight--green { border-color: #10b981; background: #ecfdf5; }
+  .insight--amber { border-color: #f59e0b; background: #fffbeb; }
+  .insight h4 { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+  .insight--red h4 { color: #ef4444; }
+  .insight--green h4 { color: #065f46; }
+  .insight--amber h4 { color: #d97706; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px; }
+  th { background: #f1f3f5; padding: 6px 10px; text-align: left; font-size: 9px; color: #888; text-transform: uppercase; font-weight: 600; }
+  td { padding: 6px 10px; border-bottom: 1px solid #eee; }
   .page-break { page-break-before: always; }
-  .footer { text-align: center; font-size: 9px; color: #bbb; margin-top: 30px; padding-top: 12px; border-top: 1px solid #eee; }
-  .spark { display: flex; align-items: flex-end; gap: 2px; height: 60px; }
+  .footer { text-align: center; font-size: 8px; color: #bbb; margin-top: 20px; padding-top: 8px; border-top: 1px solid #eee; }
+  .quote { font-style: italic; color: #555; background: #f8f9fa; border-left: 3px solid #ddd; padding: 8px 12px; margin: 10px 0; border-radius: 0 6px 6px 0; font-size: 11px; }
 </style></head>
 <body>
 
-<!-- PAGE 1 : COUVERTURE -->
+<!-- PAGE 1 – COUVERTURE -->
 <div class="cover">
   <h1>Rapport Exécutif COMEX</h1>
-  <h2>Decathlon — Intelligence de Marque</h2>
+  <h2>Decathlon, Intelligence de Marque</h2>
   <div class="line"></div>
   <div class="date">7 avril 2026</div>
   <div class="stats">
-    <div class="stat"><div class="num">4 851</div><div class="lbl">Mentions analysées</div></div>
-    <div class="stat"><div class="num">3 305</div><div class="lbl">Avis clients</div></div>
+    <div class="stat"><div class="num">4 750</div><div class="lbl">Mentions sociales</div></div>
+    <div class="stat"><div class="num">3 305</div><div class="lbl">Avis clients</div></div>
     <div class="stat"><div class="num">13</div><div class="lbl">Sources de données</div></div>
     <div class="stat"><div class="num" style="color:#ef4444">10/10</div><div class="lbl">Gravity Score</div></div>
   </div>
-  <div class="logo">LICTER × Eugenia School — Brand Intelligence Platform</div>
-</div>
-
-<!-- PAGE 2 : RÉPUTATION -->
-<h2>1. Pilier Réputation — Crise Vélo</h2>
-
-<div class="alert-box">
-  <strong>ALERTE CRISE</strong> — 4 851 mentions détectées. Gravity Score : <strong>10/10</strong>.
-  1 500+ mentions négatives sur l'accident vélo défectueux depuis le 24 février 2026.
-  <div style="font-size:10px;color:#888;margin-top:6px;font-style:italic">
-    Note : Le Gravity Score 10/10 est amplifié par le reach élevé des comptes vérifiés relayant la crise (influenceurs sport, médias) et le pic de volume concentré sur 15 jours. Le taux de 31% de négatif est aggravé par la viralité des mentions.
+  <div class="summary">
+    <strong>Synthèse exécutive —</strong> Ce rapport analyse l'ensemble des signaux publics autour de Decathlon et de son concurrent Intersport sur la période février-avril 2026. Il s'appuie sur <strong>13 sources de données</strong> (TikTok, YouTube, Reddit, X/Twitter, Instagram, Facebook, Google News, Trustpilot, Glassdoor, Google Maps, App Store, Forums, Facebook Ads) collectées par un pipeline automatisé de 13 scrapers, enrichies par IA (GPT-4o-mini) et indexées dans une base vectorielle (7 223 vecteurs).
+    <br><br>
+    <strong>Trois constats majeurs émergent –</strong> (1) une crise de réputation active sur le vélo défectueux qui nécessite une réponse immédiate, (2) un avantage concurrentiel fort sur le prix et les marques propres que Decathlon doit protéger, et (3) un SAV défaillant qui représente 40% des avis négatifs – le levier d'amélioration le plus rapide.
   </div>
+  <div class="logo">LICTER × Eugenia School – Brand Intelligence Platform</div>
 </div>
 
-<div class="kpi-grid">
-  <div class="kpi-box"><div class="value">4 851</div><div class="label">Mentions totales</div></div>
-  <div class="kpi-box"><div class="value value--danger">10</div><div class="label">Gravity Score /10</div></div>
-  <div class="kpi-box"><div class="value value--danger">1 503</div><div class="label">Mentions négatives</div></div>
-  <div class="kpi-box"><div class="value">67%</div><div class="label">Share of Voice Decathlon</div></div>
+<!-- PAGE 2 – RÉPUTATION & CRISE -->
+<h2>1. Réputation – Crise vélo défectueux</h2>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="v v--red">10/10</div><div class="l">Gravity Score</div></div>
+  <div class="kpi"><div class="v">4 750</div><div class="l">Mentions totales</div></div>
+  <div class="kpi"><div class="v v--red">32%</div><div class="l">Sentiment négatif</div></div>
+  <div class="kpi"><div class="v">67%</div><div class="l">Share of Voice</div></div>
 </div>
+
+<div class="alert">
+  <strong>CRISE ACTIVE</strong> – Depuis le 24 février 2026, un accident impliquant un vélo Rockrider défectueux a généré plus de 1 500 mentions négatives en 15 jours. La crise a atteint son pic entre le 7 et le 10 mars avec des appels au boycott relayés par des comptes vérifiés sur TikTok, X et Reddit.
+</div>
+
+<p>Le <strong>Gravity Score atteint 10/10</strong>, le maximum de notre échelle. Ce score intègre trois facteurs – le volume de mentions (4 750), le taux de sentiment négatif (32%) et le reach des comptes relayant la crise. Le fait que des influenceurs sport et des médias nationaux aient amplifié le sujet explique cette sévérité maximale.</p>
+
+<p>La répartition du sentiment montre que <strong>20% des mentions restent positives</strong> – principalement liées aux marques propres (Kiprun, Quechua) et aux promotions. Le 46% de neutre correspond aux articles de presse factuels et aux mentions comparatives sans opinion.</p>
+
+<h3>Ce que disent les clients</h3>
+<div class="quote">"J'ai acheté un Rockrider 520 il y a 3 mois. Au bout de 2 semaines, le dérailleur s'est cassé en pleine descente. J'ai failli avoir un accident grave." – YouTube, 178k vues</div>
+<div class="quote">"Decathlon devrait rappeler tous les vélos de cette série. C'est un problème de sécurité, pas un problème de qualité." – Reddit, r/Decathlon</div>
+
+<p><strong>Analyse –</strong> La crise n'est pas un problème de perception, c'est un problème de produit. Les verbatims montrent des incidents réels (dérailleur cassé, freins défaillants) qui posent un risque juridique en plus du risque réputationnel. L'absence de réponse officielle de Decathlon après 6 semaines aggrave la situation – les clients perçoivent un silence qui vaut aveu.</p>
+
+<div class="insight insight--red">
+  <h4>RECOMMANDATION CRITIQUE – Communiqué de crise (48h max)</h4>
+  <p>Publier un communiqué transparent reconnaissant le problème + mettre en place une hotline dédiée + procédure de rappel pour la série concernée. Impact estimé – <strong>-60% de volume négatif en 7 jours</strong> sur la base de benchmarks crise similaires (Samsung Galaxy Note 7, Peloton Tread).</p>
+</div>
+
+<!-- PAGE 3 – BENCHMARK -->
+<div class="page-break"></div>
+<h2>2. Benchmark – Decathlon vs Intersport</h2>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="v">67%</div><div class="l">SoV Decathlon</div></div>
+  <div class="kpi"><div class="v" style="color:#e8001c">33%</div><div class="l">SoV Intersport</div></div>
+  <div class="kpi"><div class="v">335</div><div class="l">Magasins Dec.</div></div>
+  <div class="kpi"><div class="v" style="color:#e8001c">935</div><div class="l">Magasins Int.</div></div>
+</div>
+
+<p>Sur 6 583 mentions comparatives analysées sur 12 mois, Decathlon domine la conversation avec <strong>67% de Share of Voice</strong>. Mais cette domination masque des faiblesses structurelles révélées par l'analyse thématique.</p>
+
+<h3>Analyse par topic – Forces et faiblesses</h3>
+<table>
+  <thead><tr><th>Topic</th><th style="text-align:right">Decathlon</th><th style="text-align:right">Intersport</th><th>Analyse</th></tr></thead>
+  <tbody>
+    <tr><td style="font-weight:600">Prix / Accessibilité</td><td style="text-align:right;color:#0077c8;font-weight:700">73%</td><td style="text-align:right;color:#e8001c">45%</td><td style="font-size:10px;color:#555">Avantage net Decathlon. "Sport pour tous" fonctionne.</td></tr>
+    <tr><td style="font-weight:600">Marques propres</td><td style="text-align:right;color:#0077c8;font-weight:700">81%</td><td style="text-align:right;color:#e8001c">35%</td><td style="font-size:10px;color:#555">Force majeure. Quechua, Kiprun, Domyos sont cités positivement.</td></tr>
+    <tr><td style="font-weight:600">Service en magasin</td><td style="text-align:right;color:#0077c8;font-weight:700">56%</td><td style="text-align:right;color:#e8001c">48%</td><td style="font-size:10px;color:#555">Léger avantage Decathlon, mais écart faible.</td></tr>
+    <tr><td style="font-weight:600">Engagement communauté</td><td style="text-align:right;color:#0077c8">61%</td><td style="text-align:right;color:#e8001c;font-weight:700">72%</td><td style="font-size:10px;color:#555">Intersport gagne. Maillage local (935 magasins) = proximité.</td></tr>
+    <tr><td style="font-weight:600">SAV / Service client</td><td style="text-align:right;color:#0077c8">28%</td><td style="text-align:right;color:#e8001c;font-weight:700">55%</td><td style="font-size:10px;color:#555"><strong>Faiblesse critique Decathlon.</strong> Trustpilot – 1.7/5 vs 4.2/5.</td></tr>
+    <tr><td style="font-weight:600">Qualité perçue</td><td style="text-align:right;color:#0077c8">20%</td><td style="text-align:right;color:#e8001c;font-weight:700">60%</td><td style="font-size:10px;color:#555">Intersport bénéficie de l'image "grandes marques = qualité".</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Lecture stratégique –</strong> Decathlon ne doit <strong>pas</strong> essayer de battre Intersport sur la qualité perçue ou les grandes marques. Intersport a 935 magasins et l'image premium. En revanche, Intersport est vulnérable sur trois axes où Decathlon domine – <strong>le prix (73% vs 45%), les marques propres (81% vs 35%) et le service en magasin (56% vs 48%)</strong>.</p>
+
+<div class="insight insight--green">
+  <h4>OPPORTUNITÉ – Amplifier "Sport accessible à tous"</h4>
+  <p>Lancer une campagne positionnant les marques propres (Quechua, Domyos, Kipsta) comme des alternatives de qualité certifiée aux marques premium. Profiter de la crise vélo pour montrer l'excellence Decathlon sur les <strong>autres catégories</strong> (running, randonnée, fitness). <strong>Objectif – SoV > 70%.</strong></p>
+</div>
+
+<p><strong>Point d'attention –</strong> L'écart SAV est le plus dangereux. Sur Trustpilot, Decathlon est noté <strong>1.7/5 contre 4.2/5 pour Intersport</strong>. C'est un écart de 2.5 points qui ne peut pas être expliqué par la taille – c'est un problème systémique de service après-vente que la crise vélo ne fait qu'amplifier.</p>
+
+<!-- PAGE 4 – EXPÉRIENCE CLIENT -->
+<div class="page-break"></div>
+<h2>3. Expérience Client – Voix du consommateur</h2>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="v">3 305</div><div class="l">Avis analysés</div></div>
+  <div class="kpi"><div class="v">16.7</div><div class="l">NPS Proxy</div></div>
+  <div class="kpi"><div class="v v--red">40%</div><div class="l">SAV dans avis négatifs</div></div>
+  <div class="kpi"><div class="v v--green">51%</div><div class="l">Avis 4-5★</div></div>
+</div>
+
+<p>L'analyse de 3 305 avis clients (Google Maps, Trustpilot, App Store, Custplace) révèle un NPS Proxy de <strong>+16.7</strong> – positif mais fragile. 51% des avis sont à 4 ou 5 étoiles, mais les 34% d'avis à 1-2 étoiles tirent la perception vers le bas.</p>
+
+<h3>Ce qui fait mal – Top irritants (avis 1-2★)</h3>
+<p>L'analyse thématique des avis négatifs fait ressortir 4 irritants majeurs, tous actionnables –</p>
 
 <div class="two-col">
-  <div class="card">
-    <div class="card__title">Répartition du sentiment</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="width:70px;font-size:11px;color:#666">Positif</span>
-      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:20%;height:100%;background:#22c55e;border-radius:5px"></div></div>
-      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">20%</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="width:70px;font-size:11px;color:#666">Négatif</span>
-      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:32%;height:100%;background:#ef4444;border-radius:5px"></div></div>
-      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">32%</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="width:70px;font-size:11px;color:#666">Neutre</span>
-      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:46%;height:100%;background:#94a3b8;border-radius:5px"></div></div>
-      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">46%</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="width:70px;font-size:11px;color:#666">Mixte</span>
-      <div style="flex:1;height:10px;background:#f0f0f0;border-radius:5px"><div style="width:2%;height:100%;background:#f59e0b;border-radius:5px"></div></div>
-      <span style="width:40px;font-size:12px;color:#333;text-align:right;font-weight:600">2%</span>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card__title">Volume mentions — 14 derniers jours</div>
-    <div class="spark"><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:17px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-24</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:14px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-25</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:11px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-26</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:9px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-27</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:8px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-28</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:22px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-29</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:25px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-30</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:15px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">03-31</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:42px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">04-01</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:34px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">04-02</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:38px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">04-03</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:50px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">04-04</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:32px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">04-05</span>
-    </div><div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:50px;background:#0077c8;border-radius:2px"></div>
-      <span style="font-size:7px;color:#999">04-06</span>
-    </div></div>
-  </div>
+<div>
+<table>
+  <thead><tr><th>Irritant</th><th style="text-align:right">Mentions</th></tr></thead>
+  <tbody>
+    <tr><td style="font-weight:600">Prix jugé trop élevé</td><td style="text-align:right;color:#ef4444;font-weight:700">165 (18%)</td></tr>
+    <tr><td style="font-weight:600">Temps d'attente en caisse</td><td style="text-align:right;color:#ef4444;font-weight:700">126 (14%)</td></tr>
+    <tr><td style="font-weight:600">Qualité marques propres</td><td style="text-align:right;color:#ef4444;font-weight:700">105 (12%)</td></tr>
+    <tr><td style="font-weight:600">Conseils vendeur insuffisants</td><td style="text-align:right;color:#ef4444;font-weight:700">104 (11%)</td></tr>
+  </tbody>
+</table>
+</div>
+<div>
+<table>
+  <thead><tr><th>Enchantement (avis 4-5★)</th><th style="text-align:right">Mentions</th></tr></thead>
+  <tbody>
+    <tr><td style="font-weight:600">Bon rapport qualité/prix</td><td style="text-align:right;color:#16a34a;font-weight:700">254 (19%)</td></tr>
+    <tr><td style="font-weight:600">Expérience magasin agréable</td><td style="text-align:right;color:#16a34a;font-weight:700">193 (14%)</td></tr>
+    <tr><td style="font-weight:600">Large choix produits</td><td style="text-align:right;color:#16a34a;font-weight:700">154 (11%)</td></tr>
+    <tr><td style="font-weight:600">Marques propres appréciées</td><td style="text-align:right;color:#16a34a;font-weight:700">153 (11%)</td></tr>
+  </tbody>
+</table>
+</div>
 </div>
 
-<!-- PAGE 3 : BENCHMARK -->
-<div class="page-break"></div>
-<h2>2. Pilier Benchmark — Decathlon vs Intersport</h2>
+<p><strong>Insight clé –</strong> Le "prix jugé trop élevé" en irritant #1 peut sembler contradictoire avec le "bon rapport qualité/prix" en enchantement #1. L'explication est simple – <strong>les clients qui comparent Decathlon à des enseignes premier prix trouvent cher, tandis que ceux qui comparent aux marques premium trouvent abordable.</strong> La perception dépend du référentiel du client, pas du prix absolu.</p>
 
-<div class="kpi-grid">
-  <div class="kpi-box"><div class="value">67%</div><div class="label">SoV Decathlon</div></div>
-  <div class="kpi-box"><div class="value" style="color:#e8001c">33%</div><div class="label">SoV Intersport</div></div>
-  <div class="kpi-box"><div class="value">335</div><div class="label">Magasins Decathlon</div></div>
-  <div class="kpi-box"><div class="value" style="color:#e8001c">935</div><div class="label">Magasins Intersport</div></div>
-</div>
+<p>Le vrai signal d'alarme est le <strong>SAV – 40% de tous les avis négatifs mentionnent un problème de service après-vente</strong>, notamment difficulté à joindre le service, délais de retour trop longs, absence de réponse. C'est le levier d'amélioration le plus impactant car il affecte la rétention client et le NPS.</p>
+
+<h3>Marques les plus citees dans les avis</h3>
+<p>En croisant les 1 400+ avis Google Maps et Trustpilot avec le catalogue de 4 500 produits, nous avons identifié les marques propres Decathlon les plus mentionnées :</p>
 
 <div class="two-col">
-  <div class="card">
-    <div class="card__title">Forces / Faiblesses par topic</div>
-    
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Prix / Accessibilité</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:73%;height:100%;background:#0077c8;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">73%</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
-        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:45%;height:100%;background:#e8001c;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">45%</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Service après-vente</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:28%;height:100%;background:#0077c8;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">28%</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
-        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:55%;height:100%;background:#e8001c;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">55%</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Qualité perçue</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:20%;height:100%;background:#0077c8;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">20%</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
-        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:60%;height:100%;background:#e8001c;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">60%</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Engagement communauté</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:61%;height:100%;background:#0077c8;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">61%</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
-        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:72%;height:100%;background:#e8001c;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">72%</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Marques propres</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:81%;height:100%;background:#0077c8;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">81%</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
-        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:35%;height:100%;background:#e8001c;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">35%</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#333;margin-bottom:4px">Service en magasin</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="width:70px;font-size:10px;color:#0077c8">Decathlon</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:56%;height:100%;background:#0077c8;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">56%</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
-        <span style="width:70px;font-size:10px;color:#e8001c">Intersport</span>
-        <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:48%;height:100%;background:#e8001c;border-radius:4px"></div></div>
-        <span style="width:30px;font-size:10px;color:#666;text-align:right">48%</span>
-      </div>
-    </div>
-  
-  </div>
-  <div>
-    <h3>Insights clés</h3>
-    <ul style="font-size:12px;color:#444;line-height:1.8;padding-left:16px">
-      <li>Intersport gagne sur les <strong>grandes marques</strong> et le maillage territorial (935 vs 335 magasins)</li>
-      <li>Decathlon conserve un avantage net sur le <strong>rapport qualité/prix</strong> (+45% SoV)</li>
-      <li>Sur le SAV, les deux marques sont faibles — opportunité de différenciation</li>
-      <li>2 600 mentions comparatives analysées sur 12 mois</li>
-    </ul>
-
-    <div class="reco-box reco-box--high" style="margin-top:16px">
-      <h4>RECOMMANDATION</h4>
-      <p>Ne pas engager le combat sur les marques premium. Capitaliser sur les marques propres (Quechua, Domyos, Kipsta) et l'accessibilité prix.</p>
-    </div>
-  </div>
+<div>
+<p style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:6px">AVIS NEGATIFS</p>
+<p style="font-size:11px;color:#555;line-height:1.7"><strong>Quechua</strong> (Randonnée) – clients déçus par la qualité perçue vs grandes marques.<br>
+<strong>Riverside</strong> (Cyclisme) – problèmes de conseil en magasin sur les vélos enfant.<br>
+<strong>Forclaz</strong> (Randonnée) – attentes non satisfaites sur le SAV.<br>
+Les catégories Randonnée (60%) et Cyclisme (20%) concentrent les plaintes liées aux marques propres.</p>
+</div>
+<div>
+<p style="font-size:11px;font-weight:700;color:#16a34a;margin-bottom:6px">AVIS POSITIFS</p>
+<p style="font-size:11px;color:#555;line-height:1.7"><strong>Nakamura</strong> (Cyclisme, Intersport) – 8 mentions positives, confort et qualité appréciés.<br>
+<strong>Van Rysel</strong> (Cyclisme) – 7 mentions, gamme route premium bien perçue.<br>
+<strong>Domyos</strong> (Fitness) – 4 mentions, bon rapport qualité/prix sur les équipements maison.<br>
+<strong>Kiprun</strong> (Running) – satisfaction sur les chaussures de course.</p>
+</div>
 </div>
 
-<div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-left:4px solid #10b981;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:18px">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-    <span style="font-size:12px;font-weight:800;color:#065f46;text-transform:uppercase;letter-spacing:0.05em">🚀 Opportunité Decathlon</span>
-    <span style="font-size:9px;padding:2px 8px;border-radius:4px;background:#a7f3d0;color:#065f46;font-weight:700">Marques propres</span>
-    <span style="font-size:9px;padding:2px 8px;border-radius:4px;background:#a7f3d0;color:#065f46;font-weight:700">Prix / Accessibilité</span>
-    <span style="font-size:9px;padding:2px 8px;border-radius:4px;background:#a7f3d0;color:#065f46;font-weight:700">Service en magasin</span>
-  </div>
-  <p style="font-size:12px;color:#333;line-height:1.6;margin-bottom:10px">
-    Intersport est vulnérable sur <strong>marques propres, prix / accessibilité, service en magasin</strong> (35%, 45%, 48%).
-    Decathlon domine ces topics (81%, 73%, 56%).
-  </p>
-  <ul style="font-size:11px;color:#444;line-height:1.8;padding-left:16px;margin:0">
-    <li>Amplifier le message <strong>"Sport accessible à tous"</strong> — Decathlon leader sur le prix</li>
-    <li>Campagne <strong>marques propres = qualité certifiée</strong> — contrer "grandes marques = meilleur"</li>
-    <li>Profiter de la crise vélo pour montrer la qualité Decathlon sur <strong>les autres catégories</strong></li>
-  </ul>
+<div class="insight insight--amber">
+  <h4>RECOMMANDATION – Chatbot SAV première réponse</h4>
+  <p>Déployer un chatbot de triage (IA + FAQ dynamique) capable d'absorber 60% des tickets niveau 1 (suivi commande, procédure retour, stock magasin). Coût estimé – 50k€. <strong>Impact – NPS +15 pts en Q3 2026. KPI cible – NPS > 30.</strong></p>
 </div>
 
-<!-- PAGE 4 : CX -->
+<!-- PAGE 5 – RECOMMANDATIONS & PIPELINE -->
 <div class="page-break"></div>
-<h2>3. Pilier Expérience Client</h2>
+<h2>4. Plan d'action & Méthodologie</h2>
 
-<div class="kpi-grid">
-  <div class="kpi-box"><div class="value">3 305</div><div class="label">Avis analysés</div></div>
-  <div class="kpi-box"><div class="value">16.7</div><div class="label">NPS Proxy</div></div>
-  <div class="kpi-box"><div class="value value--danger">234</div><div class="label">Avis 1★</div></div>
-  <div class="kpi-box"><div class="value" style="color:#16a34a">371</div><div class="label">Avis 5★</div></div>
+<h3>Synthèse des recommandations prioritaires</h3>
+
+<div class="insight insight--red">
+  <h4>1. CRITIQUE – Communiqué de crise vélo (48h max)</h4>
+  <p>Gravity Score 10/10. 1 500+ mentions négatives. Publier un communiqué transparent + hotline + rappel série concernée. <strong>Impact – –60% négatif en 7j.</strong></p>
+</div>
+<div class="insight insight--amber">
+  <h4>2. HAUTE – Chatbot SAV première réponse</h4>
+  <p>40% des avis négatifs = SAV. Chatbot IA pour triage niveau 1. <strong>Impact – NPS +15 pts Q3. KPI – NPS > 30.</strong></p>
+</div>
+<div class="insight insight--green">
+  <h4>3. HAUTE – Amplifier "Sport accessible à tous"</h4>
+  <p>Intersport vulnérable sur prix (45%) et marques propres (35%). Campagne qualité certifiée. <strong>Impact – SoV +10%. KPI – SoV > 70%.</strong></p>
+</div>
+<div class="insight">
+  <h4>4. MOYENNE – Digitaliser les retours produits</h4>
+  <p>2ème irritant client. QR code retour en magasin. <strong>Impact – –30% avis négatifs retours.</strong></p>
+</div>
+<div class="insight">
+  <h4>5. MOYENNE – Scan & go mobile en magasin</h4>
+  <p>126 mentions attente en caisse. Déployer dans les 50 magasins à fort trafic. <strong>Impact – –40% irritant caisse.</strong></p>
 </div>
 
-<div class="two-col">
-  <div>
-    <h3>Top 5 irritants</h3>
-    <div style="background:#fef2f2;border-left:3px solid #ef4444;padding:8px 12px;margin-bottom:12px;border-radius:0 6px 6px 0;font-size:11px;color:#555"><strong style="color:#ef4444">40% des avis négatifs portent sur le SAV</strong> — 1er irritant client</div>
-    <table><thead><tr><th>Irritant</th><th style="text-align:right">Mentions</th><th style="text-align:right">%</th></tr></thead><tbody><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Prix jugé trop élevé</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">165</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">18%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Temps d'attente en caisse</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">126</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">14%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Qualité marques propres</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">105</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">12%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Conseils vendeur insuffisants</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#ef4444">104</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">11%</td></tr></tbody></table>
-  </div>
-  <div>
-    <h3>Top 3 enchantements</h3>
-    <table><thead><tr><th>Enchantement</th><th style="text-align:right">Mentions</th><th style="text-align:right">%</th></tr></thead><tbody><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Bon rapport qualité/prix</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">254</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">19%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Expérience magasin agréable</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">193</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">14%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Large choix produits</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">154</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">11%</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">Marques propres appréciées</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:#16a34a">153</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">11%</td></tr></tbody></table>
-  </div>
-</div>
+<h3>Notre méthodologie – Pipeline de collecte et d'analyse</h3>
+<p>Ce rapport a été produit par un pipeline entièrement automatisé qui collecte, nettoie, enrichit et analyse les données en continu –</p>
 
-<div class="card">
-  <div class="card__title">Distribution des notes</div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span style="width:24px;font-size:12px;font-weight:700;color:#ef4444">1★</span>
-      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:17%;height:100%;background:#ef4444;border-radius:4px"></div></div>
-      <span style="width:50px;font-size:11px;color:#666;text-align:right">234 (17%)</span>
-    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span style="width:24px;font-size:12px;font-weight:700;color:#f97316">2★</span>
-      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:17%;height:100%;background:#f97316;border-radius:4px"></div></div>
-      <span style="width:50px;font-size:11px;color:#666;text-align:right">243 (17%)</span>
-    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span style="width:24px;font-size:12px;font-weight:700;color:#eab308">3★</span>
-      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:15%;height:100%;background:#eab308;border-radius:4px"></div></div>
-      <span style="width:50px;font-size:11px;color:#666;text-align:right">206 (15%)</span>
-    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span style="width:24px;font-size:12px;font-weight:700;color:#22c55e">4★</span>
-      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:24%;height:100%;background:#22c55e;border-radius:4px"></div></div>
-      <span style="width:50px;font-size:11px;color:#666;text-align:right">338 (24%)</span>
-    </div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span style="width:24px;font-size:12px;font-weight:700;color:#16a34a">5★</span>
-      <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px"><div style="width:27%;height:100%;background:#16a34a;border-radius:4px"></div></div>
-      <span style="width:50px;font-size:11px;color:#666;text-align:right">371 (27%)</span>
-    </div>
-</div>
+<table>
+  <thead><tr><th>Étape</th><th>Description</th><th>Outils</th></tr></thead>
+  <tbody>
+    <tr><td style="font-weight:600">1. Collecte</td><td>13 scrapers custom (Reddit JSON API, YouTube yt-dlp, TikTok DrissionPage, Instagram GraphQL, Facebook Meta Library, Google News RSS, Trustpilot, Google Maps Playwright)</td><td style="font-size:10px">Python, Playwright, DrissionPage</td></tr>
+    <tr><td style="font-weight:600">2. Enrichissement IA</td><td>Sentiment, topics, résumés, détection de crise –4 passes par mention</td><td style="font-size:10px">GPT-4o-mini via OpenRouter</td></tr>
+    <tr><td style="font-weight:600">3. Indexation vectorielle</td><td>7 223 vecteurs indexés pour recherche sémantique (RAG)</td><td style="font-size:10px">Cloudflare Vectorize + OpenAI Embeddings</td></tr>
+    <tr><td style="font-weight:600">4. Alerting</td><td>Webhooks Slack/Make si Gravity > 7 ou volume > 2× moyenne</td><td style="font-size:10px">Make + Slack</td></tr>
+    <tr><td style="font-weight:600">5. Dashboard</td><td>Interface COMEX temps réel avec chatbot IA, MCP server, LLM Visibility</td><td style="font-size:10px">React + Cloudflare Workers + D1</td></tr>
+  </tbody>
+</table>
 
-<!-- PAGE 5 : RECOMMANDATIONS -->
-<div class="page-break"></div>
-<h2>4. Recommandations stratégiques</h2>
-
-<div class="reco-box reco-box--critical">
-  <h4>CRITIQUE — Communiqué de crise vélo (48h max)</h4>
-  <p>Gravity Score 7/10. 1 500+ mentions négatives en 15 jours. Pic viral 7-10 mars. Communiqué transparent + hotline dédiée. <strong>Impact estimé : -60% volume négatif en 7 jours.</strong></p>
-</div>
-
-<div class="reco-box reco-box--high">
-  <h4>HAUTE — Chatbot SAV première réponse</h4>
-  <p>40% des avis négatifs portent sur le SAV (1er irritant). Un chatbot réduirait 60% des tickets niveau 1. <strong>Objectif : NPS +15 pts en Q3. KPI cible : NPS > 30.</strong></p>
-</div>
-
-<div class="reco-box reco-box--high">
-  <h4>HAUTE — Amplifier "Sport accessible à tous"</h4>
-  <p>Intersport vulnérable sur marques propres (35%) et prix (45%). Decathlon leader qualité/prix avec 73% et marques propres à 81%. Campagne marques propres = qualité certifiée. <strong>Objectif : SoV +10%. KPI cible : SoV > 70%.</strong></p>
-</div>
-
-<div class="reco-box" style="border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb,#fef9c3)">
-  <h4 style="color:#d97706">MOYENNE — Digitaliser les retours produits</h4>
-  <p>2ème irritant client après le SAV. Processus retour perçu comme complexe. QR code retour en magasin. <strong>Objectif : -30% avis négatifs retours. KPI cible : Irritant retours < 3%.</strong></p>
-</div>
-
-<div class="reco-box" style="border-color:#0077c8">
-  <h4 style="color:#0077c8">MOYENNE — Réduire l'attente en caisse</h4>
-  <p>126 mentions (2ème irritant). Déployer le scan & go mobile dans les 50 magasins à plus fort trafic. Quick win avant les soldes d'été. <strong>Objectif : -40% irritant caisse. KPI cible : Note magasin > 4.0★.</strong></p>
-</div>
-
-<h3 style="margin-top:16px">Sources de données surveillées (13 sources)</h3>
-<table style="font-size:11px"><thead><tr><th>Source</th><th style="text-align:right">Volume</th><th>Insight clé</th></tr></thead><tbody><tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600">Google Maps</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700">1 475</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:10px;color:#555">40 magasins, note 4.1/5. Disparités géographiques.</td>
-    </tr><tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600">Reddit</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700">1 006</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:10px;color:#555">Communauté r/Decathlon. Verbatim SAV brut non filtré.</td>
-    </tr><tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600">Trustpilot</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700">365</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:10px;color:#555">Decathlon 1.7/5 vs Intersport 4.2/5. SAV = point faible.</td>
-    </tr><tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600">YouTube</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700">175</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:10px;color:#555">Reviews produits virales. Transcripts analysés par Whisper.</td>
-    </tr><tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600">TikTok</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700">76</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:10px;color:#555">Ceinture hydratation 3.1M vues. Contenu produit viral.</td>
-    </tr><tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600">Instagram / Facebook / X</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700">198</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:10px;color:#555">@decathlon 595k followers. 50k+ pubs Meta Library analysées.</td>
-    </tr></tbody></table>
+<p><strong>Capacités avancées –</strong> Transcription vidéo automatique (Groq Whisper gratuit), détection de tendances émergentes (Trending Opportunities), découverte automatique de nouvelles sources à monitorer (Auto-Discovery), monitoring haute fréquence en cas de crise (Event Mode – scrape toutes les 5 minutes), visibilité IA multi-modèles (GPT, Gemini, Claude, Perplexity).</p>
 
 <div class="footer">
-  LICTER × Eugenia School — Brand Intelligence Platform — Généré automatiquement le 7 avril 2026<br>
-  Sources : TikTok, YouTube, Reddit, X/Twitter, Instagram, Facebook Ads, Facebook Groups, Forums FR, Google News, Trustpilot, Glassdoor, Google Maps, App Store
+  LICTER × Eugenia School – Brand Intelligence Platform – Généré automatiquement le 7 avril 2026<br>
+  13 sources – TikTok, YouTube, Reddit, X/Twitter, Instagram, Facebook Ads, Facebook Groups, Forums FR, Google News, Trustpilot, Glassdoor, Google Maps, App Store
 </div>
 
 </body></html>

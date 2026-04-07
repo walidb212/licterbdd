@@ -3,16 +3,16 @@ import ReputationPanel from './components/panels/ReputationPanel'
 import BenchmarkPanel from './components/panels/BenchmarkPanel'
 import CxPanel from './components/panels/CxPanel'
 import RecoPanel from './components/panels/RecoPanel'
-import PersonasPanel from './components/panels/PersonasPanel'
 import ChatPanel from './components/panels/ChatPanel'
-import InfluencersPanel from './components/panels/InfluencersPanel'
 import ContentComparePanel from './components/panels/ContentComparePanel'
 import AdminDbPanel from './components/panels/AdminDbPanel'
 import LlmVisibilityPanel from './components/panels/LlmVisibilityPanel'
 import SwotPanel from './components/panels/SwotPanel'
+import PipelinePanel from './components/panels/PipelinePanel'
+import EventModePanel from './components/panels/EventModePanel'
 import { useHealth } from './api/client'
 
-type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'swot' | 'llmvis' | 'personas' | 'influencers' | 'content' | 'admindb'
+type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'swot' | 'llmvis' | 'pipeline' | 'eventmode' | 'content' | 'admindb'
 
 const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] = [
   { id: 'rep', label: 'Réputation', icon: '🛡', section: 'GENERAL' },
@@ -21,9 +21,9 @@ const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] =
   { id: 'reco', label: 'Recommandations', icon: '◎', section: 'GENERAL' },
   { id: 'swot', label: 'SWOT', icon: '⊞', section: 'TOOLS' },
   { id: 'llmvis', label: 'LLM Visibility', icon: '🤖', section: 'TOOLS' },
-  { id: 'influencers', label: 'Influenceurs', icon: '👥', section: 'TOOLS' },
+  { id: 'pipeline', label: 'Pipeline IA', icon: '⚙', section: 'TOOLS' },
+  { id: 'eventmode', label: 'Event Mode', icon: '⚡', section: 'TOOLS' },
   { id: 'content', label: 'Comparateur IA', icon: '⚡', section: 'TOOLS' },
-  { id: 'personas', label: 'Personas', icon: '♟', section: 'TOOLS' },
   { id: 'admindb', label: 'Admin DB', icon: '🗄', section: 'TOOLS' },
 ]
 
@@ -138,9 +138,9 @@ function App() {
           {activeNav === 'reco' && <RecoPanel />}
           {activeNav === 'swot' && <SwotPanel />}
           {activeNav === 'llmvis' && <LlmVisibilityPanel />}
-          {activeNav === 'influencers' && <InfluencersPanel />}
+          {activeNav === 'pipeline' && <PipelinePanel />}
+          {activeNav === 'eventmode' && <EventModePanel />}
           {activeNav === 'content' && <ContentComparePanel />}
-          {activeNav === 'personas' && <PersonasPanel />}
           {activeNav === 'admindb' && <AdminDbPanel />}
         </div>
       </main>

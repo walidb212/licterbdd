@@ -46,6 +46,8 @@ def ensure_utf8_console() -> None:
 
 def main() -> int:
     ensure_utf8_console()
+    from monitor_core import load_workspace_env
+    load_workspace_env()
     from .cli import main as cli_main
 
     return cli_main()

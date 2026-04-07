@@ -103,6 +103,100 @@ function VerbatimCarousel() {
   )
 }
 
+interface TopProduct {
+  titre: string
+  image_url: string
+  mentions: number
+  categorie: string
+  marque_detectee: string
+  url: string
+  sample_reviews?: string[]
+}
+
+function ProductCard({ p, color }: { p: TopProduct; color: 'red' | 'green' }) {
+  const [open, setOpen] = useState(false)
+  const hasReviews = p.sample_reviews && p.sample_reviews.length > 0
+  return (
+    <div className="mb-2">
+      <div className={`flex items-center gap-2 cursor-pointer group ${hasReviews ? 'hover:bg-' + color + '-50/50' : ''} rounded-lg p-1 -m-1 transition-colors`}
+        onClick={() => hasReviews && setOpen(!open)}>
+        {p.image_url ? (
+          <img src={p.image_url} alt={p.titre}
+            className="w-[40px] h-[40px] rounded-lg object-cover flex-shrink-0 border border-gray-100"
+            onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).className = 'w-[40px] h-[40px] rounded-lg flex-shrink-0 bg-gray-100 flex items-center justify-center text-[14px]' }} />
+        ) : (
+          <div className="w-[40px] h-[40px] rounded-lg flex-shrink-0 bg-gray-100 flex items-center justify-center text-[14px]">
+            {p.categorie === 'Cyclisme' ? '🚲' : p.categorie === 'Running' ? '🏃' : p.categorie === 'Randonnee' ? '🥾' : p.categorie === 'Fitness' ? '💪' : '🏷'}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className={`text-[11px] text-gray-700 font-medium truncate group-hover:text-${color === 'red' ? 'red' : 'emerald'}-600`}>{p.titre}</div>
+          <div className="text-[9px] text-gray-400">
+            <span className={`font-bold ${color === 'red' ? 'text-red-400' : 'text-emerald-500'}`}>{p.mentions}</span> mentions
+            <span className="mx-1">·</span>{p.categorie}
+            {hasReviews && <span className="ml-1 text-blue-400">{open ? '▲' : '▼ voir avis'}</span>}
+          </div>
+        </div>
+        <a href={p.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+          className="text-[9px] text-blue-400 hover:text-blue-600 shrink-0">↗</a>
+      </div>
+      {open && p.sample_reviews && (
+        <div className={`ml-12 mt-1 space-y-1 border-l-2 ${color === 'red' ? 'border-red-200' : 'border-green-200'} pl-2`}>
+          {p.sample_reviews.map((r, j) => (
+            <p key={j} className="text-[10px] text-gray-500 italic leading-relaxed">"{r}"</p>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TopProductsMentioned() {
+  const { data, isLoading } = useQuery<{
+    negative: TopProduct[]
+    positive: TopProduct[]
+    insight: string
+    total_reviews_scanned: number
+  }>({
+    queryKey: ['cx-top-products'],
+    queryFn: () => fetch(apiUrl('/api/cx/top-products')).then(r => r.json()),
+  })
+
+  if (isLoading || !data) return null
+  if (!data.negative?.length && !data.positive?.length) return null
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-3">
+      <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        Marques les plus citees dans les avis
+      </h3>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="text-[9px] font-bold text-red-400 uppercase mb-2">Avis negatifs</div>
+          {data.negative.slice(0, 5).map((p, i) => <ProductCard key={i} p={p} color="red" />)}
+        </div>
+        <div>
+          <div className="text-[9px] font-bold text-emerald-500 uppercase mb-2">Avis positifs</div>
+          {data.positive.slice(0, 5).map((p, i) => <ProductCard key={i} p={p} color="green" />)}
+        </div>
+      </div>
+
+      {data.insight && (
+        <div className="mt-3 bg-amber-50 border-l-[3px] border-amber-400 rounded-r-lg px-3 py-2">
+          <p className="text-[11px] text-gray-700">
+            <span className="font-bold text-amber-600">INSIGHT :</span> {data.insight}
+          </p>
+        </div>
+      )}
+
+      <div className="text-[8px] text-gray-300 mt-2 text-right">
+        {data.total_reviews_scanned?.toLocaleString('fr-FR')} avis analyses · {(data.negative?.length || 0) + (data.positive?.length || 0)} marques detectees
+      </div>
+    </div>
+  )
+}
+
 export default function CxPanel() {
   const { data, isLoading, error } = useCx()
 
@@ -170,6 +264,9 @@ export default function CxPanel() {
 
       {/* Verbatim carousel — negative Decathlon only */}
       <VerbatimCarousel />
+
+      {/* Top produits mentionnes dans les avis */}
+      <TopProductsMentioned />
 
       {/* Parcours client */}
       {(data as any).parcours_client && (

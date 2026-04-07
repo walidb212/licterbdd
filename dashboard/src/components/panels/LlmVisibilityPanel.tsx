@@ -1,14 +1,64 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiUrl } from '../../api/client'
 
 interface VisResult {
   model: string; provider: string; question: string; decathlon_mentioned: boolean;
-  intersport_mentioned: boolean; decathlon_first: boolean; sentiment: string; answer_preview: string;
+  intersport_mentioned: boolean; decathlon_first: boolean; sentiment: string; answer_preview: string; answer_full?: string;
 }
 interface ModelBreakdown { model: string; questions: number; decathlon_pct: number; intersport_pct: number; first_pct: number }
 interface VisData {
   total_questions: number; models_tested: number; decathlon_mentioned_pct: number; intersport_mentioned_pct: number;
   decathlon_first_pct: number; model_breakdown: ModelBreakdown[]; results: VisResult[]; insight: string;
+}
+
+function renderMarkdown(text: string) {
+  // Convert **bold** and numbered lists
+  const html = text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br/>')
+  return <span dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+function ResultsList({ results }: { results: VisResult[] }) {
+  const [expanded, setExpanded] = useState<number | null>(null)
+  return (
+    <div className="bg-white rounded-[20px] shadow-sm p-5">
+      <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-4">Détail par question</h3>
+      <div className="space-y-3">
+        {results.map((r, i) => {
+          const isOpen = expanded === i
+          const hasFullAnswer = r.answer_full && r.answer_full.length > 150
+          return (
+            <div key={i} className={`border rounded-xl p-3 cursor-pointer transition-all ${isOpen ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100 hover:border-gray-200'}`}
+              onClick={() => setExpanded(isOpen ? null : i)}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-bold">{r.model || 'GPT-4o'}</span>
+                <span className="text-[12px] font-semibold text-gray-700">"{r.question}"</span>
+                {hasFullAnswer && <span className="text-[9px] text-blue-400 ml-auto">{isOpen ? '▲ réduire' : '▼ voir tout'}</span>}
+              </div>
+              <div className="flex gap-2 mb-2">
+                {r.decathlon_mentioned && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${r.decathlon_first ? 'bg-blue-100 text-blue-700' : 'bg-blue-50 text-blue-500'}`}>
+                    Decathlon {r.decathlon_first ? '(1er)' : ''}
+                  </span>
+                )}
+                {r.intersport_mentioned && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-500 font-bold">Intersport</span>
+                )}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${r.sentiment === 'positive' ? 'bg-green-50 text-green-600' : r.sentiment === 'negative' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'}`}>
+                  {r.sentiment}
+                </span>
+              </div>
+              <div className="text-[11px] text-gray-500 leading-relaxed">
+                {renderMarkdown((isOpen && r.answer_full ? r.answer_full : r.answer_preview) + (!isOpen && r.answer_preview?.length >= 140 ? '...' : ''))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 export default function LlmVisibilityPanel() {
@@ -73,33 +123,7 @@ export default function LlmVisibilityPanel() {
       </div>
 
       {/* Results table */}
-      <div className="bg-white rounded-[20px] shadow-sm p-5">
-        <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-4">Détail par question</h3>
-        <div className="space-y-3">
-          {data.results.map((r, i) => (
-            <div key={i} className="border border-gray-100 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-bold">{r.model || 'GPT-4o'}</span>
-                <span className="text-[12px] font-semibold text-gray-700">"{r.question}"</span>
-              </div>
-              <div className="flex gap-2 mb-2">
-                {r.decathlon_mentioned && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${r.decathlon_first ? 'bg-blue-100 text-blue-700' : 'bg-blue-50 text-blue-500'}`}>
-                    Decathlon {r.decathlon_first ? '(1er)' : ''}
-                  </span>
-                )}
-                {r.intersport_mentioned && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-500 font-bold">Intersport</span>
-                )}
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${r.sentiment === 'positive' ? 'bg-green-50 text-green-600' : r.sentiment === 'negative' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'}`}>
-                  {r.sentiment}
-                </span>
-              </div>
-              <div className="text-[11px] text-gray-500 leading-relaxed">{r.answer_preview}{r.answer_preview?.length >= 140 ? '...' : ''}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ResultsList results={data.results} />
     </div>
   )
 }

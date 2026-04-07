@@ -310,6 +310,122 @@ async function handleCx(db) {
   });
 }
 
+async function handleTopProducts(db, env) {
+  // Approche : chercher les marques Decathlon dans les VRAIS avis clients (pas social/YouTube)
+  const BRANDS = [
+    { kw: 'rockrider', label: 'Rockrider', cat: 'Cyclisme' },
+    { kw: 'btwin', label: 'B\'Twin', cat: 'Cyclisme' },
+    { kw: 'riverside', label: 'Riverside', cat: 'Cyclisme' },
+    { kw: 'elops', label: 'Elops', cat: 'Cyclisme' },
+    { kw: 'van rysel', label: 'Van Rysel', cat: 'Cyclisme' },
+    { kw: 'triban', label: 'Triban', cat: 'Cyclisme' },
+    { kw: 'kiprun', label: 'Kiprun', cat: 'Running' },
+    { kw: 'kalenji', label: 'Kalenji', cat: 'Running' },
+    { kw: 'quechua', label: 'Quechua', cat: 'Randonnee' },
+    { kw: 'forclaz', label: 'Forclaz', cat: 'Randonnee' },
+    { kw: 'domyos', label: 'Domyos', cat: 'Fitness' },
+    { kw: 'corength', label: 'Corength', cat: 'Fitness' },
+    { kw: 'kipsta', label: 'Kipsta', cat: 'Football' },
+    { kw: 'nabaiji', label: 'Nabaiji', cat: 'Natation' },
+    { kw: 'artengo', label: 'Artengo', cat: 'Raquettes' },
+    { kw: 'inesis', label: 'Inesis', cat: 'Golf' },
+    { kw: 'solognac', label: 'Solognac', cat: 'Chasse' },
+    { kw: 'caperlan', label: 'Caperlan', cat: 'Peche' },
+    { kw: 'tarmak', label: 'Tarmak', cat: 'Basketball' },
+    { kw: 'perfly', label: 'Perfly', cat: 'Badminton' },
+    { kw: 'nakamura', label: 'Nakamura', cat: 'Cyclisme' },
+  ];
+
+  // Chercher dans les vrais avis clients seulement
+  const negData = {};  // brand_kw -> { count, samples }
+  const posData = {};
+
+  for (const brand of BRANDS) {
+    const pattern = `%${brand.kw}%`;
+
+    // Negative: review_enriched + store_reviews + excel_cx
+    const negReviews = (await db.prepare(
+      "SELECT summary_short as text FROM review_enriched WHERE (sentiment_label = 'negative' OR rating <= 2) AND lower(summary_short) LIKE ? LIMIT 5"
+    ).bind(pattern).all()).results || [];
+    const negStores = (await db.prepare(
+      "SELECT body as text FROM store_reviews WHERE rating <= 2 AND lower(body) LIKE ? LIMIT 5"
+    ).bind(pattern).all()).results || [];
+    const negExcel = (await db.prepare(
+      "SELECT text FROM excel_cx WHERE rating <= 2 AND lower(text) LIKE ? LIMIT 5"
+    ).bind(pattern).all()).results || [];
+    const allNeg = [...negReviews, ...negStores, ...negExcel];
+
+    // Positive (filter out product descriptions: must be > 30 chars and not start with "Comment l'obtenir")
+    const posReviews = (await db.prepare(
+      "SELECT summary_short as text FROM review_enriched WHERE (sentiment_label = 'positive' OR rating >= 4) AND lower(summary_short) LIKE ? AND length(summary_short) > 30 AND summary_short NOT LIKE 'Comment l%' LIMIT 5"
+    ).bind(pattern).all()).results || [];
+    const posStores = (await db.prepare(
+      "SELECT body as text FROM store_reviews WHERE rating >= 4 AND lower(body) LIKE ? AND length(body) > 30 LIMIT 5"
+    ).bind(pattern).all()).results || [];
+    const posExcel = (await db.prepare(
+      "SELECT text FROM excel_cx WHERE rating >= 4 AND lower(text) LIKE ? AND length(text) > 30 LIMIT 5"
+    ).bind(pattern).all()).results || [];
+    const allPos = [...posReviews, ...posStores, ...posExcel];
+
+    if (allNeg.length > 0) negData[brand.kw] = { count: allNeg.length, samples: allNeg.slice(0, 3).map(r => (r.text || '').slice(0, 200)), brand };
+    if (allPos.length > 0) posData[brand.kw] = { count: allPos.length, samples: allPos.slice(0, 3).map(r => (r.text || '').slice(0, 200)), brand };
+  }
+
+  // Pour chaque marque, trouver un produit représentatif avec image
+  async function buildList(data, limit) {
+    const sorted = Object.entries(data).sort((a, b) => b[1].count - a[1].count);
+    const results = [];
+    const seenCat = {};
+    for (const [kw, info] of sorted) {
+      const cat = info.brand.cat;
+      seenCat[cat] = (seenCat[cat] || 0) + 1;
+      if (seenCat[cat] > 2) continue;
+      // Trouver un produit avec image pour cette marque
+      const product = await db.prepare(
+        "SELECT titre, image_url, categorie, url FROM decathlon_products WHERE marque_detectee = ? AND image_url IS NOT NULL AND image_url != '' ORDER BY RANDOM() LIMIT 1"
+      ).bind(kw).first();
+      results.push({
+        titre: info.brand.label,
+        image_url: product?.image_url || '',
+        categorie: cat,
+        marque_detectee: kw,
+        url: product?.url || `https://www.decathlon.fr/search?Ntt=${kw}`,
+        mentions: info.count,
+        sample_reviews: info.samples,
+      });
+      if (results.length >= limit) break;
+    }
+    return results;
+  }
+
+  // Retirer les marques qui apparaissent dans les deux
+  for (const kw of Object.keys(negData)) {
+    if (posData[kw]) {
+      if (negData[kw].count >= posData[kw].count) delete posData[kw];
+      else delete negData[kw];
+    }
+  }
+
+  const topNeg = await buildList(negData, 5);
+  const topPos = await buildList(posData, 5);
+
+  // Insight par catégorie
+  const catNeg = {};
+  for (const [, info] of Object.entries(negData)) {
+    catNeg[info.brand.cat] = (catNeg[info.brand.cat] || 0) + info.count;
+  }
+  const totalNeg = Object.values(catNeg).reduce((s, v) => s + v, 0) || 1;
+  const sortedCats = Object.entries(catNeg).sort((a, b) => b[1] - a[1]);
+  let insight = '';
+  if (sortedCats.length >= 1) {
+    const parts = sortedCats.slice(0, 3).map(([cat, count]) => `${cat} ${Math.round(count / totalNeg * 100)}%`);
+    insight = `Categories les plus critiquees : ${parts.join(', ')}. Les avis negatifs ciblent principalement ${sortedCats[0][0]}.`;
+  }
+
+  const totalScanned = Object.values(negData).reduce((s, d) => s + d.count, 0) + Object.values(posData).reduce((s, d) => s + d.count, 0);
+  return json({ negative: topNeg, positive: topPos, insight, total_reviews_scanned: totalScanned });
+}
+
 async function handleWordcloud(db) {
   const social = (await db.prepare('SELECT themes, summary_short FROM social_enriched').all()).results || [];
   const reviews = (await db.prepare('SELECT themes, summary_short FROM review_enriched').all()).results || [];
@@ -666,6 +782,7 @@ export default {
       if (path === '/api/reputation') return handleReputation(db);
       if (path === '/api/benchmark') return handleBenchmark(db);
       if (path === '/api/cx') return handleCx(db);
+      if (path === '/api/cx/top-products') return handleTopProducts(db, env);
       if (path === '/api/crisis') return handleCrisis(db);
       if (path === '/api/recommendations') return handleRecommendations();
       if (path === '/api/summary') return handleSummary(db);
@@ -781,32 +898,35 @@ ${passages}`;
 
         const apiUrl = orKey ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
         const apiKey = orKey || oaKey;
-        const results = [];
         const modelStats = {};
+        for (const model of models) modelStats[model.name] = { dec: 0, int: 0, first: 0, total: 0 };
 
+        // Parallel: all models × all questions at once
+        const tasks = [];
         for (const model of models) {
-          modelStats[model.name] = { dec: 0, int: 0, first: 0, total: 0 };
           for (const q of questions) {
-            try {
-              const resp = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: model.id, messages: [{ role: 'user', content: q }], max_tokens: 300, temperature: 0.7 }),
-              });
-              if (!resp.ok) continue;
-              const d = await resp.json();
-              const answer = (d.choices?.[0]?.message?.content || '').toLowerCase();
+            tasks.push(fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ model: model.id, messages: [{ role: 'user', content: q }], max_tokens: 800, temperature: 0.7 }),
+            }).then(r => r.ok ? r.json() : null).then(d => {
+              if (!d) return null;
+              const fullAnswer = d.choices?.[0]?.message?.content || '';
+              const answer = fullAnswer.toLowerCase();
               const decM = answer.includes('decathlon') || answer.includes('décathlon');
               const intM = answer.includes('intersport');
               const decF = decM && (!intM || answer.indexOf('decathlon') < answer.indexOf('intersport'));
               const sent = answer.includes('recommand') || answer.includes('leader') || answer.includes('incontournable') ? 'positive' : answer.includes('problème') || answer.includes('critique') ? 'negative' : 'neutral';
-              modelStats[model.name].total++;
-              if (decM) modelStats[model.name].dec++;
-              if (intM) modelStats[model.name].int++;
-              if (decF) modelStats[model.name].first++;
-              results.push({ model: model.name, provider: model.provider, question: q, decathlon_mentioned: decM, intersport_mentioned: intM, decathlon_first: decF, sentiment: sent, answer_preview: (d.choices?.[0]?.message?.content || '').slice(0, 150) });
-            } catch { /* skip */ }
+              return { model: model.name, provider: model.provider, question: q, decathlon_mentioned: decM, intersport_mentioned: intM, decathlon_first: decF, sentiment: sent, answer_preview: fullAnswer.slice(0, 150), answer_full: fullAnswer };
+            }).catch(() => null));
           }
+        }
+        const results = (await Promise.all(tasks)).filter(Boolean);
+        for (const r of results) {
+          modelStats[r.model].total++;
+          if (r.decathlon_mentioned) modelStats[r.model].dec++;
+          if (r.intersport_mentioned) modelStats[r.model].int++;
+          if (r.decathlon_first) modelStats[r.model].first++;
         }
 
         const total = results.length || 1;
@@ -814,7 +934,7 @@ ${passages}`;
         const intCount = results.filter(r => r.intersport_mentioned).length;
         const decFirst = results.filter(r => r.decathlon_first).length;
 
-        return json({
+        const payload = {
           total_questions: results.length,
           models_tested: Object.keys(modelStats).filter(k => modelStats[k].total > 0).length,
           decathlon_mentioned_pct: Math.round(decCount / total * 100),
@@ -828,7 +948,10 @@ ${passages}`;
           })),
           results,
           insight: `Decathlon mentionné dans ${Math.round(decCount / total * 100)}% des réponses across ${Object.keys(modelStats).filter(k => modelStats[k].total > 0).length} LLMs.`,
-        });
+        };
+        // Cache in D1 for 24h
+        try { await db.prepare("INSERT OR REPLACE INTO cached_responses (key, data, updated_at) VALUES ('llm_visibility', ?, datetime('now'))").bind(JSON.stringify(payload)).run(); } catch {}
+        return json(payload);
       }
 
       // SWOT Social Data
@@ -895,6 +1018,17 @@ ${passages}`;
 
       // Transcripts (from D1 — not available in prod, return placeholder)
       if (path === '/api/transcripts') return json({ total: 0, transcripts: [], message: 'Transcripts disponibles en local uniquement (Groq Whisper).' });
+
+      // Bulk SQL exec (POST only, for data sync)
+      if (path === '/api/exec-sql' && request.method === 'POST') {
+        const body = await request.json();
+        const statements = body.statements || [];
+        let ok = 0, fail = 0;
+        for (const sql of statements) {
+          try { await db.prepare(sql).run(); ok++; } catch { fail++; }
+        }
+        return json({ ok, fail, total: statements.length });
+      }
 
       return json({ error: 'Not found' }, 404);
     } catch (err) {
