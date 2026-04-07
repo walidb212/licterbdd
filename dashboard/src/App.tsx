@@ -45,7 +45,7 @@ function App() {
   return (
     <div className="flex h-screen bg-[#1a1a2e] p-3 gap-3">
       {/* ── Sidebar ── */}
-      <aside className={`${sidebarOpen ? 'w-[230px]' : 'w-[60px]'} bg-white rounded-[20px] flex flex-col shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden`}>
+      <aside className={`${sidebarOpen ? 'w-[230px]' : 'w-[60px]'} bg-white rounded-[20px] flex flex-col shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-y-auto overflow-x-hidden`}>
         {/* Logo + collapse toggle */}
         <div className="flex items-center justify-between px-3 py-2">
           {sidebarOpen && <img src="/decathlon.png?v=5" alt="Decathlon" className="w-[130px] h-auto object-contain" />}
