@@ -13,46 +13,72 @@ const ENCHANT_RENAME: Record<string, string> = {
   'choix en rayon': 'Large choix produits',
 }
 
-// Verbatim carousel component
+const PLATFORM_ICONS: Record<string, { icon: string; color: string }> = {
+  reddit_post: { icon: '🔴', color: 'text-orange-500' },
+  reddit_comment: { icon: '🔴', color: 'text-orange-500' },
+  youtube_video: { icon: '▶️', color: 'text-red-500' },
+  youtube_comment: { icon: '▶️', color: 'text-red-500' },
+  tiktok_video: { icon: '🎵', color: 'text-pink-500' },
+  x_post: { icon: '𝕏', color: 'text-gray-800' },
+  news_article: { icon: '📰', color: 'text-blue-500' },
+  review_site: { icon: '⭐', color: 'text-amber-500' },
+  store_review: { icon: '📍', color: 'text-green-600' },
+}
+
 function VerbatimCarousel({ type }: { type: 'negative' | 'positive' }) {
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
 
-  const { data } = useQuery<{ rows: { summary_short?: string; body?: string; text?: string; source_name?: string; rating?: number; published_at?: string }[] }>({
-    queryKey: ['verbatims', type],
-    queryFn: () => fetch(apiUrl(`/api/admindb?table=${type === 'negative' ? 'review_enriched' : 'review_enriched'}&sentiment=${type}&limit=5`)).then(r => r.json()),
+  // Fetch from BOTH social + reviews
+  const { data: socialData } = useQuery<{ rows: Record<string, unknown>[] }>({
+    queryKey: ['verbatims-social', type],
+    queryFn: () => fetch(apiUrl(`/api/admindb?table=social_enriched&sentiment=${type}&limit=8`)).then(r => r.json()),
+  })
+  const { data: reviewData } = useQuery<{ rows: Record<string, unknown>[] }>({
+    queryKey: ['verbatims-review', type],
+    queryFn: () => fetch(apiUrl(`/api/admindb?table=review_enriched&sentiment=${type}&limit=8`)).then(r => r.json()),
   })
 
-  const verbatims = (data?.rows || []).filter(r => {
-    const text = r.summary_short || r.body || r.text || ''
+  const allVerbatims = [
+    ...(socialData?.rows || []).map(r => ({ ...r, _table: 'social' })),
+    ...(reviewData?.rows || []).map(r => ({ ...r, _table: 'review' })),
+  ].filter(r => {
+    const text = String(r.summary_short || r.body || r.text || '')
     return text.length > 30
-  }).slice(0, 5)
+  }).sort(() => Math.random() - 0.5).slice(0, 6)
 
   useEffect(() => {
-    if (paused || !verbatims.length) return
-    const timer = setInterval(() => setIdx(i => (i + 1) % verbatims.length), 4000)
+    if (paused || !allVerbatims.length) return
+    const timer = setInterval(() => setIdx(i => (i + 1) % allVerbatims.length), 4000)
     return () => clearInterval(timer)
-  }, [paused, verbatims.length])
+  }, [paused, allVerbatims.length])
 
-  if (!verbatims.length) return null
+  if (!allVerbatims.length) return null
 
-  const current = verbatims[idx]
-  const text = current?.summary_short || current?.body || current?.text || ''
+  const current = allVerbatims[idx]
+  const text = String(current?.summary_short || current?.body || current?.text || '')
+  const sourceName = String(current?.source_name || '')
+  const platform = PLATFORM_ICONS[sourceName] || { icon: '💬', color: 'text-gray-500' }
+  const entity = String(current?.entity_name || '')
   const isNeg = type === 'negative'
 
   return (
     <div
-      className={`mt-3 rounded-xl p-3 border-l-3 ${isNeg ? 'bg-red-50/50 border-l-red-300' : 'bg-green-50/50 border-l-green-300'}`}
+      className={`mt-3 rounded-xl p-3 ${isNeg ? 'bg-red-50/60 border-l-[3px] border-red-300' : 'bg-green-50/60 border-l-[3px] border-green-300'}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <p className="text-[11px] text-gray-600 italic leading-relaxed">"{text.slice(0, 150)}{text.length > 150 ? '...' : ''}"</p>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="text-sm">{platform.icon}</span>
+        <span className={`text-[10px] font-bold ${platform.color}`}>{entity || sourceName}</span>
+      </div>
+      <p className="text-[11px] text-gray-600 italic leading-relaxed">"{text.slice(0, 180)}{text.length > 180 ? '...' : ''}"</p>
       <div className="flex items-center justify-between mt-2">
         <span className="text-[9px] text-gray-400">
-          {current?.rating ? `${'★'.repeat(Math.round(current.rating))}` : ''} {current?.source_name || ''} • {(current?.published_at || '').slice(0, 10)}
+          {current?.rating ? `${'★'.repeat(Math.round(Number(current.rating)))}` : ''} {(String(current?.published_at || '')).slice(0, 10)}
         </span>
         <div className="flex gap-1">
-          {verbatims.map((_, i) => (
+          {allVerbatims.map((_, i) => (
             <button key={i} onClick={() => setIdx(i)}
               className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? (isNeg ? 'bg-red-400' : 'bg-green-400') : 'bg-gray-200'}`} />
           ))}
