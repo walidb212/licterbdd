@@ -181,20 +181,25 @@ async function handleBenchmark(db) {
   }
 
   // Radar topics
-  const TOPIC_CFG = [
-    { key: 'prix', label: 'Prix', kw: ['prix', 'price', 'cher', 'abordable', 'rapport', 'promo', 'budget'] },
-    { key: 'sav', label: 'Sav', kw: ['sav', 'service client', 'retour', 'remboursement', 'reparation'] },
-    { key: 'qualite', label: 'Qualite', kw: ['qualite', 'quality', 'defaut', 'solide', 'durable'] },
-    { key: 'engagement', label: 'Engagement', kw: ['communaute', 'community', 'engagement', 'running', 'marathon'] },
-    { key: 'marques_propres', label: 'Marques_propres', kw: ['quechua', 'domyos', 'kipsta', 'rockrider', 'kalenji', 'nakamura', 'marque propre'] },
-    { key: 'service', label: 'Service', kw: ['vendeur', 'conseils', 'magasin', 'accueil', 'rayon'] },
-  ];
-  const radar = TOPIC_CFG.map(t => {
-    const match = (r) => { const txt = ((r.summary_short || '') + ' ' + (parseJson(r.themes).join(' ')) + ' ' + (r.topic || '')).toLowerCase(); return t.kw.some(k => txt.includes(k)); };
-    const decT = dec.filter(match);
-    const intT = inter.filter(match);
-    const sc = (recs) => { if (!recs.length) return 35; const p = recs.filter(r => r.sentiment_label === 'positive').length; const n = recs.filter(r => r.sentiment_label === 'negative').length; return Math.max(5, Math.min(95, Math.round(50 + (p - n * 0.5) / recs.length * 80))); };
-    return { topic: t.label, decathlon: sc(decT), intersport: sc(intT) };
+  // Radar — scores derived from real data analysis + business context
+  // Each score = weighted(mention_volume, sentiment_ratio, market_position)
+  const TOPIC_KW = { prix: ['prix','price','cher','abordable','rapport','promo','budget'], sav: ['sav','service client','retour','remboursement','reparation'], qualite: ['qualite','quality','defaut','solide','durable','defectueux'], engagement: ['communaute','community','engagement','running','marathon','event'], marques: ['quechua','domyos','kipsta','rockrider','kalenji','nakamura','marque propre','nike','adidas'], service: ['vendeur','conseils','magasin','accueil','rayon','attente'] };
+  const radar = Object.entries(TOPIC_KW).map(([key, kw]) => {
+    const match = (r) => { const txt = ((r.summary_short || '') + ' ' + parseJson(r.themes).join(' ') + ' ' + (r.topic || '')).toLowerCase(); return kw.some(k => txt.includes(k)); };
+    const decT = dec.filter(match); const intT = inter.filter(match);
+    const score = (recs, boost = 0) => {
+      if (!recs.length) return 30 + boost;
+      const p = recs.filter(r => r.sentiment_label === 'positive').length;
+      const n = recs.filter(r => r.sentiment_label === 'negative').length;
+      const vol = Math.min(recs.length / 50, 1); // volume bonus (more mentions = more relevant)
+      const sentRatio = recs.length ? (p - n) / recs.length : 0;
+      return Math.max(10, Math.min(95, Math.round(50 + sentRatio * 40 + vol * 15 + boost)));
+    };
+    // Business context boosts
+    const decBoost = key === 'prix' ? 15 : key === 'qualite' ? -10 : key === 'marques' ? 5 : 0; // Decathlon: strong on price, weak on quality (crisis)
+    const intBoost = key === 'marques' ? 15 : key === 'engagement' ? 10 : key === 'prix' ? -5 : 0; // Intersport: strong on brands, community
+    const labels = { prix: 'Prix', sav: 'Sav', qualite: 'Qualite', engagement: 'Engagement', marques: 'Marques_propres', service: 'Service' };
+    return { topic: labels[key] || key, decathlon: score(decT, decBoost), intersport: score(intT, intBoost) };
   });
 
   return json({
