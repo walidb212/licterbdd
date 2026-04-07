@@ -70,64 +70,58 @@ export default function ReputationPanel() {
         </div>
       </div>
 
-      {/* Reco critique — juste sous les KPIs */}
-      <div className="bg-red-50 border-l-4 border-red-600 rounded-r-xl px-4 py-2.5 mb-3">
-        <p className="text-[12px] text-gray-800">
-          <strong className="text-red-600">CRITIQUE :</strong> Communiqué de crise vélo — 48h max. {kpis.volume_total.toLocaleString('fr-FR')} mentions, {Math.round(kpis.sentiment_negatif_pct * 100)}% négatives.
-          <span className="text-emerald-600 font-bold ml-1">Impact : -60% négatif en 7j.</span>
-        </p>
-      </div>
-
-      {/* Timeline + Plateformes */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {/* Timeline crisis — 2 cols */}
-        <div className="col-span-2 bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Timeline crise — 14j</h3>
-            {crisis?.is_escalating && <span className="text-[9px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full animate-pulse">EN HAUSSE</span>}
-          </div>
-          {timeline.length > 0 ? (
-            <ResponsiveContainer width="100%" height={110}>
-              <AreaChart data={timeline} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02}/>
-                  </linearGradient>
-                  <linearGradient id="gNeg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, fontSize: 11, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
-                <Area type="monotone" dataKey="volume" stroke="#3b82f6" strokeWidth={2} fill="url(#gVol)" />
-                <Area type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} fill="url(#gNeg)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="text-gray-400 text-xs text-center py-6">Données timeline non disponibles</div>
-          )}
-          {crisis?.peak_day && (
-            <div className="flex items-center gap-2 mt-2 text-[10px] text-gray-500 bg-amber-50 rounded-lg px-3 py-1.5">
-              <span className="w-4 h-4 rounded-full bg-amber-400 text-white text-[8px] font-bold flex items-center justify-center">A</span>
-              <span>Pic : <strong className="text-gray-700">{crisis.peak_day.date}</strong> — {crisis.peak_day.volume} mentions — <strong className="text-amber-600">+{Math.round((crisis.peak_day.volume / (crisis.avg_daily_volume || 1) - 1) * 100)}% vs moy.</strong></span>
+      {/* Main row: Left (graph + reco) | Right (word cloud) — same height */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* LEFT: graph + peak + reco stacked */}
+        <div className="flex flex-col gap-2">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Timeline crise — 14j</h3>
+              {crisis?.is_escalating && <span className="text-[9px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full animate-pulse">EN HAUSSE</span>}
             </div>
-          )}
+            {timeline.length > 0 ? (
+              <ResponsiveContainer width="100%" height={120}>
+                <AreaChart data={timeline} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02}/>
+                    </linearGradient>
+                    <linearGradient id="gNeg" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, fontSize: 11, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                  <Area type="monotone" dataKey="volume" stroke="#3b82f6" strokeWidth={2} fill="url(#gVol)" />
+                  <Area type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} fill="url(#gNeg)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-gray-400 text-xs text-center py-6">Timeline non disponible</div>
+            )}
+            {crisis?.peak_day && (
+              <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-500 bg-amber-50 rounded-lg px-3 py-1">
+                <span className="w-4 h-4 rounded-full bg-amber-400 text-white text-[8px] font-bold flex items-center justify-center shrink-0">A</span>
+                <span>Pic <strong className="text-gray-700">{crisis.peak_day.date}</strong> — {crisis.peak_day.volume} mentions — <strong className="text-amber-600">+{Math.round((crisis.peak_day.volume / (crisis.avg_daily_volume || 1) - 1) * 100)}%</strong></span>
+              </div>
+            )}
+          </div>
+          {/* Reco critique */}
+          <div className="bg-red-50 border-l-4 border-red-600 rounded-r-xl px-4 py-2.5">
+            <p className="text-[12px] text-gray-800">
+              <strong className="text-red-600">CRITIQUE :</strong> Communiqué de crise vélo — 48h max. {kpis.volume_total.toLocaleString('fr-FR')} mentions, {Math.round(kpis.sentiment_negatif_pct * 100)}% négatives.
+              <span className="text-emerald-600 font-bold ml-1">Impact : -60% négatif en 7j.</span>
+            </p>
+          </div>
         </div>
 
-        {/* Plateformes — 1 col */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Plateformes</h3>
-          <PlatformPieChart data={platform_breakdown} />
+        {/* RIGHT: Word Cloud — fills full height */}
+        <div className="bg-[#f8fafc] rounded-xl p-4 shadow-sm border border-gray-100 flex items-center">
+          <WordCloud />
         </div>
-      </div>
-
-      {/* Word Cloud */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-        <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Thèmes dominants</h3>
-        <WordCloud />
       </div>
     </div>
   )
