@@ -21,8 +21,9 @@ const GREY_WORDS = new Set(['suis', 'dépasse', 'depasse', 'franchement'])
 
 function getColor(text: string): string {
   const lower = text.toLowerCase()
-  if (RED_WORDS.has(lower)) return '#dc2626'
-  if (GREEN_WORDS.has(lower)) return '#16a34a'
+  // Check both raw and humanized forms
+  if (RED_WORDS.has(lower) || [...RED_WORDS].some(w => lower.includes(w))) return '#dc2626'
+  if (GREEN_WORDS.has(lower) || [...GREEN_WORDS].some(w => lower.includes(w))) return '#16a34a'
   if (GREY_WORDS.has(lower)) return '#9ca3af'
   return '#f59e0b' // orange for neutral/mixed
 }
