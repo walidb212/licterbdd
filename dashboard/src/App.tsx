@@ -3,19 +3,16 @@ import ReputationPanel from './components/panels/ReputationPanel'
 import BenchmarkPanel from './components/panels/BenchmarkPanel'
 import CxPanel from './components/panels/CxPanel'
 import RecoPanel from './components/panels/RecoPanel'
-import SynthesePanel from './components/panels/SynthesePanel'
 import PersonasPanel from './components/panels/PersonasPanel'
 import ChatPanel from './components/panels/ChatPanel'
-import HeatmapPanel from './components/panels/HeatmapPanel'
 import InfluencersPanel from './components/panels/InfluencersPanel'
 import ContentComparePanel from './components/panels/ContentComparePanel'
 import AdminDbPanel from './components/panels/AdminDbPanel'
-import TranscriptsPanel from './components/panels/TranscriptsPanel'
 import LlmVisibilityPanel from './components/panels/LlmVisibilityPanel'
 import SwotPanel from './components/panels/SwotPanel'
 import { useHealth } from './api/client'
 
-type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'swot' | 'llmvis' | 'synthese' | 'personas' | 'heatmap' | 'influencers' | 'content' | 'admindb' | 'transcripts'
+type NavId = 'rep' | 'bench' | 'cx' | 'reco' | 'swot' | 'llmvis' | 'personas' | 'influencers' | 'content' | 'admindb'
 
 const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] = [
   { id: 'rep', label: 'Réputation', icon: '🛡', section: 'GENERAL' },
@@ -24,11 +21,8 @@ const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] =
   { id: 'reco', label: 'Recommandations', icon: '◎', section: 'GENERAL' },
   { id: 'swot', label: 'SWOT', icon: '⊞', section: 'TOOLS' },
   { id: 'llmvis', label: 'LLM Visibility', icon: '🤖', section: 'TOOLS' },
-  { id: 'heatmap', label: 'Carte Sentiment', icon: '📍', section: 'TOOLS' },
   { id: 'influencers', label: 'Influenceurs', icon: '👥', section: 'TOOLS' },
   { id: 'content', label: 'Comparateur IA', icon: '⚡', section: 'TOOLS' },
-  { id: 'transcripts', label: 'Transcripts', icon: '🎙', section: 'TOOLS' },
-  { id: 'synthese', label: 'Synthèse IA', icon: '◈', section: 'TOOLS' },
   { id: 'personas', label: 'Personas', icon: '♟', section: 'TOOLS' },
   { id: 'admindb', label: 'Admin DB', icon: '🗄', section: 'TOOLS' },
 ]
@@ -144,11 +138,8 @@ function App() {
           {activeNav === 'reco' && <RecoPanel />}
           {activeNav === 'swot' && <SwotPanel />}
           {activeNav === 'llmvis' && <LlmVisibilityPanel />}
-          {activeNav === 'heatmap' && <HeatmapPanel />}
           {activeNav === 'influencers' && <InfluencersPanel />}
           {activeNav === 'content' && <ContentComparePanel />}
-          {activeNav === 'transcripts' && <TranscriptsPanel />}
-          {activeNav === 'synthese' && <SynthesePanel />}
           {activeNav === 'personas' && <PersonasPanel />}
           {activeNav === 'admindb' && <AdminDbPanel />}
         </div>

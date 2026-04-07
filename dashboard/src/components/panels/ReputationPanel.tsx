@@ -53,22 +53,22 @@ export default function ReputationPanel() {
 
       {/* 4 KPIs */}
       <div className="grid grid-cols-4 gap-2 mb-3">
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Gravity Score</div>
           <div className="text-[28px] font-black text-red-500 leading-none">{kpis.gravity_score}<span className="text-[14px] text-red-400">/10</span></div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Volume mentions</div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[26px] font-black text-white leading-none">{kpis.volume_total.toLocaleString('fr-FR')}</span>
+            <span className="text-[26px] font-black text-gray-900 leading-none">{kpis.volume_total.toLocaleString('fr-FR')}</span>
             <span className="text-[10px] font-bold text-emerald-400">↑+190%</span>
           </div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Sentiment négatif</div>
           <div className="text-[26px] font-black text-orange-400 leading-none">{Math.round(kpis.sentiment_negatif_pct * 100)}%</div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3 relative">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3 relative">
           <div className="absolute top-2 right-2 text-[14px]">⚠️</div>
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">CA menacé</div>
           <div className="text-[26px] font-black text-red-500 leading-none">{caMenuce}M€</div>

@@ -13,8 +13,8 @@ import { getDb, parseJsonCol } from './db.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-// Fast scrapers only (< 30s each)
-const FAST_STEPS = ['news_monitor', 'reddit_monitor', 'instagram_monitor'];
+// Event scrapers — all social sources
+const FAST_STEPS = ['news_monitor', 'reddit_monitor', 'instagram_monitor', 'x_monitor', 'tiktok_monitor', 'youtube_monitor'];
 const MIN_INTERVAL = 2;      // minutes
 const MAX_DURATION = 24;     // hours
 const PYTHON = 'py';         // Windows
@@ -56,7 +56,7 @@ async function _runCycle() {
       _log(`  Running ${step}...`);
       execSync(cmd, {
         cwd: ROOT,
-        timeout: 120_000,
+        timeout: 300_000,
         encoding: 'utf-8',
         stdio: 'pipe',
         env: { ...process.env, PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' },

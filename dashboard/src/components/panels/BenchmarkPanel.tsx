@@ -24,18 +24,18 @@ export default function BenchmarkPanel() {
     <div>
       {/* 3 KPIs */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">SoV Decathlon</div>
           <div className="text-[28px] font-black text-[#3b82f6] leading-none">{Math.round(kpis.share_of_voice_decathlon * 100)}%</div>
           <div className="text-[10px] text-gray-500">{kpis.total_mentions.toLocaleString('fr-FR')} mentions</div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">SoV Intersport</div>
           <div className="text-[28px] font-black text-[#e8001c] leading-none">{Math.round(kpis.share_of_voice_intersport * 100)}%</div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Mentions totales</div>
-          <div className="text-[26px] font-black text-white leading-none">{kpis.total_mentions.toLocaleString('fr-FR')}</div>
+          <div className="text-[26px] font-black text-gray-900 leading-none">{kpis.total_mentions.toLocaleString('fr-FR')}</div>
         </div>
       </div>
 

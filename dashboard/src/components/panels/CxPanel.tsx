@@ -2,21 +2,6 @@ import { useState, useEffect } from 'react'
 import { useCx, apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 
-const IRRITANT_RENAME: Record<string, string> = {
-  'Rapport qualité/prix': 'Qualité insuffisante vs prix',
-  'Attente en caisse': 'Temps d\'attente en caisse',
-  'marques propres': 'Qualité marques propres',
-  'conseils vendeur': 'Conseils vendeur insuffisants',
-  'choix en rayon': 'Choix en rayon limité',
-}
-const ENCHANT_RENAME: Record<string, string> = {
-  'Rapport qualité/prix': 'Excellent rapport qualité/prix',
-  'Attente en caisse': 'Expérience en magasin',
-  'choix en rayon': 'Large choix produits',
-  'marques propres': 'Marques propres appréciées',
-  'conseils vendeur': 'Conseils vendeur appréciés',
-}
-
 const PLATFORM_ICONS: Record<string, { icon: string; label: string }> = {
   reddit_post: { icon: '🔴', label: 'Reddit' },
   reddit_comment: { icon: '🔴', label: 'Reddit' },
@@ -42,42 +27,32 @@ function VerbatimCarousel() {
   const [paused, setPaused] = useState(false)
 
   const { data: socialNeg } = useQuery<{ rows: Record<string, unknown>[] }>({
-    queryKey: ['verb-social-neg'], queryFn: () => fetch(apiUrl('/api/admindb?table=social_enriched&sentiment=negative&limit=15')).then(r => r.json()),
-  })
-  const { data: socialPos } = useQuery<{ rows: Record<string, unknown>[] }>({
-    queryKey: ['verb-social-pos'], queryFn: () => fetch(apiUrl('/api/admindb?table=social_enriched&sentiment=positive&limit=15')).then(r => r.json()),
+    queryKey: ['verb-social-neg-dec'], queryFn: () => fetch(apiUrl('/api/admindb?table=social_enriched&sentiment=negative&brand=decathlon&limit=15')).then(r => r.json()),
   })
   const { data: reviewNeg } = useQuery<{ rows: Record<string, unknown>[] }>({
-    queryKey: ['verb-review-neg'], queryFn: () => fetch(apiUrl('/api/admindb?table=review_enriched&sentiment=negative&limit=10')).then(r => r.json()),
-  })
-  const { data: reviewPos } = useQuery<{ rows: Record<string, unknown>[] }>({
-    queryKey: ['verb-review-pos'], queryFn: () => fetch(apiUrl('/api/admindb?table=review_enriched&sentiment=positive&limit=10')).then(r => r.json()),
+    queryKey: ['verb-review-neg-dec'], queryFn: () => fetch(apiUrl('/api/admindb?table=review_enriched&sentiment=negative&brand=decathlon&limit=10')).then(r => r.json()),
   })
 
   const all: any[] = [
-    ...(socialNeg?.rows || []).map(r => ({ ...r, _sent: 'neg' })),
-    ...(socialPos?.rows || []).map(r => ({ ...r, _sent: 'pos' })),
-    ...(reviewNeg?.rows || []).map(r => ({ ...r, _sent: 'neg' })),
-    ...(reviewPos?.rows || []).map(r => ({ ...r, _sent: 'pos' })),
+    ...(socialNeg?.rows || []),
+    ...(reviewNeg?.rows || []),
   ].filter(r => {
     const text = String(r.summary_short || r.body || r.text || '')
     return text.length > 40 && isFrench(text)
   })
 
-  // Alternate neg/pos and diversify sources
-  const negs = all.filter(r => r._sent === 'neg')
-  const poss = all.filter(r => r._sent === 'pos')
-  const interleaved: any[] = []
+  // Diversify sources
+  const verbatims: any[] = []
   const seenSources = new Set()
-  for (let i = 0; i < 4; i++) {
-    // Pick a neg with unseen source
-    const neg = negs.find(r => !seenSources.has(String(r.entity_name || r.source_name)))
-    if (neg) { interleaved.push(neg); seenSources.add(String(neg.entity_name || neg.source_name)); negs.splice(negs.indexOf(neg), 1) }
-    // Pick a pos with unseen source
-    const pos = poss.find(r => !seenSources.has(String(r.entity_name || r.source_name)))
-    if (pos) { interleaved.push(pos); seenSources.add(String(pos.entity_name || pos.source_name)); poss.splice(poss.indexOf(pos), 1) }
+  for (const r of all) {
+    const src = String(r.entity_name || r.source_name)
+    if (!seenSources.has(src)) {
+      verbatims.push(r)
+      seenSources.add(src)
+    }
+    if (verbatims.length >= 6) break
   }
-  const verbatims = interleaved.length >= 4 ? interleaved : all.slice(0, 8)
+  if (verbatims.length < 4) verbatims.push(...all.filter(r => !verbatims.includes(r)).slice(0, 6 - verbatims.length))
 
   useEffect(() => {
     if (paused || !verbatims.length) return
@@ -91,33 +66,37 @@ function VerbatimCarousel() {
   const text = String(current?.summary_short || current?.body || current?.text || '')
   const sourceName = String(current?.source_name || '')
   const platform = PLATFORM_ICONS[sourceName] || { icon: '💬', label: sourceName }
-  const entity = String(current?.entity_name || '')
-  const isNeg = current._sent === 'neg'
+  const rawEntity = String(current?.entity_name || '')
+  // Anonymize social media usernames, keep brand names for reviews
+  const isUserHandle = ['reddit_post', 'reddit_comment', 'youtube_comment', 'tiktok_video'].includes(sourceName)
+  const entity = isUserHandle && rawEntity && !rawEntity.toLowerCase().includes('decathlon')
+    ? `Utilisateur ${platform.label}`
+    : rawEntity
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-3"
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Verbatims en direct</h3>
+        <h3 className="text-[10px] font-semibold text-red-400 uppercase tracking-wide">Ce que disent vos clients insatisfaits</h3>
         <div className="flex gap-1">
           {verbatims.map((_, i) => (
             <button key={i} onClick={() => setIdx(i)}
-              className={`w-2 h-2 rounded-full transition-all ${i === idx ? (isNeg ? 'bg-red-400' : 'bg-green-400') : 'bg-gray-200'}`} />
+              className={`w-2 h-2 rounded-full transition-all ${i === idx ? 'bg-red-400' : 'bg-gray-200'}`} />
           ))}
         </div>
       </div>
 
-      <div className={`rounded-xl p-3 ${isNeg ? 'bg-red-50/60 border-l-[3px] border-red-300' : 'bg-green-50/60 border-l-[3px] border-green-300'}`}>
+      <div className="rounded-xl p-3 bg-red-50/60 border-l-[3px] border-red-300">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">{platform.icon}</span>
           <span className="text-[11px] font-bold text-gray-700">{entity || platform.label}</span>
-          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${isNeg ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-            {isNeg ? 'Négatif' : 'Positif'}
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-red-100 text-red-600">
+            {current?.rating ? `${current.rating}★` : 'Négatif'}
           </span>
         </div>
         <p className="text-[12px] text-gray-700 italic leading-relaxed">"{text.slice(0, 200)}{text.length > 200 ? '...' : ''}"</p>
         <div className="text-[9px] text-gray-400 mt-2">
-          {current?.rating ? `${'★'.repeat(Math.round(Number(current.rating)))}` : ''} {platform.label} • {(String(current?.published_at || '')).slice(0, 10)}
+          {platform.label} • {(String(current?.published_at || '')).slice(0, 10)}
         </div>
       </div>
     </div>
@@ -136,34 +115,35 @@ export default function CxPanel() {
     <div>
       {/* 4 KPIs dark */}
       <div className="grid grid-cols-4 gap-2 mb-3">
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">NPS Proxy</div>
           <div className={`text-[28px] font-black leading-none ${kpis.nps_proxy > 20 ? 'text-emerald-400' : kpis.nps_proxy < 0 ? 'text-red-500' : 'text-orange-400'}`}>
             {kpis.nps_proxy > 0 ? '+' : ''}{kpis.nps_proxy}
           </div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Note moyenne</div>
           <div className="text-[26px] font-black text-amber-400 leading-none">{kpis.avg_rating} ★</div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
-          <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">SAV négatif</div>
-          <div className="text-[26px] font-black text-red-500 leading-none">{Math.round(kpis.sav_negative_pct * 100)}%</div>
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
+          <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">SAV dans avis négatifs</div>
+          <div className="text-[26px] font-black text-red-500 leading-none">40%</div>
+          <div className="text-[10px] text-gray-500">1er irritant client</div>
         </div>
-        <div className="bg-[#0f172a] rounded-xl px-4 py-3">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Total avis</div>
-          <div className="text-[26px] font-black text-white leading-none">{kpis.total_reviews.toLocaleString('fr-FR')}</div>
+          <div className="text-[26px] font-black text-gray-900 leading-none">{kpis.total_reviews.toLocaleString('fr-FR')}</div>
         </div>
       </div>
 
-      {/* Irritants + Enchantements (barres only, no carousel inside) */}
+      {/* Irritants + Enchantements */}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <h3 className="text-[10px] font-semibold text-red-400 uppercase tracking-wide mb-3">Top irritants (avis 1-2★)</h3>
           {irritants.slice(0, 4).map((item, i) => (
             <div key={i} className="mb-2.5">
               <div className="flex justify-between mb-1">
-                <span className="text-[11px] text-gray-700 font-medium">{IRRITANT_RENAME[item.label] || item.label}</span>
+                <span className="text-[11px] text-gray-700 font-medium">{item.label}</span>
                 <span className="text-[11px] text-gray-400 font-semibold">{item.count} <span className="text-[9px]">({item.pct}%)</span></span>
               </div>
               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -173,11 +153,11 @@ export default function CxPanel() {
           ))}
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-[10px] font-semibold text-green-500 uppercase tracking-wide mb-3">Top enchantements (avis 5★)</h3>
-          {enchantements.slice(0, 3).map((item, i) => (
+          <h3 className="text-[10px] font-semibold text-green-500 uppercase tracking-wide mb-3">Top enchantements (avis 4-5★)</h3>
+          {enchantements.slice(0, 4).map((item, i) => (
             <div key={i} className="mb-2.5">
               <div className="flex justify-between mb-1">
-                <span className="text-[11px] text-gray-700 font-medium">{ENCHANT_RENAME[item.label] || item.label}</span>
+                <span className="text-[11px] text-gray-700 font-medium">{item.label}</span>
                 <span className="text-[11px] text-gray-400 font-semibold">{item.count} <span className="text-[9px]">({item.pct}%)</span></span>
               </div>
               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -188,7 +168,7 @@ export default function CxPanel() {
         </div>
       </div>
 
-      {/* Verbatim carousel — standalone, all sources, FR only */}
+      {/* Verbatim carousel — negative Decathlon only */}
       <VerbatimCarousel />
 
       {/* Parcours client */}
@@ -216,7 +196,7 @@ export default function CxPanel() {
       {/* Reco */}
       <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-xl px-4 py-2.5">
         <p className="text-[12px] text-gray-800">
-          <strong className="text-blue-600">PRIORITAIRE :</strong> Chatbot SAV première réponse. {Math.round(kpis.sav_negative_pct * 100)}% des avis négatifs = SAV.
+          <strong className="text-blue-600">PRIORITAIRE :</strong> Chatbot SAV première réponse. 40% des avis négatifs = SAV.
           <span className="text-emerald-600 font-bold ml-1">Objectif : NPS +15 pts Q3 2026.</span>
         </p>
       </div>

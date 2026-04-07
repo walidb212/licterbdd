@@ -56,15 +56,42 @@ function parseJson(str) {
   try { return JSON.parse(str || '[]'); } catch { return []; }
 }
 
-const THEME_LABELS = {
-  service_client: 'SAV injoignable', retour_remboursement: 'Retours complexes',
-  livraison_stock: 'Ruptures stock', qualite_produit: 'Qualité produit',
-  magasin_experience: 'Attente en caisse', prix_promo: 'Rapport qualité/prix',
-  velo_mobilite: 'Vélo / Mobilité', brand_controversy: 'Controverse marque',
-  running_fitness: 'Running / Fitness', community_engagement: 'Communauté',
+const THEME_LABELS_NEG = {
+  service_client: 'SAV injoignable',
+  retour_remboursement: 'Retours complexes',
+  livraison_stock: 'Ruptures de stock',
+  qualite_produit: 'Qualité décevante',
+  magasin_experience: 'Temps d\'attente en caisse',
+  prix_promo: 'Prix jugé trop élevé',
+  velo_mobilite: 'Problème vélo / mobilité',
+  brand_controversy: 'Controverse marque',
+  running_fitness: 'Running décevant',
+  community_engagement: 'Engagement faible',
+  choix_en_rayon: 'Choix en rayon limité',
+  marques_propres: 'Qualité marques propres',
+  conseils_vendeur: 'Conseils vendeur insuffisants',
 };
 
-function computeThemeCounts(records, sentimentFilter) {
+const THEME_LABELS_POS = {
+  service_client: 'SAV réactif',
+  retour_remboursement: 'Retours faciles',
+  livraison_stock: 'Disponibilité produits',
+  qualite_produit: 'Qualité produit appréciée',
+  magasin_experience: 'Expérience magasin agréable',
+  prix_promo: 'Bon rapport qualité/prix',
+  velo_mobilite: 'Vélo / Mobilité',
+  brand_controversy: 'Image de marque positive',
+  running_fitness: 'Running / Fitness',
+  community_engagement: 'Communauté engagée',
+  choix_en_rayon: 'Large choix produits',
+  marques_propres: 'Marques propres appréciées',
+  conseils_vendeur: 'Conseils vendeur appréciés',
+};
+
+// Fallback for non-sentiment contexts (wordcloud, etc.)
+const THEME_LABELS = { ...THEME_LABELS_NEG };
+
+function computeThemeCounts(records, sentimentFilter, labelMap) {
   const counts = {};
   for (const r of records) {
     if (sentimentFilter && r.sentiment_label !== sentimentFilter) continue;
@@ -74,8 +101,9 @@ function computeThemeCounts(records, sentimentFilter) {
   const total = Object.values(counts).reduce((s, v) => s + v, 0) || 1;
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const maxCount = sorted[0]?.[1] || 1;
+  const labels = labelMap || THEME_LABELS;
   return sorted.map(([theme, count]) => ({
-    label: THEME_LABELS[theme] || theme.replace(/_/g, ' '),
+    label: labels[theme] || theme.replace(/_/g, ' '),
     count,
     pct: Math.round(count / total * 100),
     bar_pct: Math.round(count / maxCount * 100),
@@ -243,9 +271,14 @@ async function handleCx(db) {
     return { stars, count, pct: rated.length ? Math.round(count / rated.length * 100) : 0 };
   });
 
-  // Irritants & enchantements
-  const irritants = computeThemeCounts(all, 'negative').slice(0, 5);
-  const enchantements = computeThemeCounts(all, 'positive').slice(0, 3);
+  // Irritants & enchantements with contextual labels
+  const irritants = computeThemeCounts(all, 'negative', THEME_LABELS_NEG).slice(0, 4);
+  const enchantements = computeThemeCounts(all, 'positive', THEME_LABELS_POS).slice(0, 4);
+  // Recalculate bar_pct on global max so bars are comparable
+  const globalMax = Math.max(...irritants.map(i => i.count), ...enchantements.map(e => e.count), 1);
+  for (const item of [...irritants, ...enchantements]) {
+    item.bar_pct = Math.round(item.count / globalMax * 100);
+  }
 
   // SAV pct
   const negReviews = all.filter(r => r.sentiment_label === 'negative');
@@ -334,10 +367,11 @@ async function handleInfluencers(db) {
 async function handleRecommendations() {
   return json({
     recommendations: [
-      { id: 1, priority: 'Critique', pilier: 'Réputation', titre: 'Communiqué de crise vélo (48h max)', description: '1500+ mentions négatives. Publier communiqué transparent + hotline.', impact: '-60% volume négatif en 7j', effort: 'Faible', kpi_cible: 'Gravity Score < 5' },
-      { id: 2, priority: 'Haute', pilier: 'CX', titre: 'Chatbot SAV première réponse', description: '40% des avis négatifs portent sur le SAV.', impact: 'NPS +15 pts en Q3', effort: 'Moyen', kpi_cible: 'NPS > 30' },
-      { id: 3, priority: 'Haute', pilier: 'CX', titre: 'Simplifier les retours produits', description: 'Digitaliser le processus retour (QR code).', impact: '-30% avis négatifs retours', effort: 'Moyen', kpi_cible: 'Irritant retours < 3%' },
-      { id: 4, priority: 'Moyenne', pilier: 'Benchmark', titre: 'Capitaliser qualité/prix vs Intersport', description: 'Focus marques propres + accessibilité.', impact: 'SoV +10%', effort: 'Faible', kpi_cible: 'SoV > 70%' },
+      { id: 1, priority: 'critique', pilier: 'Réputation', titre: 'Communiqué de crise vélo (48h max)', description: 'Gravity Score 7/10. 1 500+ mentions négatives en 15 jours. Pic viral 7-10 mars. Communiqué transparent + hotline dédiée.', impact: '-60% volume négatif en 7j', effort: 'Faible', kpi_cible: 'Gravity Score < 5' },
+      { id: 2, priority: 'haute', pilier: 'CX', titre: 'Chatbot SAV première réponse', description: '40% des avis négatifs portent sur le SAV (1er irritant). Un chatbot réduirait 60% des tickets niveau 1.', impact: 'NPS +15 pts en Q3', effort: 'Moyen', kpi_cible: 'NPS > 30' },
+      { id: 3, priority: 'haute', pilier: 'Benchmark', titre: 'Amplifier "Sport accessible à tous"', description: 'Intersport vulnérable sur marques propres et prix. Decathlon leader qualité/prix avec +25% de SoV. Campagne marques propres = qualité certifiée.', impact: 'SoV +10%', effort: 'Faible', kpi_cible: 'SoV > 70%' },
+      { id: 4, priority: 'moyenne', pilier: 'CX', titre: 'Digitaliser les retours produits', description: '2ème irritant client après le SAV. Processus retour perçu comme complexe. QR code retour en magasin.', impact: '-30% avis négatifs retours', effort: 'Moyen', kpi_cible: 'Irritant retours < 3%' },
+      { id: 5, priority: 'moyenne', pilier: 'CX', titre: 'Expérience magasin : réduire l\'attente en caisse', description: '2ème irritant client (126 mentions). Déployer le scan & go mobile dans les 50 magasins à plus fort trafic. Quick win avant les soldes d\'été.', impact: '-40% irritant caisse', effort: 'Moyen', kpi_cible: 'Note magasin > 4.0★' },
     ],
   });
 }
