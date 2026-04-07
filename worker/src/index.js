@@ -311,7 +311,13 @@ async function handleCx(db) {
 }
 
 async function handleTopProducts(db, env) {
-  // Approche : chercher les marques Decathlon dans les VRAIS avis clients (pas social/YouTube)
+  // Check D1 cache first (24h TTL)
+  try {
+    const cached = await db.prepare("SELECT data FROM cached_responses WHERE key = 'top_products'").first();
+    if (cached?.data) return json(JSON.parse(cached.data));
+  } catch { /* fallback to live */ }
+
+  // Marques DECATHLON uniquement (pas Intersport : nakamura, etc.)
   const BRANDS = [
     { kw: 'rockrider', label: 'Rockrider', cat: 'Cyclisme' },
     { kw: 'btwin', label: 'B\'Twin', cat: 'Cyclisme' },
@@ -333,7 +339,6 @@ async function handleTopProducts(db, env) {
     { kw: 'caperlan', label: 'Caperlan', cat: 'Peche' },
     { kw: 'tarmak', label: 'Tarmak', cat: 'Basketball' },
     { kw: 'perfly', label: 'Perfly', cat: 'Badminton' },
-    { kw: 'nakamura', label: 'Nakamura', cat: 'Cyclisme' },
   ];
 
   // Chercher dans les vrais avis clients seulement
@@ -409,21 +414,23 @@ async function handleTopProducts(db, env) {
   const topNeg = await buildList(negData, 5);
   const topPos = await buildList(posData, 5);
 
-  // Insight par catégorie
-  const catNeg = {};
-  for (const [, info] of Object.entries(negData)) {
-    catNeg[info.brand.cat] = (catNeg[info.brand.cat] || 0) + info.count;
-  }
-  const totalNeg = Object.values(catNeg).reduce((s, v) => s + v, 0) || 1;
-  const sortedCats = Object.entries(catNeg).sort((a, b) => b[1] - a[1]);
+  // Insight : comparer neg vs pos
+  const totalNegMentions = Object.values(negData).reduce((s, d) => s + d.count, 0);
+  const totalPosMentions = Object.values(posData).reduce((s, d) => s + d.count, 0);
+  const topPosMarque = Object.entries(posData).sort((a, b) => b[1].count - a[1].count)[0];
+  const topNegMarque = Object.entries(negData).sort((a, b) => b[1].count - a[1].count)[0];
   let insight = '';
-  if (sortedCats.length >= 1) {
-    const parts = sortedCats.slice(0, 3).map(([cat, count]) => `${cat} ${Math.round(count / totalNeg * 100)}%`);
-    insight = `Categories les plus critiquees : ${parts.join(', ')}. Les avis negatifs ciblent principalement ${sortedCats[0][0]}.`;
+  if (topPosMarque && topNegMarque) {
+    insight = `${topPosMarque[1].brand.label} est la marque la plus appreciee (${topPosMarque[1].count} mentions positives). ${topNegMarque[1].brand.label} concentre le plus de critiques (${topNegMarque[1].count} avis negatifs). Ratio global : ${totalPosMentions} positifs vs ${totalNegMentions} negatifs.`;
+  } else if (topPosMarque) {
+    insight = `${topPosMarque[1].brand.label} est la marque la plus appreciee avec ${topPosMarque[1].count} mentions positives.`;
   }
 
   const totalScanned = Object.values(negData).reduce((s, d) => s + d.count, 0) + Object.values(posData).reduce((s, d) => s + d.count, 0);
-  return json({ negative: topNeg, positive: topPos, insight, total_reviews_scanned: totalScanned });
+  const payload = { negative: topNeg, positive: topPos, insight, total_reviews_scanned: totalScanned };
+  // Cache in D1 for 24h
+  try { await db.prepare("INSERT OR REPLACE INTO cached_responses (key, data, updated_at) VALUES ('top_products', ?, datetime('now'))").bind(JSON.stringify(payload)).run(); } catch {}
+  return json(payload);
 }
 
 async function handleWordcloud(db) {
@@ -1018,17 +1025,6 @@ ${passages}`;
 
       // Transcripts (from D1 — not available in prod, return placeholder)
       if (path === '/api/transcripts') return json({ total: 0, transcripts: [], message: 'Transcripts disponibles en local uniquement (Groq Whisper).' });
-
-      // Bulk SQL exec (POST only, for data sync)
-      if (path === '/api/exec-sql' && request.method === 'POST') {
-        const body = await request.json();
-        const statements = body.statements || [];
-        let ok = 0, fail = 0;
-        for (const sql of statements) {
-          try { await db.prepare(sql).run(); ok++; } catch { fail++; }
-        }
-        return json({ ok, fail, total: statements.length });
-      }
 
       return json({ error: 'Not found' }, 404);
     } catch (err) {
