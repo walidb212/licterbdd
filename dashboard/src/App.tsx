@@ -36,6 +36,7 @@ const NAV_ITEMS: { id: NavId; label: string; icon: string; section: string }[] =
 function App() {
   const [activeNav, setActiveNav] = useState<NavId>('rep')
   const [chatOpen, setChatOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const { data: health } = useHealth()
 
   const generalItems = NAV_ITEMS.filter(i => i.section === 'GENERAL')
@@ -44,59 +45,64 @@ function App() {
   return (
     <div className="flex h-screen bg-[#1a1a2e] p-3 gap-3">
       {/* ── Sidebar ── */}
-      <aside className="w-[230px] bg-white rounded-[20px] flex flex-col shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-2">
-          <img src="/decathlon.png?v=5" alt="Decathlon" className="w-[150px] h-auto object-contain" />
+      <aside className={`${sidebarOpen ? 'w-[230px]' : 'w-[60px]'} bg-white rounded-[20px] flex flex-col shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden`}>
+        {/* Logo + collapse toggle */}
+        <div className="flex items-center justify-between px-3 py-2">
+          {sidebarOpen && <img src="/decathlon.png?v=5" alt="Decathlon" className="w-[130px] h-auto object-contain" />}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all shrink-0">
+            {sidebarOpen ? '◀' : '▶'}
+          </button>
         </div>
 
         {/* General nav */}
-        <div className="px-4 mb-1 text-[10px] font-semibold text-[#324DE6] tracking-wider">GENERAL</div>
+        {sidebarOpen && <div className="px-4 mb-1 text-[10px] font-semibold text-[#324DE6] tracking-wider">GENERAL</div>}
         <nav className="px-2 flex flex-col gap-0.5">
           {generalItems.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveNav(item.id)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] w-full text-left transition-all
+              title={item.label}
+              className={`flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2 rounded-lg text-[13px] w-full text-left transition-all
                 ${activeNav === item.id
                   ? 'bg-white text-gray-900 font-semibold shadow-sm'
                   : 'text-gray-500 hover:bg-white/60 hover:text-gray-700'}`}
             >
-              <span className="w-5 text-center text-sm">{item.icon}</span>
-              {item.label}
+              <span className="w-5 text-center text-sm shrink-0">{item.icon}</span>
+              {sidebarOpen && item.label}
             </button>
           ))}
         </nav>
 
         {/* Tools nav */}
-        <div className="px-4 mt-6 mb-1 text-[10px] font-semibold text-[#324DE6] tracking-wider">TOOLS</div>
+        {sidebarOpen && <div className="px-4 mt-6 mb-1 text-[10px] font-semibold text-[#324DE6] tracking-wider">TOOLS</div>}
         <nav className="px-2 flex flex-col gap-0.5">
           {toolItems.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveNav(item.id)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] w-full text-left transition-all
+              title={item.label}
+              className={`flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2 rounded-lg text-[13px] w-full text-left transition-all
                 ${activeNav === item.id
                   ? 'bg-white text-gray-900 font-semibold shadow-sm'
                   : 'text-gray-500 hover:bg-white/60 hover:text-gray-700'}`}
             >
-              <span className="w-5 text-center text-sm">{item.icon}</span>
-              {item.label}
+              <span className="w-5 text-center text-sm shrink-0">{item.icon}</span>
+              {sidebarOpen && item.label}
             </button>
           ))}
-          <a href="/rapport-comex.pdf" target="_blank"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] text-gray-500 hover:bg-white/60 hover:text-gray-700 no-underline transition-all">
-            <span className="w-5 text-center text-sm">⬡</span>
-            Rapport PDF
+          <a href="/rapport-comex.pdf" target="_blank" title="Rapport PDF"
+            className={`flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2 rounded-lg text-[13px] text-gray-500 hover:bg-white/60 hover:text-gray-700 no-underline transition-all`}>
+            <span className="w-5 text-center text-sm shrink-0">⬡</span>
+            {sidebarOpen && 'Rapport PDF'}
           </a>
         </nav>
 
         {/* Status indicator only */}
         {health?.status === 'ok' && (
-          <div className="mt-auto px-4 py-3">
-            <div className="flex items-center gap-2 text-[11px] text-green-600">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-dot" />
-              Pipeline actif
+          <div className={`mt-auto ${sidebarOpen ? 'px-4' : 'px-2'} py-3`}>
+            <div className={`flex items-center gap-2 text-[11px] text-green-600 ${sidebarOpen ? '' : 'justify-center'}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-dot shrink-0" />
+              {sidebarOpen && 'Pipeline actif'}
             </div>
           </div>
         )}

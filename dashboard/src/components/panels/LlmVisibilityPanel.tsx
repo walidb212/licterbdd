@@ -95,7 +95,7 @@ export default function LlmVisibilityPanel() {
                   {r.sentiment}
                 </span>
               </div>
-              <div className="text-[11px] text-gray-500">{r.answer_preview}</div>
+              <div className="text-[11px] text-gray-500 leading-relaxed">{r.answer_preview}{r.answer_preview?.length >= 140 ? '...' : ''}</div>
             </div>
           ))}
         </div>
