@@ -77,40 +77,39 @@ export default function ReputationPanel() {
         </div>
 
         {/* CA menacé */}
-        <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl px-5 py-5 relative overflow-hidden">
-          <div className="absolute top-2 right-3 text-[24px]">⚠️</div>
-          <div className="text-[10px] font-semibold text-red-200 uppercase tracking-wider mb-2">CA menacé estimé</div>
-          <div className="text-[38px] font-black text-white leading-none">{caMenuce}M€</div>
-          <div className="text-[11px] text-red-200 mt-1">impact crise sur CA France</div>
+        <div className="bg-[#0f172a] rounded-2xl px-5 py-5 relative overflow-hidden">
+          <div className="absolute top-2 right-3 text-[20px]">⚠️</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">CA menacé estimé</div>
+          <div className="text-[36px] font-black text-red-500 leading-none">{caMenuce}M€</div>
+          <div className="text-[11px] text-gray-500 mt-1">impact crise sur CA France</div>
         </div>
       </div>
 
-      {/* === Timeline — zones distinctes === */}
-      <div className="bg-[#0f172a] rounded-2xl p-5 mb-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Volume & négatif — 14 derniers jours</h3>
-          {crisis?.is_escalating && (
-            <span className="text-[10px] font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full animate-pulse">EN HAUSSE</span>
-          )}
+      {/* === Timeline + Word Cloud — même ligne === */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Volume & négatif — 14j</h3>
+            {crisis?.is_escalating && (
+              <span className="text-[10px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full animate-pulse">EN HAUSSE</span>
+            )}
+          </div>
+          <AreaChart
+            data={timelineData}
+            index="date"
+            categories={['volume', 'negative']}
+            colors={['blue', 'red']}
+            showLegend={true}
+            showGradient={true}
+            showAnimation={true}
+            curveType="monotone"
+            className="h-40"
+            yAxisWidth={30}
+          />
         </div>
-        <AreaChart
-          data={timelineData}
-          index="date"
-          categories={['volume', 'negative']}
-          colors={['blue', 'red']}
-          showLegend={true}
-          showGradient={true}
-          showAnimation={true}
-          curveType="monotone"
-          className="h-44"
-          yAxisWidth={35}
-        />
-      </div>
 
-      {/* === Word Cloud — fond sombre === */}
-      <div className="bg-[#0f172a] rounded-2xl p-5 mb-5">
-        <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Thèmes dominants</h3>
-        <div className="[&_span]:!text-gray-300">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Thèmes dominants</h3>
           <WordCloud />
         </div>
       </div>
