@@ -37,6 +37,7 @@ function App() {
   const [activeNav, setActiveNav] = useState<NavId>('rep')
   const [chatOpen, setChatOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [toolsOpen, setToolsOpen] = useState(false)
   const { data: health } = useHealth()
 
   const generalItems = NAV_ITEMS.filter(i => i.section === 'GENERAL')
@@ -74,23 +75,33 @@ function App() {
         </nav>
 
         {/* Tools nav */}
-        {sidebarOpen && <div className="px-4 mt-6 mb-1 text-[10px] font-semibold text-[#324DE6] tracking-wider">TOOLS</div>}
-        <nav className="px-2 flex flex-col gap-0.5">
-          {toolItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveNav(item.id)}
-              title={item.label}
-              className={`flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2 rounded-lg text-[13px] w-full text-left transition-all
-                ${activeNav === item.id
-                  ? 'bg-white text-gray-900 font-semibold shadow-sm'
-                  : 'text-gray-500 hover:bg-white/60 hover:text-gray-700'}`}
-            >
-              <span className="w-5 text-center text-sm shrink-0">{item.icon}</span>
-              {sidebarOpen && item.label}
-            </button>
-          ))}
-        </nav>
+        {sidebarOpen ? (
+          <button onClick={() => setToolsOpen(!toolsOpen)} className="px-4 mt-5 mb-1 text-[10px] font-semibold text-[#324DE6] tracking-wider flex items-center gap-1 w-full hover:opacity-70 transition-opacity">
+            <span className="text-[8px]">{toolsOpen ? '▼' : '▶'}</span> OUTILS AVANCÉS ({toolItems.length})
+          </button>
+        ) : (
+          <button onClick={() => setToolsOpen(!toolsOpen)} className="px-2 mt-4 mb-1 w-full flex justify-center">
+            <span className="text-[10px] text-[#324DE6]">{toolsOpen ? '▼' : '▶'}</span>
+          </button>
+        )}
+        {toolsOpen && (
+          <nav className="px-2 flex flex-col gap-0.5">
+            {toolItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveNav(item.id)}
+                title={item.label}
+                className={`flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-1.5 rounded-lg text-[12px] w-full text-left transition-all
+                  ${activeNav === item.id
+                    ? 'bg-white text-gray-900 font-semibold shadow-sm'
+                    : 'text-gray-400 hover:bg-white/60 hover:text-gray-600'}`}
+              >
+                <span className="w-5 text-center text-sm shrink-0">{item.icon}</span>
+                {sidebarOpen && item.label}
+              </button>
+            ))}
+          </nav>
+        )}
 
         {/* Status indicator only */}
         {health?.status === 'ok' && (

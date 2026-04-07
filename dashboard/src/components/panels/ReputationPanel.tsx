@@ -94,7 +94,7 @@ export default function ReputationPanel() {
                   </defs>
                   <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, fontSize: 11, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                  <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, fontSize: 11, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} formatter={(value: number, name: string) => [value, name === 'volume' ? '📊 Volume total' : '🔴 Mentions négatives']} />
                   <Area type="monotone" dataKey="volume" stroke="#3b82f6" strokeWidth={2} fill="url(#gVol)" />
                   <Area type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} fill="url(#gNeg)" />
                 </AreaChart>
