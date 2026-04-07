@@ -64,11 +64,20 @@ function VerbatimCarousel() {
     return text.length > 40 && isFrench(text)
   })
 
-  // Stable shuffle
-  const verbatims = [...all].sort((a, b) => {
-    const ha = String(a.summary_short || '').length; const hb = String(b.summary_short || '').length
-    return ha - hb
-  }).slice(0, 8)
+  // Alternate neg/pos and diversify sources
+  const negs = all.filter(r => r._sent === 'neg')
+  const poss = all.filter(r => r._sent === 'pos')
+  const interleaved: any[] = []
+  const seenSources = new Set()
+  for (let i = 0; i < 4; i++) {
+    // Pick a neg with unseen source
+    const neg = negs.find(r => !seenSources.has(String(r.entity_name || r.source_name)))
+    if (neg) { interleaved.push(neg); seenSources.add(String(neg.entity_name || neg.source_name)); negs.splice(negs.indexOf(neg), 1) }
+    // Pick a pos with unseen source
+    const pos = poss.find(r => !seenSources.has(String(r.entity_name || r.source_name)))
+    if (pos) { interleaved.push(pos); seenSources.add(String(pos.entity_name || pos.source_name)); poss.splice(poss.indexOf(pos), 1) }
+  }
+  const verbatims = interleaved.length >= 4 ? interleaved : all.slice(0, 8)
 
   useEffect(() => {
     if (paused || !verbatims.length) return
