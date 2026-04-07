@@ -57,7 +57,12 @@ export default function WordCloud() {
   if (!filtered.length) return null
 
   const maxVal = Math.max(...filtered.map(w => w.value), 1)
-  const shuffled = [...filtered].sort(() => Math.random() - 0.5)
+  // Stable shuffle based on text hash (not random — prevents re-render flicker)
+  const shuffled = [...filtered].sort((a, b) => {
+    const hashA = a.text.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)
+    const hashB = b.text.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)
+    return hashA - hashB
+  })
 
   return (
     <div className="flex flex-wrap gap-x-1.5 gap-y-0.5 justify-center items-center" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
