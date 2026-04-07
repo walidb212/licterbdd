@@ -1,6 +1,6 @@
 import { useReputation } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
-import { AreaChart } from '@tremor/react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceDot } from 'recharts'
 import WordCloud from '../../charts/WordCloud'
 
 interface CrisisData {
@@ -94,18 +94,50 @@ export default function ReputationPanel() {
               <span className="text-[10px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full animate-pulse">EN HAUSSE</span>
             )}
           </div>
-          <AreaChart
-            data={timelineData}
-            index="date"
-            categories={['volume', 'negative']}
-            colors={['blue', 'red']}
-            showLegend={true}
-            showGradient={true}
-            showAnimation={true}
-            curveType="monotone"
-            className="h-40"
-            yAxisWidth={30}
-          />
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={timelineData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02}/>
+                </linearGradient>
+                <linearGradient id="colorNeg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                formatter={(value: number, name: string) => [value, name === 'volume' ? 'Volume' : 'Négatif']}
+              />
+              <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ color: '#6b7280', fontSize: 11 }}>{v === 'volume' ? 'Volume' : 'Négatif'}</span>} />
+              <Area type="monotone" dataKey="volume" stroke="#3b82f6" strokeWidth={2.5} fill="url(#colorVolume)" animationDuration={1000} />
+              <Area type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2.5} fill="url(#colorNeg)" animationDuration={1000} />
+              {/* Peak annotation dot */}
+              {crisis?.peak_day && (() => {
+                const peakDate = crisis.peak_day.date.slice(5)
+                const peakEntry = timelineData.find(d => d.date === peakDate)
+                return peakEntry ? (
+                  <ReferenceDot x={peakDate} y={peakEntry.volume} r={8} fill="#f59e0b" stroke="#fff" strokeWidth={2}>
+                  </ReferenceDot>
+                ) : null
+              })()}
+            </AreaChart>
+          </ResponsiveContainer>
+          {/* Peak info card */}
+          {crisis?.peak_day && (
+            <div className="mt-3 flex items-start gap-3 bg-amber-50 rounded-xl px-4 py-2.5 border border-amber-100">
+              <span className="w-5 h-5 rounded-full bg-amber-400 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">A</span>
+              <div className="text-[11px]">
+                <span className="font-bold text-gray-800">{crisis.peak_day.date}</span>
+                <span className="text-gray-500 ml-2">{crisis.peak_day.volume} mentions</span>
+                <span className="text-amber-600 font-bold ml-2">+{Math.round((crisis.peak_day.volume / (crisis.avg_daily_volume || 1) - 1) * 100)}% vs moy.</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
