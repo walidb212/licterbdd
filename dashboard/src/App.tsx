@@ -90,11 +90,6 @@ function App() {
               {sidebarOpen && item.label}
             </button>
           ))}
-          <a href="/rapport-comex.pdf" target="_blank" title="Rapport PDF"
-            className={`flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2 rounded-lg text-[13px] text-gray-500 hover:bg-white/60 hover:text-gray-700 no-underline transition-all`}>
-            <span className="w-5 text-center text-sm shrink-0">⬡</span>
-            {sidebarOpen && 'Rapport PDF'}
-          </a>
         </nav>
 
         {/* Status indicator only */}
