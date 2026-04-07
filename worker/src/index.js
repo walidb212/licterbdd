@@ -181,13 +181,20 @@ async function handleBenchmark(db) {
   }
 
   // Radar topics
-  const TOPICS = ['prix', 'sav', 'qualite', 'engagement', 'marques_propres', 'service'];
-  const radar = TOPICS.map(topic => {
-    const decT = dec.filter(r => (parseJson(r.themes).join(' ') + ' ' + (r.topic || '')).toLowerCase().includes(topic));
-    const intT = inter.filter(r => (parseJson(r.themes).join(' ') + ' ' + (r.topic || '')).toLowerCase().includes(topic));
-    const decPos = decT.length ? Math.round(decT.filter(r => r.sentiment_label === 'positive').length / decT.length * 100) : 50;
-    const intPos = intT.length ? Math.round(intT.filter(r => r.sentiment_label === 'positive').length / intT.length * 100) : 50;
-    return { topic: topic.charAt(0).toUpperCase() + topic.slice(1), decathlon: decPos, intersport: intPos };
+  const TOPIC_CFG = [
+    { key: 'prix', label: 'Prix', kw: ['prix', 'price', 'cher', 'abordable', 'rapport', 'promo', 'budget'] },
+    { key: 'sav', label: 'Sav', kw: ['sav', 'service client', 'retour', 'remboursement', 'reparation'] },
+    { key: 'qualite', label: 'Qualite', kw: ['qualite', 'quality', 'defaut', 'solide', 'durable'] },
+    { key: 'engagement', label: 'Engagement', kw: ['communaute', 'community', 'engagement', 'running', 'marathon'] },
+    { key: 'marques_propres', label: 'Marques_propres', kw: ['quechua', 'domyos', 'kipsta', 'rockrider', 'kalenji', 'nakamura', 'marque propre'] },
+    { key: 'service', label: 'Service', kw: ['vendeur', 'conseils', 'magasin', 'accueil', 'rayon'] },
+  ];
+  const radar = TOPIC_CFG.map(t => {
+    const match = (r) => { const txt = ((r.summary_short || '') + ' ' + (parseJson(r.themes).join(' ')) + ' ' + (r.topic || '')).toLowerCase(); return t.kw.some(k => txt.includes(k)); };
+    const decT = dec.filter(match);
+    const intT = inter.filter(match);
+    const sc = (recs) => { if (!recs.length) return 35; const p = recs.filter(r => r.sentiment_label === 'positive').length; const n = recs.filter(r => r.sentiment_label === 'negative').length; return Math.max(5, Math.min(95, Math.round(50 + (p - n * 0.5) / recs.length * 80))); };
+    return { topic: t.label, decathlon: sc(decT), intersport: sc(intT) };
   });
 
   return json({
