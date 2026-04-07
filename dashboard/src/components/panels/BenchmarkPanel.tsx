@@ -17,7 +17,7 @@ export default function BenchmarkPanel() {
 
   // Find Intersport weaknesses (score < 30%) for opportunity block
   const intWeaknesses = (radar || [])
-    .filter(r => r.intersport < 30)
+    .filter(r => r.intersport < 50 && r.decathlon > r.intersport)
     .sort((a, b) => (b.decathlon - b.intersport) - (a.decathlon - a.intersport))
 
   return (
