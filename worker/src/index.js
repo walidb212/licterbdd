@@ -627,8 +627,14 @@ export default {
       if (path === '/api/trending') return json([]);
       if (path === '/api/autodiscover') return json({ suggestions: [], stats: { texts_scanned: 0 } });
       if (path === '/api/event/status') return json({ active: false });
-      if (path === '/api/content-compare') return handleContentCompare(db, env);
-      if (path === '/api/personas') return handlePersonas(db, env);
+      if (path === '/api/content-compare') {
+        try { const c = await db.prepare("SELECT data FROM cached_responses WHERE key = 'content_compare'").first(); if (c?.data) return json(JSON.parse(c.data)); } catch {}
+        return handleContentCompare(db, env);
+      }
+      if (path === '/api/personas') {
+        try { const c = await db.prepare("SELECT data FROM cached_responses WHERE key = 'personas'").first(); if (c?.data) return json(JSON.parse(c.data)); } catch {}
+        return handlePersonas(db, env);
+      }
       if (path === '/api/chat' && request.method === 'POST') return handleChat(db, env, await request.json());
       if (path === '/api/report/pdf') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.pdf', 302);
       if (path === '/api/report/html') return Response.redirect('https://licter-dashboard.pages.dev/rapport-comex.html', 302);
@@ -697,8 +703,13 @@ ${passages}`;
         }
       }
 
-      // LLM Visibility Score — multi-model via OpenRouter
+      // LLM Visibility Score — serve from D1 cache (pre-computed)
       if (path === '/api/llm-visibility') {
+        try {
+          const cached = await db.prepare("SELECT data FROM cached_responses WHERE key = 'llm_visibility'").first();
+          if (cached?.data) return json(JSON.parse(cached.data));
+        } catch { /* fallback to live */ }
+        // Fallback: live computation (slow)
         const orKey = env.OPENROUTER_API_KEY;
         const oaKey = env.OPENAI_API_KEY;
         if (!orKey && !oaKey) return json({ error: 'No API key' }, 503);
