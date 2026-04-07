@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useCx, apiUrl } from '../../api/client'
 import { useQuery } from '@tanstack/react-query'
 
-// Rename duplicates between irritants/enchantements
 const IRRITANT_RENAME: Record<string, string> = {
   'Rapport qualité/prix': 'Qualité insuffisante vs prix',
   'Attente en caisse': 'Files d\'attente',
@@ -13,75 +12,98 @@ const ENCHANT_RENAME: Record<string, string> = {
   'choix en rayon': 'Large choix produits',
 }
 
-const PLATFORM_ICONS: Record<string, { icon: string; color: string }> = {
-  reddit_post: { icon: '🔴', color: 'text-orange-500' },
-  reddit_comment: { icon: '🔴', color: 'text-orange-500' },
-  youtube_video: { icon: '▶️', color: 'text-red-500' },
-  youtube_comment: { icon: '▶️', color: 'text-red-500' },
-  tiktok_video: { icon: '🎵', color: 'text-pink-500' },
-  x_post: { icon: '𝕏', color: 'text-gray-800' },
-  news_article: { icon: '📰', color: 'text-blue-500' },
-  review_site: { icon: '⭐', color: 'text-amber-500' },
-  store_review: { icon: '📍', color: 'text-green-600' },
+const PLATFORM_ICONS: Record<string, { icon: string; label: string }> = {
+  reddit_post: { icon: '🔴', label: 'Reddit' },
+  reddit_comment: { icon: '🔴', label: 'Reddit' },
+  youtube_video: { icon: '▶️', label: 'YouTube' },
+  youtube_comment: { icon: '▶️', label: 'YouTube' },
+  tiktok_video: { icon: '🎵', label: 'TikTok' },
+  x_post: { icon: '𝕏', label: 'X/Twitter' },
+  news_article: { icon: '📰', label: 'Presse' },
+  review_site: { icon: '⭐', label: 'Avis' },
+  store_review: { icon: '📍', label: 'Google Maps' },
 }
 
-function VerbatimCarousel({ type }: { type: 'negative' | 'positive' }) {
+// Simple FR detection
+function isFrench(text: string): boolean {
+  const frWords = ['le', 'la', 'les', 'de', 'du', 'des', 'un', 'une', 'et', 'en', 'est', 'que', 'qui', 'pour', 'pas', 'sur', 'avec', 'dans', 'plus', 'mais', 'je', 'nous', 'très', 'chez']
+  const words = text.toLowerCase().split(/\s+/).slice(0, 20)
+  const frCount = words.filter(w => frWords.includes(w)).length
+  return frCount >= 2
+}
+
+function VerbatimCarousel() {
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
 
-  // Fetch from BOTH social + reviews
-  const { data: socialData } = useQuery<{ rows: Record<string, unknown>[] }>({
-    queryKey: ['verbatims-social', type],
-    queryFn: () => fetch(apiUrl(`/api/admindb?table=social_enriched&sentiment=${type}&limit=8`)).then(r => r.json()),
+  const { data: socialNeg } = useQuery<{ rows: Record<string, unknown>[] }>({
+    queryKey: ['verb-social-neg'], queryFn: () => fetch(apiUrl('/api/admindb?table=social_enriched&sentiment=negative&limit=15')).then(r => r.json()),
   })
-  const { data: reviewData } = useQuery<{ rows: Record<string, unknown>[] }>({
-    queryKey: ['verbatims-review', type],
-    queryFn: () => fetch(apiUrl(`/api/admindb?table=review_enriched&sentiment=${type}&limit=8`)).then(r => r.json()),
+  const { data: socialPos } = useQuery<{ rows: Record<string, unknown>[] }>({
+    queryKey: ['verb-social-pos'], queryFn: () => fetch(apiUrl('/api/admindb?table=social_enriched&sentiment=positive&limit=15')).then(r => r.json()),
+  })
+  const { data: reviewNeg } = useQuery<{ rows: Record<string, unknown>[] }>({
+    queryKey: ['verb-review-neg'], queryFn: () => fetch(apiUrl('/api/admindb?table=review_enriched&sentiment=negative&limit=10')).then(r => r.json()),
+  })
+  const { data: reviewPos } = useQuery<{ rows: Record<string, unknown>[] }>({
+    queryKey: ['verb-review-pos'], queryFn: () => fetch(apiUrl('/api/admindb?table=review_enriched&sentiment=positive&limit=10')).then(r => r.json()),
   })
 
-  const allVerbatims = [
-    ...(socialData?.rows || []).map(r => ({ ...r, _table: 'social' })),
-    ...(reviewData?.rows || []).map(r => ({ ...r, _table: 'review' })),
+  const all: any[] = [
+    ...(socialNeg?.rows || []).map(r => ({ ...r, _sent: 'neg' })),
+    ...(socialPos?.rows || []).map(r => ({ ...r, _sent: 'pos' })),
+    ...(reviewNeg?.rows || []).map(r => ({ ...r, _sent: 'neg' })),
+    ...(reviewPos?.rows || []).map(r => ({ ...r, _sent: 'pos' })),
   ].filter(r => {
     const text = String(r.summary_short || r.body || r.text || '')
-    return text.length > 30
-  }).sort(() => Math.random() - 0.5).slice(0, 6)
+    return text.length > 40 && isFrench(text)
+  })
+
+  // Stable shuffle
+  const verbatims = [...all].sort((a, b) => {
+    const ha = String(a.summary_short || '').length; const hb = String(b.summary_short || '').length
+    return ha - hb
+  }).slice(0, 8)
 
   useEffect(() => {
-    if (paused || !allVerbatims.length) return
-    const timer = setInterval(() => setIdx(i => (i + 1) % allVerbatims.length), 4000)
+    if (paused || !verbatims.length) return
+    const timer = setInterval(() => setIdx(i => (i + 1) % verbatims.length), 5000)
     return () => clearInterval(timer)
-  }, [paused, allVerbatims.length])
+  }, [paused, verbatims.length])
 
-  if (!allVerbatims.length) return null
+  if (!verbatims.length) return null
 
-  const current = allVerbatims[idx]
+  const current = verbatims[idx]
   const text = String(current?.summary_short || current?.body || current?.text || '')
   const sourceName = String(current?.source_name || '')
-  const platform = PLATFORM_ICONS[sourceName] || { icon: '💬', color: 'text-gray-500' }
+  const platform = PLATFORM_ICONS[sourceName] || { icon: '💬', label: sourceName }
   const entity = String(current?.entity_name || '')
-  const isNeg = type === 'negative'
+  const isNeg = current._sent === 'neg'
 
   return (
-    <div
-      className={`mt-3 rounded-xl p-3 ${isNeg ? 'bg-red-50/60 border-l-[3px] border-red-300' : 'bg-green-50/60 border-l-[3px] border-green-300'}`}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="text-sm">{platform.icon}</span>
-        <span className={`text-[10px] font-bold ${platform.color}`}>{entity || sourceName}</span>
-      </div>
-      <p className="text-[11px] text-gray-600 italic leading-relaxed">"{text.slice(0, 180)}{text.length > 180 ? '...' : ''}"</p>
-      <div className="flex items-center justify-between mt-2">
-        <span className="text-[9px] text-gray-400">
-          {current?.rating ? `${'★'.repeat(Math.round(Number(current.rating)))}` : ''} {(String(current?.published_at || '')).slice(0, 10)}
-        </span>
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-3"
+      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Verbatims en direct</h3>
         <div className="flex gap-1">
-          {allVerbatims.map((_, i) => (
+          {verbatims.map((_, i) => (
             <button key={i} onClick={() => setIdx(i)}
-              className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? (isNeg ? 'bg-red-400' : 'bg-green-400') : 'bg-gray-200'}`} />
+              className={`w-2 h-2 rounded-full transition-all ${i === idx ? (isNeg ? 'bg-red-400' : 'bg-green-400') : 'bg-gray-200'}`} />
           ))}
+        </div>
+      </div>
+
+      <div className={`rounded-xl p-3 ${isNeg ? 'bg-red-50/60 border-l-[3px] border-red-300' : 'bg-green-50/60 border-l-[3px] border-green-300'}`}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-base">{platform.icon}</span>
+          <span className="text-[11px] font-bold text-gray-700">{entity || platform.label}</span>
+          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${isNeg ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+            {isNeg ? 'Négatif' : 'Positif'}
+          </span>
+        </div>
+        <p className="text-[12px] text-gray-700 italic leading-relaxed">"{text.slice(0, 200)}{text.length > 200 ? '...' : ''}"</p>
+        <div className="text-[9px] text-gray-400 mt-2">
+          {current?.rating ? `${'★'.repeat(Math.round(Number(current.rating)))}` : ''} {platform.label} • {(String(current?.published_at || '')).slice(0, 10)}
         </div>
       </div>
     </div>
@@ -98,7 +120,7 @@ export default function CxPanel() {
 
   return (
     <div>
-      {/* 4 KPIs — dark style */}
+      {/* 4 KPIs dark */}
       <div className="grid grid-cols-4 gap-2 mb-3">
         <div className="bg-[#0f172a] rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">NPS Proxy</div>
@@ -109,7 +131,6 @@ export default function CxPanel() {
         <div className="bg-[#0f172a] rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Note moyenne</div>
           <div className="text-[26px] font-black text-amber-400 leading-none">{kpis.avg_rating} ★</div>
-          <div className="text-[10px] text-gray-500">{kpis.total_reviews.toLocaleString('fr-FR')} avis</div>
         </div>
         <div className="bg-[#0f172a] rounded-xl px-4 py-3">
           <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">SAV négatif</div>
@@ -121,46 +142,40 @@ export default function CxPanel() {
         </div>
       </div>
 
-      {/* Irritants + Enchantements with verbatim carousels */}
+      {/* Irritants + Enchantements (barres only, no carousel inside) */}
       <div className="grid grid-cols-2 gap-2 mb-3">
-        {/* Irritants */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <h3 className="text-[10px] font-semibold text-red-400 uppercase tracking-wide mb-3">Top irritants (avis 1-2★)</h3>
-          {irritants.length === 0
-            ? <p className="text-gray-400 text-xs">Données insuffisantes.</p>
-            : irritants.slice(0, 4).map((item, i) => (
-              <div key={i} className="mb-2.5">
-                <div className="flex justify-between mb-1">
-                  <span className="text-[11px] text-gray-700 font-medium">{IRRITANT_RENAME[item.label] || item.label}</span>
-                  <span className="text-[11px] text-gray-400 font-semibold">{item.count} <span className="text-[9px]">({item.pct}%)</span></span>
-                </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-400 rounded-full" style={{ width: `${item.bar_pct}%` }} />
-                </div>
+          {irritants.slice(0, 4).map((item, i) => (
+            <div key={i} className="mb-2.5">
+              <div className="flex justify-between mb-1">
+                <span className="text-[11px] text-gray-700 font-medium">{IRRITANT_RENAME[item.label] || item.label}</span>
+                <span className="text-[11px] text-gray-400 font-semibold">{item.count} <span className="text-[9px]">({item.pct}%)</span></span>
               </div>
-            ))}
-          <VerbatimCarousel type="negative" />
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-red-400 rounded-full" style={{ width: `${item.bar_pct}%` }} />
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Enchantements */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <h3 className="text-[10px] font-semibold text-green-500 uppercase tracking-wide mb-3">Top enchantements (avis 5★)</h3>
-          {enchantements.length === 0
-            ? <p className="text-gray-400 text-xs">Données insuffisantes.</p>
-            : enchantements.slice(0, 3).map((item, i) => (
-              <div key={i} className="mb-2.5">
-                <div className="flex justify-between mb-1">
-                  <span className="text-[11px] text-gray-700 font-medium">{ENCHANT_RENAME[item.label] || item.label}</span>
-                  <span className="text-[11px] text-gray-400 font-semibold">{item.count} <span className="text-[9px]">({item.pct}%)</span></span>
-                </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${item.bar_pct}%` }} />
-                </div>
+          {enchantements.slice(0, 3).map((item, i) => (
+            <div key={i} className="mb-2.5">
+              <div className="flex justify-between mb-1">
+                <span className="text-[11px] text-gray-700 font-medium">{ENCHANT_RENAME[item.label] || item.label}</span>
+                <span className="text-[11px] text-gray-400 font-semibold">{item.count} <span className="text-[9px]">({item.pct}%)</span></span>
               </div>
-            ))}
-          <VerbatimCarousel type="positive" />
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-green-500 rounded-full" style={{ width: `${item.bar_pct}%` }} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Verbatim carousel — standalone, all sources, FR only */}
+      <VerbatimCarousel />
 
       {/* Parcours client */}
       {(data as any).parcours_client && (
