@@ -1,0 +1,148 @@
+┌───────────────────────────────── Execution ─────────────────────────────────┐
+│ Reddit monitor run                                                          │
+│ brand: both                                                                 │
+│ run_id: 20260406T211521896971Z_7f2def                                       │
+│ headless: True                                                              │
+│ output: data\reddit_runs\20260406T211521896971Z_7f2def                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                Seed Discovery                                 
+                                                                               
+  Seed     Brand     Type     Found   Unique   Dup   Filter…   Blank   Status  
+ ───────────────────────────────────────────────────────────────────────────── 
+  decat…   decath…   subre…      25       15     0         0       0   ok      
+  franc…   decath…   subre…      21       15     0         9       0   ok      
+  franc…   inters…   subre…       3        3     0         2       0   ok      
+  velo_…   decath…   subre…      25       15     0         5       0   ok      
+  searc…   decath…   search      14       14     0         5       0   ok      
+  searc…   inters…   search       5        5     0         3       0   ok      
+  searc…   both      search      25       15     0         1       0   ok      
+  searc…   decath…   search       0        0     0         0       0   ok      
+  searc…   decath…   search      25       15     2         8       0   ok      
+  searc…   decath…   search      25       15     0         0       0   ok      
+  searc…   inters…   search      12       12     2         7       0   ok      
+                                                                               
+         Posts by Brand and Subreddit         
+                                              
+  Brand        Subreddit               Posts  
+ ──────────────────────────────────────────── 
+  decathlon    Decathlon                  18  
+  decathlon    pedale                     10  
+  decathlon    france                      7  
+  decathlon    cycling                     2  
+  decathlon    onebag                      2  
+  both         Budgetbikeriders            1  
+  both         Decathlon                   1  
+  both         Denver                      1  
+  both         Fahrrad                     1  
+  both         Frandroid                   1  
+  both         PHikingAndBackpacking       1  
+  both         PHitness                    1  
+  both         Rosario                     1  
+  both         SoloTravel_India            1  
+  both         StudyInTheNetherlands       1  
+  both         askSingapore                1  
+  both         onebag                      1  
+  both         pedale                      1  
+  both         surfing                     1  
+  decathlon    IaCaca                      1  
+  decathlon    Innsbruck                   1  
+  decathlon    ManyBaggers                 1  
+  decathlon    SurveyCircle_fr             1  
+  decathlon    TechWear                    1  
+  decathlon    Tools                       1  
+  decathlon    UKhiking                    1  
+  decathlon    Ultralight                  1  
+  decathlon    XaviersMansion              1  
+  decathlon    bicycling                   1  
+  decathlon    climbingshoes               1  
+  decathlon    deinfluencingPH             1  
+  decathlon    india_cycling               1  
+  decathlon    indianrunners               1  
+  decathlon    italy                       1  
+  decathlon    japanresidents              1  
+  decathlon    oldschoolcool80s            1  
+  decathlon    pcmasterraceFR              1  
+  decathlon    pelotonmemes                1  
+  decathlon    santementale                1  
+  decathlon    wandern                     1  
+  intersport   Frandroid                   1  
+  intersport   Ingolstadt                  1  
+  intersport   askCroatians                1  
+  intersport   bikefit                     1  
+  intersport   france                      1  
+  intersport   prsuk                       1  
+                                              
+                                   Top Posts                                   
+                                                                               
+  Brand       Subreddit           Comments   Score    Rel.   Title             
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon   pcmasterraceFR           313     246   1.000   Pourquoi on       
+                                                             s'inflige encore  
+                                                             des casques       
+                                                             "Gaming" à 150€   
+                                                             alors que les     
+                                                             IEMs existent ?   
+  decathlon   france                   134     465   1.000   On en parle de    
+                                                             la guerre des     
+                                                             fournisseurs      
+                                                             d'accès internet  
+                                                             qui fait rage     
+                                                             depuis des        
+                                                             années, et qui    
+                                                             prend des a       
+  decathlon   onebag                   121    1074   1.000   Onebagging 3      
+                                                             months            
+                                                             sabbatical with   
+                                                             3 kids            
+  both        askSingapore              95      60   1.000   Decathlon vs      
+                                                             Uniqlo - which    
+                                                             is better for     
+                                                             winter clothings  
+  both        StudyInTheNether…         81      43   1.000   First Dutch       
+                                                             winter - need     
+                                                             winter wear       
+                                                             advice! Uniqlo    
+                                                             vs Decathlon?     
+  decathlon   italy                     79      53   1.000   Qual è la vostra  
+                                                             esperienza con    
+                                                             Decathlon?        
+  decathlon   france                    68     297   1.000   Kiabi, Shein,     
+                                                             Decathlon : la    
+                                                             fast fashion      
+                                                             encaisse des      
+                                                             millions d’euros  
+                                                             d’argent public   
+                                                             avec le don de    
+                                                             vêtemen           
+  both        PHitness                  58      46   1.000   Workout clothes   
+                                                             for longevity:    
+                                                             Adidas/Nike vs.   
+                                                             Uniqlo vs.        
+                                                             Decathlon?        
+                                                                               
+                                Comment Samples                                
+                                                                               
+  Brand       Subreddit   Author                 Excerpt                       
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon   Decathlon   Psychological-Ad7403   Check the soles of your       
+                                                 shoes. Running shoes that     
+                                                 have soft rubber compounds    
+                                                 often flake off.              
+  decathlon   Decathlon   bdua                   No idea, mine does that too   
+                                                 and I worried a bit at first  
+                                                 thinking something was        
+                                                 wrong. It still makes the     
+                                                 sound at mid speeds. My       
+                                                 guess is t                    
+  decathlon   Decathlon   CleanDwarfWeed         Tell them youd like rerurn    
+                                                 of payment on bank card       
+                                                 payment was made from.        
+  decathlon   Decathlon   Financial-Heart5033    I can pay u 3.5k              
+  decathlon   Decathlon   Financial-Heart5033    Have to purchase few things   
+                                                 for upcoming trip             
+                                                                               
+┌────────────────────────────────── Summary ──────────────────────────────────┐
+│ posts: 80                                                                   │
+│ comments: 309                                                               │
+│ brand mix: both=14, decathlon=60, intersport=6                              │
+└─────────────────────────────────────────────────────────────────────────────┘

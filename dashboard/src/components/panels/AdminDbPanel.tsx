@@ -70,6 +70,7 @@ const SOURCE_OPTIONS = [
   { value: 'x_post', label: 'X / Twitter' },
   { value: 'instagram_post', label: 'Instagram' },
   { value: 'facebook_ad', label: 'Facebook Ads' },
+  { value: 'facebook_group', label: 'Facebook Groups' },
   { value: 'news_article', label: 'Presse' },
   { value: 'store_review', label: 'Google Maps' },
   { value: 'review_site', label: 'Avis (Trustpilot...)' },

@@ -1,0 +1,14 @@
+C:\Users\walid\AppData\Local\Programs\Python\Python310\lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.0.1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+23:16:09 [INFO] facebook_monitor - Logged in to Facebook
+23:16:09 [INFO] facebook_monitor - [group] Running Club France...
+23:16:42 [INFO] facebook_monitor - [group] Running Club France: 5 posts
+C:\Users\walid\Desktop\DEV\EugeniaSchool\LICTER\facebook_monitor\__main__.py:38: DeprecationWarning: invalid escape sequence '\/'
+  return text.encode("utf-8", errors="replace").decode("unicode_escape", errors="replace").encode("utf-8", errors="replace").decode("utf-8", errors="replace")
+23:16:46 [INFO] facebook_monitor - [group] DECATHLON...
+23:16:57 [INFO] facebook_monitor - [group] DECATHLON: 2 posts
+23:17:01 [INFO] facebook_monitor - [group] Bref je fais du running...
+23:17:01 [ERROR] facebook_monitor - Facebook scraping failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:17:01 [INFO] facebook_monitor - facebook_monitor done — 7 posts in 100.3s -> data\facebook_runs\20260406T211521103235Z_f70c12

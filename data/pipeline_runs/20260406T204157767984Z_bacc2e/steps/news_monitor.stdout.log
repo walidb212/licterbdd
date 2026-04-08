@@ -1,0 +1,24 @@
+[Execution] run_id=20260406T211521325913Z_60ab24 brand=both region=FR output=data\news_runs\20260406T211521325913Z_60ab24
+[Summary] queries=10 articles=101 cloudflare=cloudflare
+[Queries]
+- decathlon_crise_securite: fetched=3 retained=1 added=1 status=ok
+- decathlon_bad_buzz: fetched=1 retained=1 added=1 status=ok
+- decathlon_ethique: fetched=8 retained=8 added=8 status=ok
+- intersport_expansion: fetched=15 retained=15 added=15 status=ok
+- benchmark_financier: fetched=53 retained=17 added=14 status=ok
+- benchmark_comparatif: fetched=12 retained=12 added=9 status=ok
+- decathlon_cx_sav: fetched=38 retained=15 added=13 status=ok
+- decathlon_cx_magasins: fetched=34 retained=20 added=15 status=ok
+- decathlon_partenariats: fetched=41 retained=20 added=9 status=ok
+- sector_distribution: fetched=67 retained=20 added=16 status=ok
+[Articles]
+- 2026-03-29T07:00:00+00:00 | both | reputation | Outre-mer La 1ère | Crise de l'eau : "une distribution d’eau en mode dégradé" en Petite-Terre après une casse sur le réseau - Outre-mer La 1ère
+- 2026-04-03T02:00:28+00:00 | both | reputation | Outre-mer La 1ère | Crise de l'eau : la distribution toujours perturbée dans le nord de Mayotte, des citernes d'eau installées - Outre-mer La 1ère
+- 2026-04-04T07:35:52+00:00 | decathlon | reputation | MCE TV | Rappel de merguez à La Réunion chez Leclerc, Carrefour et Super U pour risque de toxi-infection - MCE TV
+- 2026-03-24T07:00:00+00:00 | intersport | general | Ouest-France | Déstockage : Intersport liquide ses stocks ce jeudi 26 mars avec ces 155 offres flash (-50 % et plus) - Ouest-France
+- 2026-03-24T07:00:00+00:00 | decathlon | general | La Voix du Nord | Bon plan Adizero Evo SL : les chaussures de running adidas sont à moins de 120 € - La Voix du Nord
+- 2026-03-24T15:12:32+00:00 | decathlon | general | La Gazette France | Exotec® équipe sept sites logistiques de Decathlon - La Gazette France
+- 2026-03-24T16:24:38+00:00 | decathlon | general | Le Journal des Entreprises | Decathlon s’allie à l’Aixois Madewis pour équiper les clubs sportifs - Le Journal des Entreprises
+- 2026-03-25T07:00:00+00:00 | intersport | store_network | Le Télégramme | Le nouveau magasin Intersport de Landivisiau a ouvert ses portes mercredi 25 mars - Le Télégramme
+- 2026-03-25T07:00:00+00:00 | both | store_network | Paris Normandie | Près du Havre, quelle grande enseigne sportive ouvre un nouveau magasin ? - Paris Normandie
+- 2026-03-25T07:00:00+00:00 | intersport | cx | Ouest-France | « On vise les 500 participants sur chaque course » : les 5 et 10 km Intersport de retour dans la zone nord du Mans - Ouest-France

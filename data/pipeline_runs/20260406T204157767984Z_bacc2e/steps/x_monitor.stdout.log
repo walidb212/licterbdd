@@ -1,0 +1,112 @@
+┌───────────────────────────────── Execution ─────────────────────────────────┐
+│ X monitor run                                                               │
+│ brand: both                                                                 │
+│ run_id: 20260406T211522247733Z_7e0528                                       │
+│ auth: env_vars                                                              │
+│ clix: playwright                                                            │
+│ output: data\x_runs\20260406T211522247733Z_7e0528                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                 Query Summary                                 
+                                                                               
+  Query                    Brand        Type     Raw   Valid   Added   Status  
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon_mentions_la…   decathlon    latest     5       5       5   ok      
+  decathlon_mentions_top   decathlon    top        7       7       7   ok      
+  intersport_mentions_l…   intersport   latest    16      16      16   ok      
+  intersport_mentions_t…   intersport   top        7       7       7   ok      
+                                                                               
+      Brand and Language Mix       
+                                   
+  Dimension   Value        Tweets  
+ ───────────────────────────────── 
+  brand       decathlon        12  
+  brand       intersport       23  
+  language    unknown          35  
+                                   
+                                  Top Tweets                                   
+                                                                               
+  Brand        Lang   Type    Eng.     Views   Author          Excerpt         
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon    -      tweet   5914   3201583   burned1078      Marathon shoes  
+                                                               sorted!         
+                                                               Jimmy Gressier  
+                                                               just ran 12:51  
+                                                               for a European  
+                                                               5K record in a  
+                                                               pair of         
+                                                               Kipruns by      
+                                                               Decathlo        
+  intersport   -      tweet   3908     42585   ntz_zoo         L’époque où     
+                                                               j’allais à      
+                                                               intersport      
+                                                               juste pour      
+                                                               regarder les    
+                                                               crampons et     
+                                                               les maillots    
+                                                               de foot         
+  intersport   -      tweet    821     13402   fabrodu13       Il n’est        
+                                                               jamais trop     
+                                                               tard  , Viens   
+                                                               et on envoie    
+                                                               Pavard chez     
+                                                               intersport      
+                                                               plan de         
+                                                               campagne        
+  decathlon    -      tweet    328      7986   nnis_sports     National        
+                                                               Record Alert:   
+                                                               Tejaswin        
+                                                               breaks the      
+                                                               decathlon       
+                                                               national        
+                                                               record!         
+                                                                               
+                                                               Tejaswin        
+                                                               Shankar         
+                                                               finished 1st    
+                                                               at the Da       
+  intersport   -      tweet    325    369042   CaminoTV        le maillot a    
+                                                               restock en      
+                                                               full size chez  
+                                                               intersport      
+                                                                               
+                                                                               
+                                                               https://        
+                                                               chck.me/QFpi    
+  decathlon    -      tweet    277     22242   Thomas_Cycli…   Le niveau de    
+                                                               Tobias Lund     
+                                                               Andresen,       
+                                                               c'est une       
+                                                               folie !         
+                                                                               
+                                                               Je ne pense     
+                                                               pas qu'on se    
+                                                               rend compte du  
+                                                               niveau là.      
+                                                                               
+                                                               C'es            
+  intersport   -      tweet    156     35580   _PointDePena…   Le maillot de   
+                                                               Mbappé au Real  
+                                                               à 59€ flocage   
+                                                               compris faut    
+                                                               coffrer direct  
+                                                                               
+                                                               Domicile        
+                                                               https://        
+                                                               tinyurl.com/2…  
+  decathlon    -      tweet    125     11084   Eurosport_FR    Qui a hâte de   
+                                                               voir le         
+                                                               biathlète sur   
+                                                               un vélo ?       
+                                                                               
+                                                               Comment         
+                                                               Decathlon CMA   
+                                                               CGM compte le   
+                                                               transformer en  
+                                                               puncheur :      
+                                                                               
+┌────────────────────────────────── Summary ──────────────────────────────────┐
+│ queries: 4                                                                  │
+│ raw tweets: 35                                                              │
+│ normalized tweets: 35                                                       │
+│ replies: 0                                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘

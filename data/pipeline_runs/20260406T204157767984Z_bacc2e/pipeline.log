@@ -1,0 +1,13 @@
+2026-04-06T21:11:59.877064+00:00 step=store_monitor status=failed exit=1 duration_s=1802.11
+2026-04-06T21:13:42.624986+00:00 step=review_monitor status=failed exit=1 duration_s=102.75
+2026-04-06T21:15:20.668385+00:00 step=product_monitor status=ok exit=0 duration_s=98.04
+2026-04-06T21:15:32.588320+00:00 step=news_monitor status=ok exit=0 duration_s=11.88
+2026-04-06T21:18:38.536719+00:00 step=reddit_monitor status=ok exit=0 duration_s=197.80
+2026-04-06T21:23:45.403970+00:00 step=youtube_monitor status=ok exit=0 duration_s=504.65
+2026-04-06T21:24:51.411637+00:00 step=tiktok_monitor status=ok exit=0 duration_s=570.63
+2026-04-06T21:24:51.415639+00:00 step=instagram_monitor status=ok exit=0 duration_s=570.62
+2026-04-06T21:24:51.420641+00:00 step=facebook_monitor status=ok exit=0 duration_s=570.61
+2026-04-06T21:24:51.424638+00:00 step=facebook_ads_monitor status=ok exit=0 duration_s=570.59
+2026-04-06T21:24:51.477297+00:00 step=x_monitor status=ok exit=0 duration_s=570.62
+2026-04-06T21:24:51.516849+00:00 step=context_monitor status=ok exit=0 duration_s=570.64
+2026-04-06T21:24:52.048713+00:00 step=global_summary status=ok exit=0 duration_s=0.52

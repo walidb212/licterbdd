@@ -1,0 +1,23 @@
+{
+  "run_id": "20260407T204908724477Z_c7f9ab",
+  "provider": "heuristic",
+  "model": "gpt-4o-mini",
+  "input_runs": {
+    "review": "data\\review_runs\\20260406T211216903688Z_034e83",
+    "store": "data\\store_runs\\20260406T204158629035Z_d083c3",
+    "product": "data\\product_runs\\20260406T211343302229Z_528915",
+    "news": "data\\news_runs\\20260406T211521325913Z_60ab24",
+    "reddit": "data\\reddit_runs\\20260406T211521896971Z_7f2def",
+    "youtube": "data\\youtube_runs\\20260406T211521192534Z_6de472",
+    "tiktok": "data\\tiktok_runs\\20260406T211521225575Z_0a7dab",
+    "x": "data\\x_runs\\20260407T204800549369Z_70d8ef",
+    "global": "data\\global_runs\\20260406T212451681222Z_4bf7e6"
+  },
+  "counts": {
+    "social": 3981,
+    "review": 1536,
+    "news": 101,
+    "entities": 202
+  },
+  "warnings": []
+}

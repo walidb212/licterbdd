@@ -317,10 +317,12 @@ async function handleTopProducts(db, env) {
     if (cached?.data) return json(JSON.parse(cached.data));
   } catch { /* fallback to live */ }
 
-  // Marques DECATHLON uniquement (pas Intersport : nakamura, etc.)
+  // Marques DECATHLON + termes produit que les clients utilisent vraiment
   const BRANDS = [
+    // Marques propres
     { kw: 'rockrider', label: 'Rockrider', cat: 'Cyclisme' },
     { kw: 'btwin', label: 'B\'Twin', cat: 'Cyclisme' },
+    { kw: 'b\'twin', label: 'B\'Twin', cat: 'Cyclisme' },
     { kw: 'riverside', label: 'Riverside', cat: 'Cyclisme' },
     { kw: 'elops', label: 'Elops', cat: 'Cyclisme' },
     { kw: 'van rysel', label: 'Van Rysel', cat: 'Cyclisme' },
@@ -334,15 +336,33 @@ async function handleTopProducts(db, env) {
     { kw: 'kipsta', label: 'Kipsta', cat: 'Football' },
     { kw: 'nabaiji', label: 'Nabaiji', cat: 'Natation' },
     { kw: 'artengo', label: 'Artengo', cat: 'Raquettes' },
-    { kw: 'inesis', label: 'Inesis', cat: 'Golf' },
     { kw: 'solognac', label: 'Solognac', cat: 'Chasse' },
     { kw: 'caperlan', label: 'Caperlan', cat: 'Peche' },
     { kw: 'tarmak', label: 'Tarmak', cat: 'Basketball' },
     { kw: 'perfly', label: 'Perfly', cat: 'Badminton' },
+    // Modeles populaires que les clients citent
+    { kw: 'tapis de course', label: 'Domyos', cat: 'Fitness' },
+    { kw: 'tapis de marche', label: 'Domyos', cat: 'Fitness' },
+    { kw: 'velo electrique', label: 'Riverside / Elops', cat: 'Cyclisme' },
+    { kw: 'vélo électrique', label: 'Riverside / Elops', cat: 'Cyclisme' },
+    { kw: 'velo enfant', label: 'B\'Twin', cat: 'Cyclisme' },
+    { kw: 'vélo enfant', label: 'B\'Twin', cat: 'Cyclisme' },
+    { kw: 'tente', label: 'Quechua', cat: 'Randonnee' },
+    { kw: 'chaussure running', label: 'Kiprun', cat: 'Running' },
+    { kw: 'chaussures running', label: 'Kiprun', cat: 'Running' },
+    { kw: 'vtt', label: 'Rockrider', cat: 'Cyclisme' },
+    { kw: 'sac a dos', label: 'Quechua / Forclaz', cat: 'Randonnee' },
+    { kw: 'sac à dos', label: 'Quechua / Forclaz', cat: 'Randonnee' },
+    { kw: 'maillot de bain', label: 'Nabaiji', cat: 'Natation' },
+    { kw: 'raquette', label: 'Artengo / Perfly', cat: 'Raquettes' },
+    { kw: 'ballon', label: 'Kipsta', cat: 'Football' },
+    { kw: 'haltere', label: 'Corength', cat: 'Fitness' },
+    { kw: 'haltère', label: 'Corength', cat: 'Fitness' },
+    { kw: 'banc de musculation', label: 'Corength', cat: 'Fitness' },
   ];
 
-  // Chercher dans les vrais avis clients seulement
-  const negData = {};  // brand_kw -> { count, samples }
+  // Chercher dans les vrais avis clients seulement — merger par label (pas par kw)
+  const negData = {};  // label -> { count, samples, brand }
   const posData = {};
 
   for (const brand of BRANDS) {
@@ -372,8 +392,17 @@ async function handleTopProducts(db, env) {
     ).bind(pattern).all()).results || [];
     const allPos = [...posReviews, ...posStores, ...posExcel];
 
-    if (allNeg.length > 0) negData[brand.kw] = { count: allNeg.length, samples: allNeg.slice(0, 3).map(r => (r.text || '').slice(0, 200)), brand };
-    if (allPos.length > 0) posData[brand.kw] = { count: allPos.length, samples: allPos.slice(0, 3).map(r => (r.text || '').slice(0, 200)), brand };
+    // Merge by label to avoid duplicates (e.g. "quechua" + "tente" both map to Quechua)
+    if (allNeg.length > 0) {
+      if (!negData[brand.label]) negData[brand.label] = { count: 0, samples: [], brand };
+      negData[brand.label].count += allNeg.length;
+      for (const r of allNeg) { if (negData[brand.label].samples.length < 3) negData[brand.label].samples.push((r.text || '').slice(0, 200)); }
+    }
+    if (allPos.length > 0) {
+      if (!posData[brand.label]) posData[brand.label] = { count: 0, samples: [], brand };
+      posData[brand.label].count += allPos.length;
+      for (const r of allPos) { if (posData[brand.label].samples.length < 3) posData[brand.label].samples.push((r.text || '').slice(0, 200)); }
+    }
   }
 
   // Pour chaque marque, trouver un produit représentatif avec image
@@ -381,20 +410,21 @@ async function handleTopProducts(db, env) {
     const sorted = Object.entries(data).sort((a, b) => b[1].count - a[1].count);
     const results = [];
     const seenCat = {};
-    for (const [kw, info] of sorted) {
+    for (const [label, info] of sorted) {
       const cat = info.brand.cat;
       seenCat[cat] = (seenCat[cat] || 0) + 1;
       if (seenCat[cat] > 2) continue;
-      // Trouver un produit avec image pour cette marque
+      // Trouver un produit avec image pour cette marque (utiliser le premier mot du label comme marque)
+      const marqueKey = label.split(' ')[0].split('/')[0].toLowerCase().replace("'", '');
       const product = await db.prepare(
         "SELECT titre, image_url, categorie, url FROM decathlon_products WHERE marque_detectee = ? AND image_url IS NOT NULL AND image_url != '' ORDER BY RANDOM() LIMIT 1"
-      ).bind(kw).first();
+      ).bind(marqueKey).first();
       results.push({
-        titre: info.brand.label,
+        titre: label,
         image_url: product?.image_url || '',
         categorie: cat,
-        marque_detectee: kw,
-        url: product?.url || `https://www.decathlon.fr/search?Ntt=${kw}`,
+        marque_detectee: marqueKey,
+        url: product?.url || `https://www.decathlon.fr/search?Ntt=${marqueKey}`,
         mentions: info.count,
         sample_reviews: info.samples,
       });

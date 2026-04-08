@@ -1,0 +1,190 @@
+┌───────────────────────────────── Execution ─────────────────────────────────┐
+│ Product monitor run                                                         │
+│ brand: both                                                                 │
+│ max products/brand: 20                                                      │
+│ run_id: 20260406T211343302229Z_528915                                       │
+│ output: data\product_runs\20260406T211343302229Z_528915                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                   Products                                    
+                                                                               
+  Brand       Category   Product             Agg.   Count   Status             
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon   cycling    Vélo tout chemin    4.65     543   ok                 
+                         électrique à                                          
+                         moteur central et                                     
+                         cadre bas, E-ACTV                                     
+                         500                                                   
+  decathlon   cycling    Vélo de route       5.00       1   ok                 
+                         carbone Shimano                                       
+                         Tiagra 2x10v, EDR                                     
+                         CF blanc                                              
+  decathlon   cycling    Vélo VTT            5.00       3   ok                 
+                         électrique                                            
+                         randonnée                                             
+                         semi-rigide 29"                                       
+                         Cadre Aluminium,                                      
+                         E-EXPL                                                
+  decathlon   cycling    Velo cargo          4.67       6   ok                 
+                         électrique                                            
+                         longtail, E-three                                     
+                         500 Bleu abysse                                       
+  decathlon   fitness    Vélo                4.44     681   ok                 
+                         d'appartement                                         
+                         connecté et                                           
+                         auto-alimenté,                                        
+                         EB900 B, garanti                                      
+                         par Dec                                               
+  decathlon   fitness    Tee-shirt en        4.62    4526   ok                 
+                         coton col rond                                        
+                         femme, noir                                           
+  decathlon   fitness    Tapis de course     4.63    1523   ok                 
+                         pliable 16km/h,                                       
+                         RUN500 garanti                                        
+                         par Decathlon                                         
+  decathlon   fitness    Tapis de Course     4.37     206   ok                 
+                         Pliable                                               
+                         1400W,CITYSPORTS                                      
+                         WP9,APP,Bluetoot…                                     
+                         1-1                                                   
+  decathlon   football   ​But de football     4.69     252   ok                 
+                         Classique L (300                                      
+                         cm x 200 cm)                                          
+                         blanc                                                 
+  decathlon   football   adidas Predator        -       -   ok                 
+                         League Laceless                                       
+                         FG chaussure                                          
+                         Adulte Noir                                           
+  decathlon   football   Sweat 1/2 zip de    4.82     107   ok                 
+                         football adulte                                       
+                         Viralto Dop noir                                      
+                         et gris                                               
+  decathlon   football   VDP                    -       -   no_reviews_visib…  
+  decathlon   running    Chaussures de       4.57       7   ok                 
+                         trail running                                         
+                         Femme, Fresh Foam                                     
+                         X Garoe V2, Gris                                      
+  decathlon   running    Chaussures de       4.78     156   ok                 
+                         running route                                         
+                         homme, Kiprun                                         
+                         Kipstorm Tempo                                        
+                         bleu rose                                             
+  decathlon   running    Chaussures de       4.87      23   ok                 
+                         running route                                         
+                         femme, Kiprun                                         
+                         Kipstorm tempo                                        
+                         jaune clair                                           
+  decathlon   running    Chaussures de       4.85     119   ok                 
+                         running légères                                       
+                         homme, adidas                                         
+                         Adizero Evo SL                                        
+                         blanches et                                           
+  decathlon   cycling    Tapis Home          4.76     565   ok                 
+                         Trainer Flanders                                      
+  decathlon   cycling    Table Home          4.73     143   ok                 
+                         Trainer                                               
+  decathlon   fitness    T-shirt fitness     4.52   15771   ok                 
+                         coton homme - 100                                     
+                         sportee gris                                          
+  decathlon   fitness    Skierg CONCEPT 2       -       -   ok                 
+                         (sans plateforme)                                     
+                                                                               
+                            Sample Product Reviews                             
+                                                                               
+  Brand       Category   Product                Rating   Excerpt               
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon   cycling    Vélo tout chemin          4.7   Meilleure vente       
+                         électrique à moteur             ROCKRIDER Vélo tout   
+                         cen                             chemin électrique à   
+                                                         moteur central et     
+                                                         cadre bas, E-ACTV     
+                                                         500 vert 4.7 543      
+                                                         avis Dôté d’une       
+                                                         autonomie jusqu       
+  decathlon   cycling    Vélo tout chemin            -   autonomie Jusqu'à     
+                         électrique à moteur             150 km (en mode       
+                         cen                             éco). Batterie        
+                                                         intégrée et           
+                                                         amovible. Capacité    
+                                                         504 Wh. Jusqu'à 150   
+                                                         km (en mode éco).     
+                                                         Batterie intégrée et  
+                                                         a                     
+  decathlon   cycling    Vélo tout chemin            -   puissance Moteur      
+                         électrique à moteur             central Yamaha.       
+                         cen                             Couple max 55 Nm.     
+                                                         Moteur central        
+                                                         Yamaha. Couple max    
+                                                         55 Nm.                
+  decathlon   cycling    Vélo tout chemin            -   adaptabilité          
+                         électrique à moteur             morphologique         
+                         cen                             Position du guidon    
+                                                         ajustable: potence    
+                                                         réglable de -10° à    
+                                                         +60°. Position du     
+                                                         guidon ajustable:     
+                                                         potence réglable de   
+  decathlon   cycling    Vélo tout chemin            -   Résistance à la       
+                         électrique à moteur             crevaison Pneu        
+                         cen                             renforcé avec double  
+                                                         protection gomme +    
+                                                         nylon. Score          
+                                                         anti-crevaison :      
+                                                         5/5. Pneu renforcé    
+                                                         avec double protecti  
+  decathlon   cycling    Vélo tout chemin            -   connectivité          
+                         électrique à moteur             Téléchargez l'app     
+                         cen                             gratuite DECATHLON    
+                                                         RIDE et bénéficiez    
+                                                         de statistiques       
+                                                         avancées Téléchargez  
+                                                         l'app gratuite        
+                                                         DECATHLON RIDE et b   
+  decathlon   cycling    Vélo tout chemin            -   compatibilité         
+                         électrique à moteur             Compatible avec       
+                         cen                             porte-bagages         
+                                                         arrière, siège        
+                                                         enfant et remorque.   
+                                                         Compatible avec       
+                                                         porte-bagages         
+                                                         arrière, siège        
+                                                         enfant et remorq      
+  decathlon   cycling    Vélo de route             5.0   VAN RYSEL Vélo de     
+                         carbone Shimano                 route carbone         
+                         Tiagra 2x1                      Shimano Tiagra        
+                                                         2x10v, EDR CF blanc   
+                                                         5 1 avis Equipé       
+                                                         d'une transmission    
+                                                         complète Shimano      
+                                                         Tiagra et des roues   
+                                                         a                     
+  decathlon   cycling    Vélo de route               -   nombre de vitesses    
+                         carbone Shimano                 Transmission SHIMANO  
+                         Tiagra 2x1                      TIAGRA 2x10 - double  
+                                                         plateau 48/34T -      
+                                                         cassette 11/32T       
+                                                         Transmission SHIMANO  
+                                                         TIAGRA 2x10 - double  
+                                                         plat                  
+  decathlon   cycling    Vélo de route               -   puissance de          
+                         carbone Shimano                 freinage Freins à     
+                         Tiagra 2x1                      disque hydrauliques   
+                                                         SHIMANO Tiagra        
+                                                         Freins à disque       
+                                                         hydrauliques SHIMANO  
+                                                         Tiagra                
+                                                                               
+┌────────────────────────────────── Summary ──────────────────────────────────┐
+│ products: 20                                                                │
+│ reviews: 94                                                                 │
+│ brands: decathlon=20                                                        │
+│ categories: cycling=6, fitness=6, football=4, running=4                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────── Warnings ──────────────────────────────────┐
+│ - decathlon:outdoor returned no product candidates from cloudflare.         │
+│ - intersport:running returned no product candidates from cloudflare.        │
+│ - intersport:cycling returned no product candidates from cloudflare.        │
+│ - intersport:fitness returned no product candidates from cloudflare.        │
+│ - intersport:outdoor returned no product candidates from cloudflare.        │
+│ - intersport:football returned no product candidates from cloudflare.       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘

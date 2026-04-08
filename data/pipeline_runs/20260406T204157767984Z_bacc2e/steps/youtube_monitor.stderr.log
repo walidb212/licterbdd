@@ -1,0 +1,36 @@
+23:15:21 [INFO] youtube_monitor - date_filter=month
+23:15:21 [INFO] youtube_monitor - Launching 10 searches in parallel...
+23:15:21 [INFO] youtube_monitor - [decathlon] search - decathlon_general (Decathlon)
+C:\Users\walid\AppData\Local\Programs\Python\Python310\lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.0.1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+23:16:07 [INFO] youtube_monitor - [decathlon] search - rep_crise_velo (Decathlon velo accident defectueux)
+23:16:10 [INFO] youtube_monitor - [decathlon] search - rep_scandale (Decathlon scandale boycott)
+23:16:12 [INFO] youtube_monitor - [decathlon] search - bench_vs_intersport (Decathlon vs Intersport)
+23:16:40 [INFO] youtube_monitor - [decathlon] bench_vs_intersport - skipped 2 (no brand match)
+23:16:40 [INFO] youtube_monitor - [decathlon] search - cx_avis_sav (avis Decathlon SAV retour)
+23:16:41 [INFO] youtube_monitor - [decathlon] search - cx_qualite (test produit Decathlon qualite)
+23:17:01 [INFO] youtube_monitor - [intersport] search - intersport_general (Intersport)
+23:17:12 [INFO] youtube_monitor - [intersport] search - rep_avis (Intersport avis probleme)
+23:17:13 [INFO] youtube_monitor - [intersport] search - bench_vs_decathlon (Intersport vs Decathlon)
+23:17:21 [INFO] youtube_monitor - [intersport] bench_vs_decathlon - skipped 1 (no brand match)
+23:17:21 [INFO] youtube_monitor - [intersport] search - cx_sav (SAV Intersport qualite retour)
+23:17:22 [INFO] youtube_monitor - Fetching comments for top 10 videos (by engagement)...
+23:17:23 [INFO] youtube_monitor -   [intersport] 0 comments for 'INTERSPORT MARATHON DE PARIS 15s 16x9 260331 YOUTU'
+23:17:25 [INFO] youtube_monitor -   [intersport] 19 comments for 'Au Vieux Campeur, une anomalie dans le monde du sp'
+23:17:27 [INFO] youtube_monitor -   [intersport] 0 comments for 'AR x INTERSPORT - MARCH'
+23:17:29 [INFO] youtube_monitor -   [intersport] 1 comments for 'INTERSPORT x FFF : La compo'
+23:17:31 [INFO] youtube_monitor -   [decathlon] 19 comments for 'Remorque vélo Decathlon, porte-vélos à radar de re'
+23:17:33 [INFO] youtube_monitor -   [decathlon] 11 comments for 'DECATHLON s'est fait voler son LOGO ?'
+23:17:34 [INFO] youtube_monitor -   [decathlon] 5 comments for 'Decathlon sort un nouveau VTC électrique (et il po'
+23:17:36 [INFO] youtube_monitor -   [decathlon] 6 comments for 'Tout savoir sur la planche Mid-Length Tribord Expl'
+23:17:39 [INFO] youtube_monitor -   [decathlon] 20 comments for 'Airbag vélo chez Decathlon, Wasted Watts et Tenway'
+23:17:41 [INFO] youtube_monitor -   [decathlon] 17 comments for 'Nouveaux gravels Nakamura, Lemmo One automatique e'
+23:17:41 [INFO] youtube_monitor - Transcribing top 5 spoken videos via Groq/Whisper...
+23:18:11 [INFO] youtube_monitor -   [transcript] Au Vieux Campeur, une anomalie dans le m: 8251 chars
+23:18:27 [INFO] youtube_monitor -   [transcript] Remorque vélo Decathlon, porte-vélos à r: 6369 chars
+23:19:22 [INFO] youtube_monitor -   [transcript] Decathlon sort un nouveau VTC électrique: 6459 chars
+23:19:43 [INFO] youtube_monitor -   [transcript] Tout savoir sur la planche Mid-Length Tr: 18343 chars
+23:19:43 [INFO] youtube_monitor - [intersport] channel videos - intersport_france_official
+23:21:41 [INFO] youtube_monitor - [intersport] channel shorts - intersport_france_official
+23:23:45 [INFO] youtube_monitor - Saved 4 transcripts (39422 total chars)
+23:23:45 [INFO] youtube_monitor - youtube_monitor done - videos=72 comments=98 output=data\youtube_runs\20260406T211521192534Z_6de472

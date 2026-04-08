@@ -1,0 +1,129 @@
+23:15:21 [INFO] tiktok_monitor - [decathlon] account - decathlon_official_account
+C:\Users\walid\AppData\Local\Programs\Python\Python310\lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.0.1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+23:16:28 [INFO] tiktok_monitor - [intersport] account - intersport_fr_official_account
+23:17:11 [INFO] tiktok_monitor.extractor - Initializing Chrome via DrissionPage (headless=True)...
+23:17:11 [INFO] tiktok_monitor.extractor - Chrome browser ready
+23:17:11 [INFO] tiktok_monitor - [decathlon] hashtag - #decathlon
+23:17:11 [INFO] tiktok_monitor.extractor - Searching 'decathlon' -> https://www.tiktok.com/search/video?q=decathlon
+23:17:35 [INFO] tiktok_monitor.extractor -   search: 12 videos
+23:17:35 [INFO] tiktok_monitor.extractor - Scraping tag 'decathlon' -> https://www.tiktok.com/tag/decathlon
+23:17:57 [INFO] tiktok_monitor.extractor -   tag: 0 videos (0 new)
+23:17:57 [INFO] tiktok_monitor.extractor - 'decathlon': 12 total unique videos
+23:17:57 [INFO] tiktok_monitor -   #decathlon: 12 relevant / 12 raw -> 7 after 30-day filter
+23:18:00 [INFO] tiktok_monitor -   Pause 4.0s...
+23:18:04 [INFO] tiktok_monitor - [decathlon] hashtag - #decathlonfrance
+23:18:04 [INFO] tiktok_monitor.extractor - Searching 'decathlonfrance' -> https://www.tiktok.com/search/video?q=decathlonfrance
+23:18:06 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:18:06 [INFO] tiktok_monitor.extractor - Scraping tag 'decathlonfrance' -> https://www.tiktok.com/tag/decathlonfrance
+23:18:06 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:18:06 [INFO] tiktok_monitor.extractor - 'decathlonfrance': 0 total unique videos
+23:18:06 [INFO] tiktok_monitor -   #decathlonfrance: 0 relevant / 0 raw -> 0 after 30-day filter
+23:18:06 [INFO] tiktok_monitor -   Pause 7.0s...
+23:18:14 [INFO] tiktok_monitor - [decathlon] hashtag - #decathlonsport
+23:18:14 [INFO] tiktok_monitor.extractor - Searching 'decathlonsport' -> https://www.tiktok.com/search/video?q=decathlonsport
+23:18:16 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:18:16 [INFO] tiktok_monitor.extractor - Scraping tag 'decathlonsport' -> https://www.tiktok.com/tag/decathlonsport
+23:18:16 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:18:16 [INFO] tiktok_monitor.extractor - 'decathlonsport': 0 total unique videos
+23:18:16 [INFO] tiktok_monitor -   #decathlonsport: 0 relevant / 0 raw -> 0 after 30-day filter
+23:18:16 [INFO] tiktok_monitor -   Pause 7.2s...
+23:18:23 [INFO] tiktok_monitor - [decathlon] hashtag - #decathlonfr
+23:18:23 [INFO] tiktok_monitor.extractor - Searching 'decathlonfr' -> https://www.tiktok.com/search/video?q=decathlonfr
+23:18:25 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:18:25 [INFO] tiktok_monitor.extractor - Scraping tag 'decathlonfr' -> https://www.tiktok.com/tag/decathlonfr
+23:18:25 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:18:25 [INFO] tiktok_monitor.extractor - 'decathlonfr': 0 total unique videos
+23:18:25 [INFO] tiktok_monitor -   #decathlonfr: 0 relevant / 0 raw -> 0 after 30-day filter
+23:18:25 [INFO] tiktok_monitor -   Pause 6.1s...
+23:18:31 [INFO] tiktok_monitor - [intersport] hashtag - #intersport
+23:18:31 [INFO] tiktok_monitor.extractor - Searching 'intersport' -> https://www.tiktok.com/search/video?q=intersport
+23:18:33 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:18:33 [INFO] tiktok_monitor.extractor - Scraping tag 'intersport' -> https://www.tiktok.com/tag/intersport
+23:18:33 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:18:33 [INFO] tiktok_monitor.extractor - 'intersport': 0 total unique videos
+23:23:45 [INFO] tiktok_monitor -   #intersport: 0 relevant / 0 raw -> 0 after 30-day filter
+23:23:45 [INFO] tiktok_monitor -   Pause 6.4s...
+23:23:51 [INFO] tiktok_monitor - [intersport] hashtag - #intersportfrance
+23:23:51 [INFO] tiktok_monitor.extractor - Searching 'intersportfrance' -> https://www.tiktok.com/search/video?q=intersportfrance
+23:23:53 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:23:53 [INFO] tiktok_monitor.extractor - Scraping tag 'intersportfrance' -> https://www.tiktok.com/tag/intersportfrance
+23:23:53 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:23:53 [INFO] tiktok_monitor.extractor - 'intersportfrance': 0 total unique videos
+23:23:53 [INFO] tiktok_monitor -   #intersportfrance: 0 relevant / 0 raw -> 0 after 30-day filter
+23:23:53 [INFO] tiktok_monitor -   Pause 4.5s...
+23:23:58 [INFO] tiktok_monitor - [intersport] hashtag - #intersportfr
+23:23:58 [INFO] tiktok_monitor.extractor - Searching 'intersportfr' -> https://www.tiktok.com/search/video?q=intersportfr
+23:24:00 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:24:00 [INFO] tiktok_monitor.extractor - Scraping tag 'intersportfr' -> https://www.tiktok.com/tag/intersportfr
+23:24:00 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:24:00 [INFO] tiktok_monitor.extractor - 'intersportfr': 0 total unique videos
+23:24:00 [INFO] tiktok_monitor -   #intersportfr: 0 relevant / 0 raw -> 0 after 30-day filter
+23:24:00 [INFO] tiktok_monitor -   Pause 4.2s...
+23:24:04 [INFO] tiktok_monitor - [decathlon] hashtag - #rockrider
+23:24:04 [INFO] tiktok_monitor.extractor - Searching 'rockrider' -> https://www.tiktok.com/search/video?q=rockrider
+23:24:06 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:24:06 [INFO] tiktok_monitor.extractor - Scraping tag 'rockrider' -> https://www.tiktok.com/tag/rockrider
+23:24:06 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:24:06 [INFO] tiktok_monitor.extractor - 'rockrider': 0 total unique videos
+23:24:06 [INFO] tiktok_monitor -   #rockrider: 0 relevant / 0 raw -> 0 after 30-day filter
+23:24:06 [INFO] tiktok_monitor -   Pause 4.7s...
+23:24:11 [INFO] tiktok_monitor - [intersport] hashtag - #nakamura
+23:24:11 [INFO] tiktok_monitor.extractor - Searching 'nakamura' -> https://www.tiktok.com/search/video?q=nakamura
+23:24:13 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:24:13 [INFO] tiktok_monitor.extractor - Scraping tag 'nakamura' -> https://www.tiktok.com/tag/nakamura
+23:24:13 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:24:13 [INFO] tiktok_monitor.extractor - 'nakamura': 0 total unique videos
+23:24:13 [INFO] tiktok_monitor -   #nakamura: 0 relevant / 0 raw -> 0 after 30-day filter
+23:24:13 [INFO] tiktok_monitor -   Pause 6.4s...
+23:24:19 [INFO] tiktok_monitor - [both] hashtag - #sportpascher
+23:24:19 [INFO] tiktok_monitor.extractor - Searching 'sportpascher' -> https://www.tiktok.com/search/video?q=sportpascher
+23:24:21 [WARNING] tiktok_monitor.extractor -   search failed: 
+浏览器未开启或已关闭。
+版本: 4.1.1.2
+23:24:21 [INFO] tiktok_monitor.extractor - Scraping tag 'sportpascher' -> https://www.tiktok.com/tag/sportpascher
+23:24:21 [WARNING] tiktok_monitor.extractor -   tag failed: 
+与页面的连接已断开。
+版本: 4.1.1.2
+23:24:21 [INFO] tiktok_monitor.extractor - 'sportpascher': 0 total unique videos
+23:24:21 [INFO] tiktok_monitor -   #sportpascher: 0 relevant / 0 raw -> 0 after 30-day filter
+23:24:21 [INFO] tiktok_monitor - Comments collected: 0
+23:24:21 [INFO] tiktok_monitor - Transcribing top 5 TikToks via Whisper...
+23:24:34 [INFO] tiktok_monitor -   [transcript] On corrige ensemble les erreurs les plus: 2781 chars
+23:24:39 [INFO] tiktok_monitor -   [transcript] En même temps je comprends il a un éclai: 26 chars
+23:24:46 [INFO] tiktok_monitor -   [transcript] On a suivi Fred, l’homme derrière la cam: 2841 chars
+23:24:51 [INFO] tiktok_monitor -   [transcript] Joyeux anniversaire Antoine ! 🎂👀 👕 Viral: 221 chars
+23:24:51 [INFO] tiktok_monitor - Saved 4 TikTok transcripts
+23:24:51 [INFO] tiktok_monitor - tiktok_monitor done - videos=27 output=data\tiktok_runs\20260406T211521225575Z_0a7dab

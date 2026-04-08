@@ -1,0 +1,46 @@
+┌───────────────────────────────── Execution ─────────────────────────────────┐
+│ Context monitor run                                                         │
+│ brand: both                                                                 │
+│ document types: all                                                         │
+│ run_id: 20260406T211522600159Z_4e046a                                       │
+│ output: data\context_runs\20260406T211522600159Z_4e046a                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                               Context Documents                               
+                                                                               
+  Brand       Type          Title                 Fetch                  Size  
+ ───────────────────────────────────────────────────────────────────────────── 
+  decathlon   avis-policy   *                     cloudflare_markdown   14755  
+                            [Rechercher](#sear…                                
+                            * [Voir le                                         
+                            contenu](#content)                                 
+                            * [Accé                                            
+  decathlon   livraison     *                     cloudflare_markdown   23346  
+                            [Rechercher](#sear…                                
+                            * [Voir le                                         
+                            contenu](#content)                                 
+                            * [Accd                                            
+  decathlon   atelier       [Support](/) * Se     cloudflare_markdown    5667  
+                            connecter * Réparer                                
+                            mon produit *                                      
+                            Prestations atelier                                
+                            * Pièces                                           
+  decathlon   services      [Support](/) * Se     cloudflare_markdown    3100  
+                            connecter * Réparer                                
+                            mon produit *                                      
+                            Prestations atelier                                
+                            * Pièces                                           
+                                                                               
+┌────────────────────────────────── Summary ──────────────────────────────────┐
+│ documents: 4                                                                │
+│ brands: decathlon=4                                                         │
+│ types: atelier=1, avis-policy=1, livraison=1, services=1                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────── Warnings ──────────────────────────────────┐
+│ - decathlon_returns: unchanged document skipped by incremental state.       │
+│ - intersport_cgv: unchanged document skipped by incremental state.          │
+│ - intersport_returns: empty or low-signal document skipped.                 │
+│ - intersport_delivery: empty or low-signal document skipped.                │
+│ - intersport_sav: empty or low-signal document skipped.                     │
+│ - intersport_atelier: empty or low-signal document skipped.                 │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘

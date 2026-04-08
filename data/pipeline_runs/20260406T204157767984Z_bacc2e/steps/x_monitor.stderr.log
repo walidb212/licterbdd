@@ -1,0 +1,5 @@
+23:15:35 [INFO] x_monitor - Logged in via Playwright, running 4 queries
+23:16:02 [INFO] x_monitor - [decathlon] decathlon_mentions_latest latest -> 5 tweets
+23:16:38 [INFO] x_monitor - [decathlon] decathlon_mentions_top top -> 7 tweets
+23:17:08 [INFO] x_monitor - [intersport] intersport_mentions_latest latest -> 16 tweets
+23:17:28 [INFO] x_monitor - [intersport] intersport_mentions_top top -> 7 tweets
